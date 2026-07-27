@@ -56,7 +56,7 @@ export default function MemoriesPage() {
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <MapPinIcon width={14} height={14} />
-                  {m.location}
+                  {m.city}
                 </span>
                 <span className="flex items-center gap-1">
                   <CalendarIcon width={14} height={14} />

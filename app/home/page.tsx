@@ -82,7 +82,7 @@ export default function HomePage() {
                 />
               </div>
               <p className="mt-2 line-clamp-1 text-sm font-medium">{m.title}</p>
-              <p className="text-xs text-muted-foreground">{m.city}</p>
+              <p className="text-xs text-muted-foreground">{(m as any).city || (m as any).location}</p>
             </Link>
           ))}
         </div>

@@ -28,6 +28,18 @@ export type Wine = {
   ratings: WineRating[];
 };
 
+export type Book = {
+  id: string;
+  title: string;
+  author: string;
+  description: string;
+  cover: string;
+  file: string;
+  pages: number;
+  size: string;
+  category: string;
+};
+
 export type Article = {
   id: string;
   title: string;
@@ -178,6 +190,45 @@ export const articles: Article[] = [
     author: 'Sofia Katz',
     readingTime: '5 min read',
     date: 'February 2024',
+  },
+];
+
+export const books: Book[] = [
+  {
+    id: 'atlas-wines',
+    title: 'The Atlas of Wines',
+    author: 'Elena Moreau',
+    description:
+      'A field companion to the regions, grapes, and quiet cellars worth travelling for. Notes, maps, and pairings collected over a decade.',
+    cover: '/images/book-atlas-wines.png',
+    file: '/books/atlas-wines.pdf',
+    pages: 148,
+    size: '4.2 MB',
+    category: 'Wine',
+  },
+  {
+    id: 'travel-memory',
+    title: 'Travel & Memory',
+    author: 'Marco Bianchi',
+    description:
+      'Essays on why some places stay with us long after we leave, and how to hold onto the details that matter.',
+    cover: '/images/book-travel-memory.png',
+    file: '/books/travel-memory.pdf',
+    pages: 96,
+    size: '2.8 MB',
+    category: 'Travel',
+  },
+  {
+    id: 'terroir-guide',
+    title: 'A Guide to Terroir',
+    author: 'Sofia Katz',
+    description:
+      'Soil, slope, and season — a gentle introduction to tasting the place inside every glass.',
+    cover: '/images/book-terroir-guide.png',
+    file: '/books/terroir-guide.pdf',
+    pages: 112,
+    size: '3.5 MB',
+    category: 'Wine',
   },
 ];
 

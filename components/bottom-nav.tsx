@@ -7,6 +7,7 @@ import {
   MemoriesIcon,
   WineIcon,
   ArticlesIcon,
+  BookIcon,
   ProfileIcon,
 } from './icons';
 
@@ -15,6 +16,7 @@ const items = [
   { href: '/memories', label: 'Memories', Icon: MemoriesIcon },
   { href: '/wines', label: 'Wines', Icon: WineIcon },
   { href: '/articles', label: 'Articles', Icon: ArticlesIcon },
+  { href: '/books', label: 'Books', Icon: BookIcon },
   { href: '/profile', label: 'Profile', Icon: ProfileIcon },
 ];
 

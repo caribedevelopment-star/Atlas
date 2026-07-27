@@ -146,6 +146,26 @@ export function StarIcon(props: IconProps) {
   );
 }
 
+export function BookIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props} aria-hidden="true">
+      <path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5V4.5Z" />
+      <path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19" />
+      <path d="M9 7h6" />
+    </svg>
+  );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props} aria-hidden="true">
+      <path d="M12 3v11" />
+      <path d="m7.5 10 4.5 4.5 4.5-4.5" />
+      <path d="M5 20h14" />
+    </svg>
+  );
+}
+
 export function ClockIcon(props: IconProps) {
   return (
     <svg {...base} {...props} aria-hidden="true">

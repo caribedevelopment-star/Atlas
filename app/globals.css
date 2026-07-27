@@ -3,25 +3,48 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* Warm white background */
+  --background: 40 33% 97%;
+  --foreground: 0 0% 8%;
+
+  --card: 40 33% 99%;
+  --card-foreground: 0 0% 8%;
+
+  --muted: 40 20% 92%;
+  --muted-foreground: 0 0% 42%;
+
+  --border: 40 15% 88%;
+
+  /* Olive green accent */
+  --olive: 74 22% 34%;
+  --olive-foreground: 40 33% 97%;
+
+  /* Burgundy accent (wine) */
+  --burgundy: 348 45% 30%;
+  --burgundy-foreground: 40 33% 97%;
+
+  --primary: 0 0% 8%;
+  --primary-foreground: 40 33% 97%;
+
+  --radius: 1.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+* {
+  border-color: hsl(var(--border));
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hide scrollbars for a cleaner mobile-app feel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

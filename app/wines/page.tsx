@@ -162,7 +162,7 @@ export default function WinesPage() {
 
                   {wine.tasting_notes && (
                     <p className="text-xs text-slate-600 mt-3 line-clamp-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      "{wine.tasting_notes}"
+                    <p className="...">{"\""}{wine.tasting_notes}{"\""}</p>
                     </p>
                   )}
                 </div>

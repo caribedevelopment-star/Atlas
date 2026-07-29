@@ -2,75 +2,93 @@
 
 import Image from 'next/image';
 
-// Ajusta según la interfaz que ya tengas en el archivo
 interface Wine {
   id: string;
   name: string;
-  winery: string;
-  image: string;
+  winery?: string;
+  image_url?: string;
+  image?: string;
+  is_popular?: boolean;
   isPopular?: boolean;
-  vintage?: string | number;
-  rating?: number;
+  price?: number;
+  supermarket?: string;
 }
 
-export function WineLibrary({ wines }: { wines: Wine[] }) {
-  // 1. Filtramos los vinos por tipo
-  const popularWines = wines.filter((w) => w.isPopular);
-  const communityWines = wines.filter((w) => !w.isPopular);
+export function WineLibrary({ wines = [] }: { wines: Wine[] }) {
+  // Filtramos verificando tanto la propiedad snake_case como camelCase
+  const popularWines = wines.filter((w) => w.is_popular === true || w.isPopular === true);
+  const communityWines = wines.filter((w) => !w.is_popular && !w.isPopular);
 
   return (
     <div className="space-y-12 py-6">
       
-      {/* SECCIÓN 1: VINOS MÁS VENDIDOS / POPULARES */}
+      {/* SECCIÓN 1: MÁS VENDIDOS EN SUPERMERCADOS */}
       <section>
         <div className="mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Vinos más populares</h2>
-          <p className="text-xs text-gray-500">Etiquetas clásicas del mercado y supermercados</p>
+          <h2 className="text-xl font-bold text-gray-900">🍷 Más vendidos en supermercados</h2>
+          <p className="text-xs text-gray-500">Etiquetas clásicas del mercado y referencias de supermercado</p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {popularWines.map((wine) => (
-            <div key={wine.id} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition">
-              <div className="relative h-40 w-full bg-gray-50 rounded-lg mb-2">
-                <Image
-                  src={wine.image}
-                  alt={wine.name}
-                  fill
-                  className="object-contain p-2" // No recorta la imagen de la botella
-                />
-              </div>
-              <h3 className="font-semibold text-sm text-gray-900 truncate">{wine.name}</h3>
-              <p className="text-xs text-gray-500">{wine.winery}</p>
-            </div>
-          ))}
-        </div>
+        {popularWines.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">No hay vinos populares disponibles.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {popularWines.map((wine) => {
+              const img = wine.image_url || wine.image || '/images/wine-rioja.png';
+              return (
+                <div key={wine.id} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition">
+                  <div className="relative h-44 w-full bg-gray-50 rounded-lg mb-2">
+                    <Image
+                      src={img}
+                      alt={wine.name}
+                      fill
+                      className="object-contain p-2"
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase text-amber-600 block">
+                    {wine.supermarket || 'Supermercado'}
+                  </span>
+                  <h3 className="font-semibold text-sm text-gray-900 truncate">{wine.name}</h3>
+                  <p className="text-xs text-gray-500">{wine.winery}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
-      {/* SECCIÓN 2: SUBIDOS POR LA COMUNIDAD (FOTOS REALES) */}
+      {/* SECCIÓN 2: SUBIDOS POR LOS USUARIOS (FOTOS REALES) */}
       <section>
         <div className="mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Fotos reales de la comunidad</h2>
-          <p className="text-xs text-gray-500">Botellas registradas directamente por usuarios</p>
+          <h2 className="text-xl font-bold text-gray-900">📸 Subidos por los usuarios</h2>
+          <p className="text-xs text-gray-500">Fotos reales guardadas directamente por la comunidad</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {communityWines.map((wine) => (
-            <div key={wine.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition">
-              <div className="relative h-56 w-full bg-gray-900">
-                <Image
-                  src={wine.image}
-                  alt={wine.name}
-                  fill
-                  className="object-cover" // Hace que la foto real llene la tarjeta
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-gray-900">{wine.name}</h3>
-                <p className="text-sm text-gray-600">{wine.winery}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {communityWines.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">Aún no hay vinos subidos por los usuarios.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {communityWines.map((wine) => {
+              const img = wine.image_url || wine.image || '/images/wine-rioja.png';
+              return (
+                <div key={wine.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition">
+                  <div className="relative h-60 w-full bg-gray-900">
+                    <Image
+                      src={img}
+                      alt={wine.name}
+                      fill
+                      className="object-cover" // object-cover para fotos reales de la cámara
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900">{wine.name}</h3>
+                    <p className="text-sm text-gray-600">{wine.winery}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
     </div>

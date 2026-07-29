@@ -1,104 +1,78 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import { SearchIcon, MapPinIcon, UsersIcon } from '@/components/icons';
-import { Rating } from '@/components/rating';
-import { averageRating, type Wine } from '@/lib/data';
+
+// Ajusta según la interfaz que ya tengas en el archivo
+interface Wine {
+  id: string;
+  name: string;
+  winery: string;
+  image: string;
+  isPopular?: boolean;
+  vintage?: string | number;
+  rating?: number;
+}
 
 export function WineLibrary({ wines }: { wines: Wine[] }) {
-  const [query, setQuery] = useState('');
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return wines;
-    return wines.filter((w) =>
-      [w.name, w.country, w.region, w.type, w.addedBy]
-        .join(' ')
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [query, wines]);
+  // 1. Filtramos los vinos por tipo
+  const popularWines = wines.filter((w) => w.isPopular);
+  const communityWines = wines.filter((w) => !w.isPopular);
 
   return (
-    <div className="px-5">
-      <div className="sticky top-0 z-20 -mx-5 bg-background/90 px-5 pb-3 pt-1 backdrop-blur">
-        <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-3 shadow-soft">
-          <SearchIcon width={18} height={18} className="text-muted-foreground" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, region, or type"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            aria-label="Search wines"
-          />
+    <div className="space-y-12 py-6">
+      
+      {/* SECCIÓN 1: VINOS MÁS VENDIDOS / POPULARES */}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Vinos más populares</h2>
+          <p className="text-xs text-gray-500">Etiquetas clásicas del mercado y supermercados</p>
         </div>
-      </div>
 
-      <div className="space-y-4 pt-2">
-        {filtered.map((wine) => {
-          const avg = averageRating(wine);
-          return (
-            <article
-              key={wine.id}
-              className="overflow-hidden rounded-lg border border-border bg-card shadow-soft"
-            >
-              <div className="flex gap-4 p-4">
-                <div className="relative h-36 w-24 shrink-0 overflow-hidden rounded-md bg-muted">
-                  <Image
-                    src={wine.image || '/placeholder.svg'}
-                    alt={wine.name}
-                    fill
-                    className="object-cover"
-                    sizes="96px"
-                  />
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="w-fit rounded-full bg-burgundy/10 px-2.5 py-0.5 text-[11px] font-medium text-burgundy">
-                    {wine.type}
-                  </span>
-                  <h2 className="mt-2 text-pretty text-lg font-semibold leading-snug">
-                    {wine.name}
-                  </h2>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <MapPinIcon width={13} height={13} />
-                    {wine.region}, {wine.country}
-                  </p>
-
-                  <div className="mt-auto flex items-center gap-2 pt-3">
-                    <Rating value={avg} size={15} />
-                    <span className="text-sm font-medium">{avg}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({wine.ratings.length})
-                    </span>
-                  </div>
-                </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {popularWines.map((wine) => (
+            <div key={wine.id} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition">
+              <div className="relative h-40 w-full bg-gray-50 rounded-lg mb-2">
+                <Image
+                  src={wine.image}
+                  alt={wine.name}
+                  fill
+                  className="object-contain p-2" // No recorta la imagen de la botella
+                />
               </div>
+              <h3 className="font-semibold text-sm text-gray-900 truncate">{wine.name}</h3>
+              <p className="text-xs text-gray-500">{wine.winery}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-              <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <UsersIcon width={13} height={13} className="text-olive" />
-                  {wine.ratings.length} tasters
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Added by{' '}
-                  <span className="font-medium text-foreground">
-                    {wine.addedBy}
-                  </span>
-                </span>
+      {/* SECCIÓN 2: SUBIDOS POR LA COMUNIDAD (FOTOS REALES) */}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Fotos reales de la comunidad</h2>
+          <p className="text-xs text-gray-500">Botellas registradas directamente por usuarios</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {communityWines.map((wine) => (
+            <div key={wine.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition">
+              <div className="relative h-56 w-full bg-gray-900">
+                <Image
+                  src={wine.image}
+                  alt={wine.name}
+                  fill
+                  className="object-cover" // Hace que la foto real llene la tarjeta
+                />
               </div>
-            </article>
-          );
-        })}
+              <div className="p-4">
+                <h3 className="font-bold text-gray-900">{wine.name}</h3>
+                <p className="text-sm text-gray-600">{wine.winery}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        {filtered.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">
-            No wines match &ldquo;{query}&rdquo;.
-          </p>
-        )}
-      </div>
     </div>
   );
 }

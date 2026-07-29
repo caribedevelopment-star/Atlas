@@ -7,22 +7,24 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Utensils, Coffee, BookOpen, Layers, Search, Plus } from 'lucide-react';
 
-// Ajuste para los iconos de Leaflet
-delete L.Icon.Default.prototype._getIconUrl;
+// Ajuste para los iconos por defecto de Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// 1. Definimos las capas que quieres tener
+// 1. Definimos las capas disponibles
 const LAYERS = [
   { id: 'memories', label: 'Memorias', icon: BookOpen, color: 'text-purple-400' },
   { id: 'restaurants', label: 'Restaurantes', icon: Utensils, color: 'text-amber-400' },
   { id: 'cafes', label: 'Cafés', icon: Coffee, color: 'text-emerald-400' },
-];
+] as const;
 
-// 2. Unos pocos lugares de prueba para ver el mapa en acción
+type LayerId = (typeof LAYERS)[number]['id'];
+
+// 2. Lugares de prueba
 const MOCK_PLACES = [
   { id: 1, type: 'memories', title: 'Atardecer en la terraza', lat: 40.4167, lng: -3.7037, desc: 'Un gran recuerdo.' },
   { id: 2, type: 'restaurants', title: 'Bistró Central', lat: 40.4180, lng: -3.7000, desc: 'Comida excelente.' },
@@ -30,19 +32,19 @@ const MOCK_PLACES = [
 ];
 
 export default function MapComponent() {
-  // Estado para saber qué capas están visibles (true = encendida)
-  const [activeLayers, setActiveLayers] = useState({
+  // Estado para las capas activas
+  const [activeLayers, setActiveLayers] = useState<Record<string, boolean>>({
     memories: true,
     restaurants: true,
     cafes: true,
   });
 
-  // Activar o desactivar una capa al hacer clic
-  const toggleLayer = (layerId) => {
+  // Activar o desactivar una capa
+  const toggleLayer = (layerId: string) => {
     setActiveLayers((prev) => ({ ...prev, [layerId]: !prev[layerId] }));
   };
 
-  // Filtrar los puntos según las capas activas
+  // Filtrar puntos según las capas activas
   const filteredPlaces = MOCK_PLACES.filter((place) => activeLayers[place.type]);
 
   return (
@@ -51,18 +53,16 @@ export default function MapComponent() {
       {/* MAPA A PANTALLA COMPLETA */}
       <div className="absolute inset-0 z-0">
         <MapContainer
-          center={[40.41678, -3.70379]} // Coordenadas del centro (Madrid de ejemplo)
+          center={[40.41678, -3.70379]}
           zoom={13}
           zoomControl={false}
           className="w-full h-full"
         >
-          {/* Capa de mapa bonita y oscura (100% gratis) */}
           <TileLayer
             attribution='&copy; CARTO'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
 
-          {/* Ponemos los puntos en el mapa */}
           {filteredPlaces.map((place) => (
             <Marker key={place.id} position={[place.lat, place.lng]}>
               <Popup>
@@ -87,7 +87,7 @@ export default function MapComponent() {
           />
         </div>
 
-        <button className="bg-emerald-500 text-slate-950 font-semibold px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-2 text-sm pointer-events-auto">
+        <button className="bg-emerald-500 text-slate-950 font-semibold px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-2 text-sm pointer-events-auto hover:bg-emerald-400 transition">
           <Plus className="w-4 h-4" />
           <span>Añadir lugar</span>
         </button>

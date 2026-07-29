@@ -1,5 +1,5 @@
 import './globals.css';
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
@@ -17,13 +17,6 @@ export const metadata: Metadata = {
     description: 'Places disappear. Stories remain.',
     type: 'website',
   },
-};
-
-export const viewport: Viewport = {
-  themeColor: '#FAF9F6',
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({

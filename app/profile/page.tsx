@@ -38,7 +38,7 @@ export default function ProfilePage() {
         <div className="relative h-24 w-24 overflow-hidden rounded-full border border-border bg-muted shadow-soft">
           <Image
             src={profile.avatar || '/placeholder.svg'}
-            alt={`${profile.name}'s avatar`}
+            alt={`${profile.userId}'s avatar`}
             fill
             priority
             className="object-cover"
@@ -46,11 +46,11 @@ export default function ProfilePage() {
           />
         </div>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-          {profile.name}
+          {profile.userId}
         </h1>
-        <p className="text-sm text-muted-foreground">@{profile.handle}</p>
+        <p className="text-sm text-muted-foreground">@{profile.userId}</p>
         <p className="mt-3 max-w-xs text-pretty text-sm leading-relaxed text-muted-foreground">
-          {profile.bio}
+          {profile.userId}
         </p>
       </header>
 

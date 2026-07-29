@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import Image from 'next/image';
-import { Wine, Plus, Star, Camera, Loader2 } from 'lucide-react';
+import { Wine, Plus, Star, ShoppingBag, Tag, Loader2 } from 'lucide-react';
 
 interface WineItem {
   id: string;
@@ -11,6 +10,8 @@ interface WineItem {
   winery: string;
   vintage: number;
   rating: number;
+  supermarket: string;
+  price: number;
   tasting_notes: string;
   image_url: string;
 }
@@ -26,6 +27,8 @@ export default function WinesPage() {
   const [winery, setWinery] = useState('');
   const [vintage, setVintage] = useState(new Date().getFullYear());
   const [rating, setRating] = useState(5);
+  const [supermarket, setSupermarket] = useState('');
+  const [price, setPrice] = useState('');
   const [tastingNotes, setTastingNotes] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -53,7 +56,6 @@ export default function WinesPage() {
     try {
       let publicImageUrl = '';
 
-      // 1. Subir foto al Storage de Supabase si hay archivo
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
@@ -65,7 +67,6 @@ export default function WinesPage() {
 
         if (uploadError) throw uploadError;
 
-        // Obtener la URL pública de la foto subida
         const { data: urlData } = supabase.storage
           .from('wine-photos')
           .getPublicUrl(filePath);
@@ -73,7 +74,6 @@ export default function WinesPage() {
         publicImageUrl = urlData.publicUrl;
       }
 
-      // 2. Guardar registro en la base de datos
       const { data, error } = await supabase
         .from('wines')
         .insert([
@@ -82,6 +82,8 @@ export default function WinesPage() {
             winery,
             vintage: Number(vintage),
             rating: Number(rating),
+            supermarket,
+            price: price ? parseFloat(price) : null,
             tasting_notes: tastingNotes,
             image_url: publicImageUrl,
           },
@@ -93,9 +95,10 @@ export default function WinesPage() {
       if (data) {
         setWines((prev) => [data[0], ...prev]);
         setIsModalOpen(false);
-        // Limpiar campos
         setName('');
         setWinery('');
+        setSupermarket('');
+        setPrice('');
         setTastingNotes('');
         setImageFile(null);
       }
@@ -109,14 +112,13 @@ export default function WinesPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800">
       <div className="max-w-5xl mx-auto">
-        {/* Cabecera */}
         <header className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
               <Wine className="w-6 h-6 text-rose-600" />
               Bodega Personal
             </h1>
-            <p className="text-xs text-slate-500 mt-1">Colección y notas de cata reales</p>
+            <p className="text-xs text-slate-500 mt-1">Colección de vinos, tiendas y precios</p>
           </div>
 
           <button
@@ -128,7 +130,6 @@ export default function WinesPage() {
           </button>
         </header>
 
-        {/* Lista de Vinos */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
@@ -160,9 +161,22 @@ export default function WinesPage() {
                     {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
                   </p>
 
+                  <div className="flex items-center justify-between mt-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium">
+                    <div className="flex items-center gap-1.5 text-slate-600">
+                      <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{wine.supermarket || 'No especificado'}</span>
+                    </div>
+                    {wine.price && (
+                      <div className="flex items-center gap-1 text-emerald-700 font-bold">
+                        <Tag className="w-3.5 h-3.5" />
+                        <span>{wine.price.toFixed(2)} €</span>
+                      </div>
+                    )}
+                  </div>
+
                   {wine.tasting_notes && (
-                    <p className="text-xs text-slate-600 mt-3 line-clamp-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <p className="...">{"\""}{wine.tasting_notes}{"\""}</p>
+                    <p className="text-xs text-slate-600 mt-3 line-clamp-2 italic">
+                      &quot;{wine.tasting_notes}&quot;
                     </p>
                   )}
                 </div>
@@ -172,7 +186,6 @@ export default function WinesPage() {
         )}
       </div>
 
-      {/* MODAL NUEVO VINO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 font-sans">
@@ -186,7 +199,7 @@ export default function WinesPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ej. Vega Sicilia Único"
+                  placeholder="Ej. Marqués de Riscal"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
                 />
               </div>
@@ -198,7 +211,7 @@ export default function WinesPage() {
                     type="text"
                     value={winery}
                     onChange={(e) => setWinery(e.target.value)}
-                    placeholder="Ej. Bodegas Vega Sicilia"
+                    placeholder="Ej. Riscal"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
                   />
                 </div>
@@ -208,6 +221,30 @@ export default function WinesPage() {
                     type="number"
                     value={vintage}
                     onChange={(e) => setVintage(Number(e.target.value))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Supermercado/Tienda</label>
+                  <input
+                    type="text"
+                    value={supermarket}
+                    onChange={(e) => setSupermarket(e.target.value)}
+                    placeholder="Ej. Mercadona, Carrefour"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Precio (€)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="Ej. 12.50"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
                   />
                 </div>
@@ -232,7 +269,7 @@ export default function WinesPage() {
                   rows={2}
                   value={tastingNotes}
                   onChange={(e) => setTastingNotes(e.target.value)}
-                  placeholder="Aromas, maridaje, sensaciones..."
+                  placeholder="Sensaciones, maridaje..."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
                 />
               </div>
@@ -271,3 +308,4 @@ export default function WinesPage() {
     </div>
   );
 }
+   

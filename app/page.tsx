@@ -1,131 +1,49 @@
+
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { AppShell } from '@/components/app-shell';
+import { Search, Plus } from 'lucide-react';
 
+// Cargamos el mapa sin renderizado en el servidor (SSR: false)
+const MapComponent = dynamic(() => import('@/components/MapComponent'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-slate-950 flex items-center justify-center text-slate-400 font-sans text-sm">
+      Cargando mapa interactivo...
+    </div>
+  ),
+});
 
-export default function LandingPage() {
-  const router = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  async function signIn() {
-    setLoading(true);
-    setMessage('');
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      router.push('/home');
-    }
-
-    setLoading(false);
-  }
-
-  async function signUp() {
-    setLoading(true);
-    setMessage('');
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage('Cuenta creada. Revisa tu correo.');
-    }
-
-    setLoading(false);
-  }
-
-  async function signInGoogle() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/home`,
-      },
-    });
-  }
-  
+export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background px-6">
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <p className="mb-6 text-xs font-medium uppercase tracking-[0.3em] text-olive">
-          A personal memory journal
-        </p>
+    <AppShell>
+      <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 font-sans text-slate-100">
+        
+        {/* 1. MAPA DE FONDO A PANTALLA COMPLETA */}
+        <div className="absolute inset-0 z-0">
+          <MapComponent />
+        </div>
 
-        <h1 className="text-6xl font-semibold tracking-[0.02em]">ATLAS</h1>
+        {/* 2. BARRA SUPERIOR SOBREPUESTA (BÚSQUEDA Y ACCIÓN) */}
+        <header className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none gap-2">
+          <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-2.5 px-4 rounded-2xl shadow-2xl pointer-events-auto w-full max-w-sm">
+            <Search className="w-4 h-4 text-slate-400 shrink-0" />
+            <input 
+              type="text" 
+              placeholder="Buscar memorias, restaurantes, cafés..." 
+              className="bg-transparent border-none outline-none text-xs sm:text-sm w-full text-slate-200 placeholder-slate-500"
+            />
+          </div>
 
-        <p className="mt-5 max-w-xs text-pretty text-lg leading-relaxed text-muted-foreground">
-          Places disappear. Stories remain.
-        </p>
+          <button className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-3 py-2.5 rounded-2xl shadow-lg flex items-center gap-1.5 text-xs sm:text-sm transition pointer-events-auto shrink-0">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Añadir lugar</span>
+          </button>
+        </header>
+
       </div>
-
-      <div className="pb-12">
-       <div className="space-y-4">
-
-  <input
-    type="email"
-    placeholder="Correo electrónico"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-  />
-
-  <input
-    type="password"
-    placeholder="Contraseña"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-  />
-
-  <button
-    onClick={signIn}
-    disabled={loading}
-    className="w-full rounded-lg bg-primary px-6 py-4 text-primary-foreground shadow-soft-lg"
-  >
-    Entrar
-  </button>
-
-  <button
-    onClick={signInGoogle}
-    className="w-full rounded-lg border border-gray-300 bg-white px-6 py-4"
-  >
-    Continuar con Google
-  </button>
-
-  <button
-    onClick={signUp}
-    className="w-full text-sm text-muted-foreground hover:underline"
-  >
-    Crear una cuenta
-  </button>
-
-  {message && (
-    <p className="text-center text-sm text-red-500">
-      {message}
-    </p>
-  )}
-
-</div>
-        <p className="mt-5 text-center text-xs leading-relaxed text-muted-foreground">
-          No followers. No likes. No noise.
-          <br />
-          Only the moments worth keeping.
-        </p>
-      </div>
-    </main>
+    </AppShell>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Wine, Plus, Star, ShoppingBag, Tag, Loader2 } from 'lucide-react';
+import { Wine, Plus, Star, ShoppingBag, Tag, Loader2, Globe } from 'lucide-react';
 import CaniaAssistant from '@/components/CaniaAssistant';
 
 interface WineItem {
@@ -17,8 +17,11 @@ interface WineItem {
   image_url: string;
 }
 
+const STORES = ['Todos', 'Mercadona', 'Lidl', 'Aldi', 'Carrefour', 'Supercor'];
+
 export default function WinesPage() {
   const [wines, setWines] = useState<WineItem[]>([]);
+  const [selectedStore, setSelectedStore] = useState('Todos');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +31,7 @@ export default function WinesPage() {
   const [winery, setWinery] = useState('');
   const [vintage, setVintage] = useState(new Date().getFullYear());
   const [rating, setRating] = useState(5);
-  const [supermarket, setSupermarket] = useState('');
+  const [supermarket, setSupermarket] = useState('Mercadona');
   const [price, setPrice] = useState('');
   const [tastingNotes, setTastingNotes] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -98,7 +101,7 @@ export default function WinesPage() {
         setIsModalOpen(false);
         setName('');
         setWinery('');
-        setSupermarket('');
+        setSupermarket('Mercadona');
         setPrice('');
         setTastingNotes('');
         setImageFile(null);
@@ -110,44 +113,67 @@ export default function WinesPage() {
     }
   };
 
+  const filteredWines = selectedStore === 'Todos'
+    ? wines
+    : wines.filter(w => w.supermarket?.toLowerCase() === selectedStore.toLowerCase());
+
   return (
-    <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800">
+    <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 pb-24">
       <div className="max-w-5xl mx-auto">
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Wine className="w-6 h-6 text-rose-600" />
-              Bodega Personal
-            </h1>
-            <p className="text-xs text-slate-500 mt-1">Colección de vinos, tiendas y precios</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <Wine className="w-6 h-6 text-rose-600" />
+                Bodega Abierta
+              </h1>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Globe className="w-3 h-3" /> Pública
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Catálogo de vinos destacados por supermercado y comunidad
+            </p>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-md transition"
+            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-md transition self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Añadir Vino</span>
           </button>
         </header>
 
-        {/* Asistente de IA Cania */}
-        <div className="mb-8">
-          <CaniaAssistant userWines={wines} />
+        {/* Filtro por supermercados */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
+          {STORES.map((store) => (
+            <button
+              key={store}
+              onClick={() => setSelectedStore(store)}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                selectedStore === store
+                  ? 'bg-rose-900 text-white shadow-sm'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {store}
+            </button>
+          ))}
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
           </div>
-        ) : wines.length === 0 ? (
+        ) : filteredWines.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
             <Wine className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">Aún no has registrado ningún vino.</p>
+            <p className="text-sm font-medium text-slate-600">No hay vinos registrados para esta selección.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wines.map((wine) => (
+            {filteredWines.map((wine) => (
               <div key={wine.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
                 <div className="relative w-full h-48 bg-slate-100 flex items-center justify-center">
                   {wine.image_url ? (
@@ -192,6 +218,7 @@ export default function WinesPage() {
         )}
       </div>
 
+      {/* Modal para añadir vino */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 font-sans">
@@ -235,13 +262,18 @@ export default function WinesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Supermercado/Tienda</label>
-                  <input
-                    type="text"
+                  <select
                     value={supermarket}
                     onChange={(e) => setSupermarket(e.target.value)}
-                    placeholder="Ej. Mercadona, Carrefour"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
-                  />
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800 bg-white"
+                  >
+                    <option value="Mercadona">Mercadona</option>
+                    <option value="Lidl">Lidl</option>
+                    <option value="Aldi">Aldi</option>
+                    <option value="Carrefour">Carrefour</option>
+                    <option value="Supercor">Supercor</option>
+                    <option value="Otro">Otro</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Precio (€)</label>
@@ -311,6 +343,9 @@ export default function WinesPage() {
           </div>
         </div>
       )}
+
+      {/* Asistente Flotante Nube de Cania */}
+      <CaniaAssistant userWines={wines} />
     </div>
   );
 }

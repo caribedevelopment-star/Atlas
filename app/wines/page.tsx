@@ -105,11 +105,10 @@ export default function WinesPage() {
       }
     } catch (err: any) {
       alert('Error guardando el vino: ' + err.message);
-    } catch (err: any) {
-      alert('Error guardando el vino: ' + err.message);
     } finally {
       setUploading(false);
     }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800">
@@ -132,7 +131,7 @@ export default function WinesPage() {
           </button>
         </header>
 
-        {/* Asistente de IA Cania ubicado correctamente dentro de la página */}
+        {/* Asistente de IA Cania */}
         <div className="mb-8">
           <CaniaAssistant userWines={wines} />
         </div>

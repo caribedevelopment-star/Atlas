@@ -3,6 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Wine, Plus, Star, ShoppingBag, Tag, Loader2 } from 'lucide-react';
+import CaniaAssistant from '@/components/CaniaAssistant';
+
+<div className="mb-8">
+  <CaniaAssistant userWines={wines} />
+</div>
 
 interface WineItem {
   id: string;

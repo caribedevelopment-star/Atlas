@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -13,7 +12,7 @@ import CreateMemoryModal, { VisibilityMode } from './CreateMemoryModal';
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
@@ -29,19 +28,10 @@ export default function MapComponent() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memories, setMemories] = useState<any[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // 1. Cargar usuario actual y memorias reales de la BD
   useEffect(() => {
-    // Obtener sesión activa
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setCurrentUser(data.user);
-    });
-
-    // Cargar memorias según políticas de RLS
     fetchMemories();
 
-    // Obtener geolocalización
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
@@ -51,6 +41,7 @@ export default function MapComponent() {
     }
   }, []);
 
+  // Cargar memorias reales desde Supabase
   const fetchMemories = async () => {
     const { data, error } = await supabase
       .from('memories')
@@ -64,20 +55,17 @@ export default function MapComponent() {
     }
   };
 
-  // 2. Guardar nueva memoria real en la base de datos
+  // Guardar nueva memoria en la BD
   const handleAddMemory = async (formData: { title: string; desc: string; visibility: VisibilityMode; sharedWith: string[] }) => {
-    if (!currentUser) {
-      alert('Debes estar autenticado para guardar una memoria.');
-      return;
-    }
-
     const lat = userLocation ? userLocation[0] : 40.4167;
     const lng = userLocation ? userLocation[1] : -3.7037;
 
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data, error } = await supabase.from('memories').insert([
       {
-        user_id: currentUser.id,
-        author_name: currentUser.user_metadata?.full_name || currentUser.email || 'Usuario',
+        user_id: user?.id || null,
+        author_name: user?.email || 'Usuario Anónimo',
         title: formData.title,
         description: formData.desc,
         latitude: lat,
@@ -88,7 +76,7 @@ export default function MapComponent() {
     ]).select();
 
     if (error) {
-      alert('Error al guardar la memoria: ' + error.message);
+      alert('Error guardando memoria: ' + error.message);
     } else if (data) {
       setMemories((prev) => [data[0], ...prev]);
     }
@@ -106,7 +94,6 @@ export default function MapComponent() {
           />
           <UserLocationCentering coords={userLocation} />
 
-          {/* Marcadores reales de Supabase */}
           {memories.map((mem) => (
             <Marker key={mem.id} position={[mem.latitude, mem.longitude]}>
               <Popup>
@@ -118,7 +105,6 @@ export default function MapComponent() {
                     {mem.visibility === 'public' && <Globe className="w-3 h-3 text-emerald-600" />}
                   </div>
                   <p className="text-xs text-slate-600">{mem.description}</p>
-                  <p className="text-[10px] text-slate-400 mt-2 font-medium">Por: {mem.author_name}</p>
                 </div>
               </Popup>
             </Marker>
@@ -126,7 +112,6 @@ export default function MapComponent() {
         </MapContainer>
       </div>
 
-      {/* BARRA SUPERIOR */}
       <header className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none gap-2">
         <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-slate-200 p-2.5 px-4 rounded-2xl pointer-events-auto w-full max-w-md shadow-lg">
           <Search className="w-5 h-5 text-slate-400 shrink-0" />

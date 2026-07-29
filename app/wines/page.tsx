@@ -5,10 +5,6 @@ import { supabase } from '@/lib/supabase';
 import { Wine, Plus, Star, ShoppingBag, Tag, Loader2 } from 'lucide-react';
 import CaniaAssistant from '@/components/CaniaAssistant';
 
-<div className="mb-8">
-  <CaniaAssistant userWines={wines} />
-</div>
-
 interface WineItem {
   id: string;
   name: string;
@@ -109,7 +105,7 @@ export default function WinesPage() {
       }
     } catch (err: any) {
       alert('Error guardando el vino: ' + err.message);
-    } finally {
+    } font-sans finally {
       setUploading(false);
     }
   };
@@ -134,6 +130,11 @@ export default function WinesPage() {
             <span>Añadir Vino</span>
           </button>
         </header>
+
+        {/* Asistente de IA Cania ubicado correctamente dentro de la página */}
+        <div className="mb-8">
+          <CaniaAssistant userWines={wines} />
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -313,4 +314,3 @@ export default function WinesPage() {
     </div>
   );
 }
-   

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { User, Save, MapPin, Wine, BookOpen, Loader2 } from 'lucide-react';
+import { User, Save, MapPin, Wine, Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -18,23 +18,45 @@ export default function ProfilePage() {
 
   const loadProfileAndStats = async () => {
     setLoading(true);
-    
-    // Cargar recuento de datos guardados
-    const { count: memCount } = await supabase.from('memories').select('*', { count: 'exact', head: true });
-    const { count: wineCount } = await supabase.from('wines').select('*', { count: 'exact', head: true });
-    
-    setStats({
-      memoriesCount: memCount || 0,
-      winesCount: wineCount || 0,
-    });
 
-    // Cargar primer perfil disponible o datos
-    const { data } = await supabase.from('profiles').select('*').limit(1).single();
-    if (data) {
-      setFullName(data.full_name || '');
-      setUsername(data.username || '');
-      setBio(data.bio || '');
+    // 1. Obtener el usuario autenticado actual
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // 2. Cargar recuento de datos FILTRADOS por el usuario actual
+      const { count: memCount } = await supabase
+        .from('memories')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      const { count: wineCount } = await supabase
+        .from('wines')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setStats({
+        memoriesCount: memCount || 0,
+        winesCount: wineCount || 0,
+      });
+
+      // 3. Cargar EL PERFIL ESPECÍFICO del usuario autenticado
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setFullName(data.full_name || '');
+        setUsername(data.username || '');
+        setBio(data.bio || '');
+      } else {
+        // Fallback al meta_data del login si aún no tiene registro en 'profiles'
+        setFullName(user.user_metadata?.full_name || user.user_metadata?.name || '');
+        setUsername(user.email?.split('@')[0] || '');
+      }
     }
+
     setLoading(false);
   };
 
@@ -43,10 +65,15 @@ export default function ProfilePage() {
     setSaving(true);
 
     const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+
+    if (!user) {
+      alert('Debes estar autenticado para guardar tu perfil.');
+      setSaving(false);
+      return;
+    }
 
     const { error } = await supabase.from('profiles').upsert({
-      id: userId,
+      id: user.id,
       full_name: fullName,
       username,
       bio,
@@ -54,6 +81,7 @@ export default function ProfilePage() {
     });
 
     setSaving(false);
+
     if (error) {
       alert('Error guardando perfil: ' + error.message);
     } else {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import {
@@ -16,18 +16,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import CreateMemoryModal, { VisibilityMode } from './CreateMemoryModal';
+import type { WineRegion, InnerMapProps } from './InnerWineMap';
 
-// --- INTERFAZ DE REGIONES ---
-export interface WineRegion {
-  id: string;
-  name: string;
-  country: string;
-  type: string;
-  color: string;
-  coordinates: [number, number][];
-  center: [number, number];
-  zoom: number;
-}
+// Re-exportamos WineRegion si otros componentes la consumen desde aquí
+export type { WineRegion };
 
 // --- REGIONES CON GEOMETRÍAS REFINADAS ---
 const WINE_REGIONS: WineRegion[] = [
@@ -111,16 +103,19 @@ const WINE_REGIONS: WineRegion[] = [
   },
 ];
 
-// --- CARGA DINÁMICA DEL MAPA (DESACTIVA SSR PARA EVITAR ERRORES Y TIRONES) ---
-const DynamicLeafletMap = dynamic(() => import('./InnerWineMap'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 gap-2">
-      <Sparkles className="w-5 h-5 animate-spin text-stone-500" />
-      <span className="text-xs font-medium uppercase tracking-wider">Cargando Mapa de Vinos...</span>
-    </div>
-  ),
-});
+// --- CARGA DINÁMICA CON TIPADO EXPLÍCITO ---
+const DynamicLeafletMap = dynamic<InnerMapProps>(
+  () => import('./InnerWineMap'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 gap-2">
+        <Sparkles className="w-5 h-5 animate-spin text-stone-500" />
+        <span className="text-xs font-medium uppercase tracking-wider">Cargando Mapa de Vinos...</span>
+      </div>
+    ),
+  }
+);
 
 export default function MapComponent() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);

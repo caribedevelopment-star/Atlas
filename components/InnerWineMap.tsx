@@ -3,7 +3,26 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { WineRegion } from './MapComponent';
+
+export interface WineRegion {
+  id: string;
+  name: string;
+  country: string;
+  type: string;
+  color: string;
+  coordinates: [number, number][];
+  center: [number, number];
+  zoom: number;
+}
+
+export interface InnerMapProps {
+  regions: WineRegion[];
+  showRegions: boolean;
+  selectedRegion: WineRegion | null;
+  onSelectRegion: (region: WineRegion) => void;
+  memories: any[];
+  flyTarget: { center: [number, number]; zoom: number } | null;
+}
 
 const winePinIcon = L.divIcon({
   className: 'wine-pin-custom',
@@ -26,15 +45,6 @@ function MapFlyControl({ flyTarget }: { flyTarget: { center: [number, number]; z
     }
   }, [flyTarget, map]);
   return null;
-}
-
-export interface InnerMapProps {
-  regions: WineRegion[];
-  showRegions: boolean;
-  selectedRegion: WineRegion | null;
-  onSelectRegion: (region: WineRegion) => void;
-  memories: any[];
-  flyTarget: { center: [number, number]; zoom: number } | null;
 }
 
 export default function InnerWineMap({

@@ -1,82 +1,152 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polygon, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import Link from 'next/link';
 import {
-  BookOpen,
+  Wine,
   Search,
   Plus,
-  Lock,
-  Globe,
-  Users,
-  Navigation,
-  X,
+  Layers,
   MapPin,
-  Calendar
+  X,
+  Compass,
+  Check,
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import CreateMemoryModal, { VisibilityMode } from './CreateMemoryModal';
 
-// --- ICONOS PERSONALIZADOS EN CSS ---
-const createCustomIcon = (visibility: string) => {
-  let colorClass = 'bg-emerald-500 shadow-emerald-500/50'; // Public
-  if (visibility === 'private') colorClass = 'bg-amber-500 shadow-amber-500/50';
-  if (visibility === 'shared') colorClass = 'bg-indigo-500 shadow-indigo-500/50';
-
-  return L.divIcon({
-    className: 'custom-map-pin',
-    html: `
-      <div className="relative flex items-center justify-center w-8 h-8">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-40"></span>
-        <div className="relative inline-flex rounded-full h-7 w-7 ${colorClass} border-2 border-slate-900 shadow-lg items-center justify-center">
-          <div className="w-2 h-2 bg-white rounded-full"></div>
-        </div>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-  });
-};
-
-// Componente para re-centrar el mapa suavemente
-function MapController({ coords, targetPos }: { coords: [number, number] | null; targetPos: [number, number] | null }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (targetPos) {
-      map.flyTo(targetPos, 16, { animate: true, duration: 1.2 });
-    } else if (coords) {
-      map.flyTo(coords, 14, { animate: true, duration: 1.5 });
-    }
-  }, [coords, targetPos, map]);
-
-  return null;
+// --- DENOMINACIONES DE ORIGEN Y REGIONES VINÍCOLAS (POLÍGONOS) ---
+export interface WineRegion {
+  id: string;
+  name: string;
+  country: string;
+  type: string;
+  color: string;
+  coordinates: [number, number][];
+  center: [number, number];
 }
 
-// Capturador de clics en el mapa para añadir memoria en lugar específico
-function LocationPicker({ onSelectCoords }: { onSelectCoords: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click(e) {
-      onSelectCoords(e.latlng.lat, e.latlng.lng);
-    },
-  });
+const WINE_REGIONS: WineRegion[] = [
+  {
+    id: 'rioja',
+    name: 'D.O.Ca. Rioja',
+    country: 'España',
+    type: 'Tinto / Blanco',
+    color: '#8b0032',
+    center: [42.35, -2.50],
+    coordinates: [
+      [42.60, -2.95],
+      [42.40, -2.15],
+      [42.15, -2.10],
+      [42.25, -2.70],
+      [42.60, -2.95],
+    ],
+  },
+  {
+    id: 'ribera-duero',
+    name: 'D.O. Ribera del Duero',
+    country: 'España',
+    type: 'Tinto',
+    color: '#722f37',
+    center: [41.62, -3.65],
+    coordinates: [
+      [41.70, -4.15],
+      [41.75, -3.10],
+      [41.50, -3.15],
+      [41.55, -4.10],
+      [41.70, -4.15],
+    ],
+  },
+  {
+    id: 'rias-baixas',
+    name: 'D.O. Rías Baixas',
+    country: 'España',
+    type: 'Blanco (Albariño)',
+    color: '#2e7d32',
+    center: [42.35, -8.75],
+    coordinates: [
+      [42.55, -8.90],
+      [42.55, -8.60],
+      [42.15, -8.65],
+      [42.20, -8.90],
+      [42.55, -8.90],
+    ],
+  },
+  {
+    id: 'champagne',
+    name: 'AOC Champagne',
+    country: 'Francia',
+    type: 'Espumoso / Champaña',
+    color: '#d4af37',
+    center: [49.08, 4.10],
+    coordinates: [
+      [49.35, 3.80],
+      [49.30, 4.45],
+      [48.80, 4.50],
+      [48.85, 3.75],
+      [49.35, 3.80],
+    ],
+  },
+  {
+    id: 'bordeaux',
+    name: 'AOC Bordeaux',
+    country: 'Francia',
+    type: 'Tinto / Blanco',
+    color: '#800020',
+    center: [44.83, -0.57],
+    coordinates: [
+      [45.20, -0.95],
+      [45.15, -0.10],
+      [44.40, -0.20],
+      [44.50, -0.85],
+      [45.20, -0.95],
+    ],
+  },
+];
+
+// --- PIN PERSONALIZADO BLANCO/VINO ---
+const winePinIcon = L.divIcon({
+  className: 'wine-pin',
+  html: `
+    <div className="relative flex items-center justify-center w-8 h-8">
+      <div className="w-8 h-8 bg-white border-2 border-stone-900 rounded-full shadow-md flex items-center justify-center text-red-900 font-bold text-xs">
+        🍷
+      </div>
+    </div>
+  `,
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+function MapFlyTo({ target }: { target: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (target) {
+      map.flyTo(target, 9, { animate: true, duration: 1.5 });
+    }
+  }, [target, map]);
   return null;
 }
 
 export default function MapComponent() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memories, setMemories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedMemory, setSelectedMemory] = useState<any | null>(null);
-  const [mapTarget, setMapTarget] = useState<[number, number] | null>(null);
+  
+  // Estados para Denominaciones de Origen y Panel
+  const [showRegions, setShowRegions] = useState(true);
+  const [selectedRegion, setSelectedRegion] = useState<WineRegion | null>(null);
+  const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     fetchMemories();
-
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
@@ -92,40 +162,19 @@ export default function MapComponent() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error al cargar memorias:', error.message);
-    } else if (data) {
-      setMemories(data);
-    }
-  };
-
-  // Filtrado reactivo por término de búsqueda
-  const filteredMemories = useMemo(() => {
-    if (!searchQuery.trim()) return memories;
-    const query = searchQuery.toLowerCase();
-    return memories.filter(
-      (m) =>
-        m.title?.toLowerCase().includes(query) ||
-        m.description?.toLowerCase().includes(query)
-    );
-  }, [memories, searchQuery]);
-
-  const handleMapClick = (lat: number, lng: number) => {
-    setSelectedCoords([lat, lng]);
-    setSelectedMemory(null); // Cerrar tarjeta activa si se toca el mapa libre
+    if (!error && data) setMemories(data);
   };
 
   const handleAddMemory = async (formData: { title: string; desc: string; visibility: VisibilityMode; sharedWith: string[] }) => {
-    // Usa las coordenadas seleccionadas al hacer clic, o la ubicación actual, o Madrid por defecto
-    const lat = selectedCoords ? selectedCoords[0] : userLocation ? userLocation[0] : 40.4167;
-    const lng = selectedCoords ? selectedCoords[1] : userLocation ? userLocation[1] : -3.7037;
+    const lat = flyTarget ? flyTarget[0] : userLocation ? userLocation[0] : 40.4167;
+    const lng = flyTarget ? flyTarget[1] : userLocation ? userLocation[1] : -3.7037;
 
     const { data: { user } } = await supabase.auth.getUser();
 
     const { data, error } = await supabase.from('memories').insert([
       {
         user_id: user?.id || null,
-        author_name: user?.email || 'Usuario Anónimo',
+        author_name: user?.email || 'Catador Anónimo',
         title: formData.title,
         description: formData.desc,
         latitude: lat,
@@ -139,168 +188,206 @@ export default function MapComponent() {
       alert('Error guardando memoria: ' + error.message);
     } else if (data) {
       setMemories((prev) => [data[0], ...prev]);
-      setSelectedCoords(null);
     }
   };
 
-  const centerOnUser = () => {
-    if (userLocation) {
-      setMapTarget(userLocation);
-    }
+  const selectRegionHandler = (region: WineRegion) => {
+    setSelectedRegion(region);
+    setFlyTarget(region.center);
   };
 
-  const initialCenter: [number, number] = userLocation || [40.41678, -3.70379];
+  const initialCenter: [number, number] = [43.0, -1.0]; // Centrado en península ibérica / suroeste Francia
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-slate-950 font-sans text-slate-100">
-      {/* MAPA PRINCIPAL */}
-      <div className="absolute inset-0 z-0">
-        <MapContainer
-          center={initialCenter}
-          zoom={13}
-          zoomControl={false}
-          className="w-full h-full bg-slate-950"
-        >
-          {/* TileLayer en Dark Mode (CartoDB Dark Matter) */}
-          <TileLayer
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
-          />
-
-          <MapController coords={userLocation} targetPos={mapTarget} />
-          <LocationPicker onSelectCoords={handleMapClick} />
-
-          {/* Marcadores de Memorias */}
-          {filteredMemories.map((mem) => (
-            <Marker
-              key={mem.id}
-              position={[mem.latitude, mem.longitude]}
-              icon={createCustomIcon(mem.visibility)}
-              eventHandlers={{
-                click: () => {
-                  setSelectedMemory(mem);
-                  setMapTarget([mem.latitude, mem.longitude]);
-                },
-              }}
-            />
-          ))}
-
-          {/* Indicador visual de punto seleccionado en el mapa */}
-          {selectedCoords && (
-            <Marker
-              position={selectedCoords}
-              icon={L.divIcon({
-                className: 'custom-picker-pin',
-                html: `<div className="w-5 h-5 bg-white border-2 border-indigo-500 rounded-full animate-bounce shadow-lg"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
-              })}
-            />
-          )}
-        </MapContainer>
-      </div>
-
-      {/* HEADER SUPERIOR CON BARRA DE BÚSQUEDA Y ACCIONES */}
-      <header className="absolute top-4 left-4 right-4 z-10 flex flex-col sm:flex-row items-center justify-between pointer-events-none gap-3">
-        <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 p-2.5 px-4 rounded-2xl pointer-events-auto w-full sm:max-w-md shadow-2xl shadow-black/50">
-          <Search className="w-5 h-5 text-slate-400 shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar recuerdos, lugares..."
-            className="bg-transparent border-none outline-none text-sm w-full text-slate-100 placeholder-slate-500"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="text-slate-500 hover:text-slate-300">
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 pointer-events-auto shrink-0 self-end sm:self-auto">
-          <Link
-            href="/memories"
-            className="bg-slate-900/80 hover:bg-slate-800/80 backdrop-blur-xl text-slate-200 font-medium px-4 py-2.5 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-2 text-sm transition"
-          >
-            <BookOpen className="w-4 h-4 text-indigo-400" />
-            <span className="hidden sm:inline">Lista</span>
-          </Link>
-
+    <div className="relative w-full h-full overflow-hidden bg-stone-50 font-sans text-stone-900 flex">
+      {/* PANEL LATERAL DE DENOMINACIONES DE ORIGEN */}
+      <aside
+        className={`absolute top-0 left-0 bottom-0 z-20 w-80 bg-white/95 backdrop-blur-md border-r border-stone-200 shadow-2xl transition-transform duration-300 flex flex-col ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="p-5 border-b border-stone-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-stone-100 rounded-xl border border-stone-200">
+              <Wine className="w-5 h-5 text-red-900" />
+            </div>
+            <div>
+              <h2 className="font-bold text-base text-stone-900">Mapa de Vinos</h2>
+              <p className="text-xs text-stone-500">Denominaciones & Champañas</p>
+            </div>
+          </div>
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2.5 rounded-2xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 text-sm transition"
+            onClick={() => setIsSidebarOpen(false)}
+            className="text-stone-400 hover:text-stone-600 p-1.5 rounded-lg"
           >
-            <Plus className="w-4 h-4" />
-            <span>{selectedCoords ? 'Añadir aquí' : 'Nuevo lugar'}</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
-      </header>
 
-      {/* BOTÓN RE-CENTRAR NAVEGACIÓN */}
-      <div className="absolute bottom-6 left-4 z-10">
+        {/* CONTROLES DE CAPAS */}
+        <div className="p-4 border-b border-stone-100 bg-stone-50/50">
+          <label className="flex items-center justify-between text-xs font-medium text-stone-700 cursor-pointer">
+            <span className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-stone-500" />
+              Sombra de Regiones / D.O.
+            </span>
+            <input
+              type="checkbox"
+              checked={showRegions}
+              onChange={(e) => setShowRegions(e.target.checked)}
+              className="accent-red-900 w-4 h-4 rounded"
+            />
+          </label>
+        </div>
+
+        {/* BÚSQUEDA */}
+        <div className="p-4 border-b border-stone-100">
+          <div className="flex items-center gap-2 bg-stone-100 px-3 py-2 rounded-xl border border-stone-200">
+            <Search className="w-4 h-4 text-stone-400 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar D.O. o bodega..."
+              className="bg-transparent text-xs outline-none w-full text-stone-800 placeholder-stone-400"
+            />
+          </div>
+        </div>
+
+        {/* LISTA DE REGIONES Y D.O. */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-1">
+            Denominaciones destacadas
+          </span>
+
+          {WINE_REGIONS.filter((r) =>
+            r.name.toLowerCase().includes(searchQuery.toLowerCase())
+          ).map((region) => {
+            const isSelected = selectedRegion?.id === region.id;
+            return (
+              <button
+                key={region.id}
+                onClick={() => selectRegionHandler(region)}
+                className={`w-full text-left p-3 rounded-2xl border transition flex items-center justify-between ${
+                  isSelected
+                    ? 'bg-stone-900 text-white border-stone-900 shadow-md'
+                    : 'bg-white border-stone-200 hover:border-stone-300 text-stone-800'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-white/40"
+                    style={{ backgroundColor: region.color }}
+                  />
+                  <div>
+                    <h4 className="font-semibold text-xs leading-tight">{region.name}</h4>
+                    <span
+                      className={`text-[10px] ${
+                        isSelected ? 'text-stone-400' : 'text-stone-500'
+                      }`}
+                    >
+                      {region.country} • {region.type}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight
+                  className={`w-4 h-4 ${
+                    isSelected ? 'text-white' : 'text-stone-400'
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t border-stone-200 bg-stone-50/80">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Añadir Cata / Memoria</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* BOTÓN RE-ABRIR SIDEBAR SI ESTÁ CERRADO */}
+      {!isSidebarOpen && (
         <button
-          onClick={centerOnUser}
-          className="bg-slate-900/80 hover:bg-slate-800/80 backdrop-blur-xl border border-slate-800 p-3 rounded-2xl shadow-xl text-slate-200 transition"
-          title="Mi ubicación"
+          onClick={() => setIsSidebarOpen(true)}
+          className="absolute top-4 left-4 z-10 bg-white border border-stone-200 p-3 rounded-2xl shadow-xl text-stone-800 hover:bg-stone-50 transition"
         >
-          <Navigation className="w-5 h-5 text-indigo-400" />
+          <Wine className="w-5 h-5 text-red-900" />
         </button>
-      </div>
-
-      {/* PANEL DESPLEGABLE / DRAWER DE DETALLE DE MEMORIA */}
-      {selectedMemory && (
-        <aside className="absolute bottom-6 right-4 left-4 sm:left-auto sm:w-96 z-20 bg-slate-900/90 backdrop-blur-2xl border border-slate-800 rounded-3xl p-5 shadow-2xl animate-in slide-in-from-bottom-5 duration-200">
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <div className="flex items-center gap-2">
-              <span className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
-                <MapPin className="w-4 h-4" />
-              </span>
-              <h3 className="font-bold text-base text-slate-100 line-clamp-1">{selectedMemory.title}</h3>
-            </div>
-            <button
-              onClick={() => setSelectedMemory(null)}
-              className="text-slate-500 hover:text-slate-300 p-1 rounded-lg transition"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <p className="text-xs text-slate-400 mb-4 line-clamp-3 leading-relaxed">
-            {selectedMemory.description || 'Sin descripción adicional.'}
-          </p>
-
-          <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/80 pt-3">
-            <div className="flex items-center gap-1.5">
-              {selectedMemory.visibility === 'private' && (
-                <>
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-amber-400 font-medium">Privado</span>
-                </>
-              )}
-              {selectedMemory.visibility === 'shared' && (
-                <>
-                  <Users className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="text-indigo-400 font-medium">Compartido</span>
-                </>
-              )}
-              {selectedMemory.visibility === 'public' && (
-                <>
-                  <Globe className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400 font-medium">Público</span>
-                </>
-              )}
-            </div>
-
-            {selectedMemory.created_at && (
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{new Date(selectedMemory.created_at).toLocaleDateString()}</span>
-              </div>
-            )}
-          </div>
-        </aside>
       )}
+
+      {/* CONTENEDOR DEL MAPA (TOTALMENTE BLANCO - CARTO POSITRON) */}
+      <div className="flex-1 h-full relative">
+        <MapContainer
+          center={initialCenter}
+          zoom={6}
+          zoomControl={false}
+          className="w-full h-full bg-stone-100"
+        >
+          {/* Capa de Mapa Blanco Minimalista */}
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          />
+
+          <MapFlyTo target={flyTarget} />
+
+          {/* POLÍGONOS SOMBREADOS DE LAS D.O. */}
+          {showRegions &&
+            WINE_REGIONS.map((region) => {
+              const isSelected = selectedRegion?.id === region.id;
+              return (
+                <Polygon
+                  key={region.id}
+                  positions={region.coordinates}
+                  pathOptions={{
+                    color: region.color,
+                    fillColor: region.color,
+                    fillOpacity: isSelected ? 0.45 : 0.2,
+                    weight: isSelected ? 3 : 1.5,
+                    dashArray: isSelected ? '' : '4',
+                  }}
+                  eventHandlers={{
+                    click: () => selectRegionHandler(region),
+                  }}
+                >
+                  <Popup>
+                    <div className="p-1 text-stone-900">
+                      <span className="text-[10px] uppercase font-bold text-stone-400">
+                        Denominación de Origen
+                      </span>
+                      <h4 className="font-bold text-sm text-stone-900 mb-0.5">{region.name}</h4>
+                      <p className="text-xs text-stone-600 mb-2">{region.type}</p>
+                      <button
+                        onClick={() => selectRegionHandler(region)}
+                        className="text-xs font-semibold text-red-900 underline"
+                      >
+                        Ver detalles en el panel
+                      </button>
+                    </div>
+                  </Popup>
+                </Polygon>
+              );
+            })}
+
+          {/* MARCADORES DE MEMORIAS Y CATAS */}
+          {memories.map((mem) => (
+            <Marker key={mem.id} position={[mem.latitude, mem.longitude]} icon={winePinIcon}>
+              <Popup>
+                <div className="p-1 max-w-xs text-stone-900">
+                  <h4 className="font-bold text-sm text-stone-900">{mem.title}</h4>
+                  <p className="text-xs text-stone-600 mt-1">{mem.description}</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
 
       {/* MODAL CREAR MEMORIA */}
       <CreateMemoryModal

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Wine, Plus, Star, ShoppingBag, Tag, Loader2, Globe } from 'lucide-react';
+import { Wine, Plus, Star, ShoppingBag, Tag, Loader2, Globe, AlertCircle, RefreshCw } from 'lucide-react';
 import CaniaAssistant from '@/components/CaniaAssistant';
 
 interface WineItem {
@@ -23,6 +23,7 @@ export default function WinesPage() {
   const [wines, setWines] = useState<WineItem[]>([]);
   const [selectedStore, setSelectedStore] = useState('Todos');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -42,15 +43,21 @@ export default function WinesPage() {
 
   const fetchWines = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('wines')
-      .select('*')
-      .order('created_at', { ascending: false });
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('wines')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      setWines(data);
+      if (fetchError) throw fetchError;
+      setWines(data || []);
+    } catch (err: any) {
+      console.error('Error fetching wines:', err);
+      setError(err.message || 'No se pudieron recuperar los vinos de la base de datos.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleAddWine = async (e: React.FormEvent) => {
@@ -162,9 +169,33 @@ export default function WinesPage() {
           ))}
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+        {error ? (
+          <div className="bg-red-50 border border-red-200 rounded-3xl p-6 text-center max-w-md mx-auto my-8 shadow-sm">
+            <AlertCircle className="w-10 h-10 text-red-600 mx-auto mb-3" />
+            <h3 className="font-bold text-red-950 mb-1">Error de conexión</h3>
+            <p className="text-xs text-red-700 leading-relaxed mb-4">{error}</p>
+            <button
+              onClick={fetchWines}
+              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reintentar
+            </button>
+          </div>
+        ) : loading ? (
+          /* High-end Skeleton Loader Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm animate-pulse">
+                <div className="w-full h-48 bg-slate-100 flex items-center justify-center relative" />
+                <div className="p-5 space-y-3">
+                  <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded-md w-1/2" />
+                  <div className="h-8 bg-slate-50 rounded-xl w-full" />
+                  <div className="h-3 bg-slate-100 rounded-md w-5/6" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredWines.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
@@ -208,7 +239,7 @@ export default function WinesPage() {
 
                   {wine.tasting_notes && (
                     <p className="text-xs text-slate-600 mt-3 line-clamp-2 italic">
-                      &quot;{wine.tasting_notes}&quot;
+                      "{wine.tasting_notes}"
                     </p>
                   )}
                 </div>

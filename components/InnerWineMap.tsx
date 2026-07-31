@@ -1,10 +1,8 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { WineRegion } from './MapComponent';
 
 const winePinIcon = L.divIcon({
@@ -30,7 +28,7 @@ function MapFlyControl({ flyTarget }: { flyTarget: { center: [number, number]; z
   return null;
 }
 
-interface InnerMapProps {
+export interface InnerMapProps {
   regions: WineRegion[];
   showRegions: boolean;
   selectedRegion: WineRegion | null;
@@ -47,7 +45,7 @@ export default function InnerWineMap({
   memories,
   flyTarget,
 }: InnerMapProps) {
-  const initialCenter: [number, number] = [46.0, 2.0]; // Centrado elegante en Europa Suroeste
+  const initialCenter: [number, number] = [46.0, 2.0];
 
   return (
     <MapContainer
@@ -56,7 +54,6 @@ export default function InnerWineMap({
       zoomControl={false}
       className="w-full h-full bg-stone-100"
     >
-      {/* Capa de Mapa Blanco Minimalista High-Contrast */}
       <TileLayer
         attribution='&copy; CARTO'
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
@@ -64,7 +61,6 @@ export default function InnerWineMap({
 
       <MapFlyControl flyTarget={flyTarget} />
 
-      {/* POLÍGONOS D.O. CON SOMBREADO ESTÉTICO */}
       {showRegions &&
         regions.map((region) => {
           const isSelected = selectedRegion?.id === region.id;
@@ -96,7 +92,6 @@ export default function InnerWineMap({
           );
         })}
 
-      {/* MARCADORES */}
       {memories.map((mem) => (
         <Marker key={mem.id} position={[mem.latitude, mem.longitude]} icon={winePinIcon}>
           <Popup>

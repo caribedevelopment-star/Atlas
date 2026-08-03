@@ -7,7 +7,6 @@ import { usePathname } from 'next/navigation';
 import {
   Map as MapIcon,
   Wine,
-  FileText,
   BookOpen,
   User,
   Search,
@@ -119,12 +118,12 @@ export default function MapComponent() {
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  // Navegación principal unificada
   const navItems = [
     { name: 'Mapa', href: '/home', icon: MapIcon },
     { name: 'Memorias', href: '/memories', icon: Plane },
     { name: 'Vinos', href: '/wines', icon: Wine },
-    { name: 'Artículos', href: '/articles', icon: FileText },
-    { name: 'Libros', href: '/books', icon: BookOpen },
+    { name: 'Lecturas', href: '/library', icon: BookOpen },
     { name: 'Perfil', href: '/profile', icon: User },
   ];
 
@@ -212,7 +211,7 @@ export default function MapComponent() {
           <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2 px-1">
             Secciones
           </div>
-          <nav className="grid grid-cols-3 gap-1">
+          <nav className="grid grid-cols-5 gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -227,7 +226,7 @@ export default function MapComponent() {
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5 mb-1" />
-                  <span>{item.name}</span>
+                  <span className="truncate w-full text-center">{item.name}</span>
                 </Link>
               );
             })}
@@ -472,4 +471,3 @@ export default function MapComponent() {
     </div>
   );
 }
-

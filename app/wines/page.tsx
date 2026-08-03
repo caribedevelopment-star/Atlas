@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Wine, Plus, Star, ShoppingBag, Tag, Loader2, Globe, AlertCircle, RefreshCw } from 'lucide-react';
+import { Wine, Plus, Star, ShoppingBag, Tag, Loader2, Globe, AlertCircle, RefreshCw, Camera, Store } from 'lucide-react';
 import CaniaAssistant from '@/components/CaniaAssistant';
 
 interface WineItem {
@@ -15,6 +16,7 @@ interface WineItem {
   price: number;
   tasting_notes: string;
   image_url: string;
+  is_popular?: boolean;
 }
 
 const STORES = ['Todos', 'Mercadona', 'Lidl', 'Aldi', 'Carrefour', 'Supercor'];
@@ -97,6 +99,7 @@ export default function WinesPage() {
             price: price ? parseFloat(price) : null,
             tasting_notes: tastingNotes,
             image_url: publicImageUrl,
+            is_popular: false, // Los añadidos por la interfaz son de usuario
           },
         ])
         .select();
@@ -120,14 +123,21 @@ export default function WinesPage() {
     }
   };
 
+  // Filtrado general por tienda
   const filteredWines = selectedStore === 'Todos'
     ? wines
     : wines.filter(w => w.supermarket?.toLowerCase() === selectedStore.toLowerCase());
 
+  // Separación por categoría (Populares de Supermercado vs Usuarios)
+  const popularWines = filteredWines.filter(w => w.is_popular === true);
+  const communityWines = filteredWines.filter(w => !w.is_popular);
+
   return (
     <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 pb-24">
-      <div className="max-w-5xl mx-auto">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="max-w-5xl mx-auto space-y-10">
+        
+        {/* Cabecera */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -153,7 +163,7 @@ export default function WinesPage() {
         </header>
 
         {/* Filtro por supermercados */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {STORES.map((store) => (
             <button
               key={store}
@@ -169,6 +179,7 @@ export default function WinesPage() {
           ))}
         </div>
 
+        {/* Estado de Error o Carga */}
         {error ? (
           <div className="bg-red-50 border border-red-200 rounded-3xl p-6 text-center max-w-md mx-auto my-8 shadow-sm">
             <AlertCircle className="w-10 h-10 text-red-600 mx-auto mb-3" />
@@ -183,7 +194,6 @@ export default function WinesPage() {
             </button>
           </div>
         ) : loading ? (
-          /* High-end Skeleton Loader Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((n) => (
               <div key={n} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm animate-pulse">
@@ -192,59 +202,138 @@ export default function WinesPage() {
                   <div className="h-4 bg-slate-200 rounded-md w-3/4" />
                   <div className="h-3 bg-slate-100 rounded-md w-1/2" />
                   <div className="h-8 bg-slate-50 rounded-xl w-full" />
-                  <div className="h-3 bg-slate-100 rounded-md w-5/6" />
                 </div>
               </div>
             ))}
-          </div>
-        ) : filteredWines.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
-            <Wine className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">No hay vinos registrados para esta selección.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWines.map((wine) => (
-              <div key={wine.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
-                <div className="relative w-full h-48 bg-slate-100 flex items-center justify-center">
-                  {wine.image_url ? (
-                    <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Wine className="w-12 h-12 text-slate-300" />
-                  )}
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 flex items-center gap-1 shadow">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span>{wine.rating}</span>
-                  </div>
-                </div>
-
-                <div className="p-5">
-                  <h3 className="font-bold text-slate-900 text-base">{wine.name}</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
-                    {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
-                  </p>
-
-                  <div className="flex items-center justify-between mt-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium">
-                    <div className="flex items-center gap-1.5 text-slate-600">
-                      <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{wine.supermarket || 'No especificado'}</span>
-                    </div>
-                    {wine.price && (
-                      <div className="flex items-center gap-1 text-emerald-700 font-bold">
-                        <Tag className="w-3.5 h-3.5" />
-                        <span>{wine.price.toFixed(2)} €</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {wine.tasting_notes && (
-                    <p className="text-xs text-slate-600 mt-3 line-clamp-2 italic">
-                      "{wine.tasting_notes}"
-                    </p>
-                  )}
+          <div className="space-y-12">
+            
+            {/* SECCIÓN 1: MÁS VENDIDOS EN SUPERMERCADOS */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                <Store className="w-5 h-5 text-rose-600" />
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Más vendidos en supermercados</h2>
+                  <p className="text-xs text-slate-500">Referencias habituales en lineales comerciales</p>
                 </div>
               </div>
-            ))}
+
+              {popularWines.length === 0 ? (
+                <p className="text-xs text-slate-400 italic py-4">No hay vinos destacados en esta selección.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {popularWines.map((wine) => (
+                    <div key={wine.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                      <div>
+                        <div className="relative w-full h-48 bg-slate-100 flex items-center justify-center overflow-hidden">
+                          {wine.image_url ? (
+                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Wine className="w-12 h-12 text-slate-300" />
+                          )}
+                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 flex items-center gap-1 shadow">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span>{wine.rating}</span>
+                          </div>
+                        </div>
+
+                        <div className="p-5">
+                          <h3 className="font-bold text-slate-900 text-base">{wine.name}</h3>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
+                          </p>
+
+                          <div className="flex items-center justify-between mt-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium">
+                            <div className="flex items-center gap-1.5 text-slate-600">
+                              <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{wine.supermarket || 'Supermercado'}</span>
+                            </div>
+                            {wine.price && (
+                              <div className="flex items-center gap-1 text-emerald-700 font-bold">
+                                <Tag className="w-3.5 h-3.5" />
+                                <span>{wine.price.toFixed(2)} €</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {wine.tasting_notes && (
+                            <p className="text-xs text-slate-600 mt-3 line-clamp-2 italic">
+                              "{wine.tasting_notes}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* SECCIÓN 2: SUBIDOS POR LA COMUNIDAD */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                <Camera className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Subidos por la comunidad</h2>
+                  <p className="text-xs text-slate-500">Fotografías reales y recomendaciones de los usuarios</p>
+                </div>
+              </div>
+
+              {communityWines.length === 0 ? (
+                <div className="text-center py-8 bg-white rounded-3xl border border-slate-200 p-6">
+                  <Camera className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs font-medium text-slate-500">Aún no hay vinos subidos por la comunidad en esta categoría.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {communityWines.map((wine) => (
+                    <div key={wine.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                      <div>
+                        <div className="relative w-full h-56 bg-slate-900 flex items-center justify-center overflow-hidden">
+                          {wine.image_url ? (
+                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Wine className="w-12 h-12 text-slate-600" />
+                          )}
+                          <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1 shadow">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span>{wine.rating}</span>
+                          </div>
+                        </div>
+
+                        <div className="p-5">
+                          <h3 className="font-bold text-slate-900 text-base">{wine.name}</h3>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
+                          </p>
+
+                          <div className="flex items-center justify-between mt-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium">
+                            <div className="flex items-center gap-1.5 text-slate-600">
+                              <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{wine.supermarket || 'Comunidad'}</span>
+                            </div>
+                            {wine.price && (
+                              <div className="flex items-center gap-1 text-emerald-700 font-bold">
+                                <Tag className="w-3.5 h-3.5" />
+                                <span>{wine.price.toFixed(2)} €</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {wine.tasting_notes && (
+                            <p className="text-xs text-slate-600 mt-3 line-clamp-3 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+                              "{wine.tasting_notes}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
           </div>
         )}
       </div>

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase';
 import {
   BookOpen,
   Bookmark,

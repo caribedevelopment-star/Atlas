@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 import { AppShell } from '@/components/app-shell';
 
-// Carga el mapa de forma dinámica (solo cliente) con fondo claro y geolocalización
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
@@ -16,7 +15,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
 export default function HomePage() {
   return (
     <AppShell>
-      <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden bg-slate-50">
+      <div className="w-full h-[calc(100vh-4rem)] relative">
         <MapComponent />
       </div>
     </AppShell>

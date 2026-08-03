@@ -2,46 +2,39 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import {
   Wine,
   Search,
   Plus,
   Layers,
-  MapPin,
-  X,
+  PanelLeftClose,
+  PanelLeftOpen,
   ChevronRight,
   Sparkles,
-  SlidersHorizontal
+  MapPin,
+  Eye,
+  EyeOff,
+  Lock,
+  Globe,
+  Users,
+  Filter
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import CreateMemoryModal, { VisibilityMode } from './CreateMemoryModal';
 import type { WineRegion, InnerMapProps } from './InnerWineMap';
+import 'leaflet/dist/leaflet.css';
 
-// Re-exportamos WineRegion si otros componentes la consumen desde aquí
 export type { WineRegion };
 
-// --- REGIONES CON GEOMETRÍAS REFINADAS ---
+// BASE DE DATOS EXTENDIDA DE REGIONES POR PAÍS
 const WINE_REGIONS: WineRegion[] = [
-  {
-    id: 'champagne',
-    name: 'AOC Champagne',
-    country: 'Francia',
-    type: 'Espumoso / Champaña',
-    color: '#D4AF37', // Dorado Champagne
-    center: [49.04, 3.95],
-    zoom: 10,
-    coordinates: [
-      [49.25, 3.80], [49.30, 4.05], [49.22, 4.30], [49.00, 4.25],
-      [48.85, 4.40], [48.75, 4.10], [48.80, 3.85], [49.05, 3.75]
-    ],
-  },
+  // --- ESPAÑA ---
   {
     id: 'rioja',
     name: 'D.O.Ca. Rioja',
     country: 'España',
     type: 'Tinto / Blanco',
-    color: '#800020', // Burdeos
+    color: '#800020',
     center: [42.38, -2.45],
     zoom: 10,
     coordinates: [
@@ -54,7 +47,7 @@ const WINE_REGIONS: WineRegion[] = [
     name: 'D.O. Ribera del Duero',
     country: 'España',
     type: 'Tinto',
-    color: '#581845', // Tinto Profundo
+    color: '#581845',
     center: [41.65, -3.68],
     zoom: 10,
     coordinates: [
@@ -63,11 +56,39 @@ const WINE_REGIONS: WineRegion[] = [
     ],
   },
   {
+    id: 'priorat',
+    name: 'D.O.Ca. Priorat',
+    country: 'España',
+    type: 'Tinto',
+    color: '#4A0E17',
+    center: [41.20, 0.82],
+    zoom: 11,
+    coordinates: [
+      [41.28, 0.78], [41.29, 0.92], [41.20, 0.96], [41.12, 0.88],
+      [41.14, 0.75]
+    ],
+  },
+  {
+    id: 'rias-baixas',
+    name: 'D.O. Rías Baixas',
+    country: 'España',
+    type: 'Blanco (Albariño)',
+    color: '#1B4D3E',
+    center: [42.43, -8.72],
+    zoom: 10,
+    coordinates: [
+      [42.58, -8.85], [42.55, -8.65], [42.35, -8.60], [42.15, -8.70],
+      [42.18, -8.90], [42.40, -8.80]
+    ],
+  },
+
+  // --- FRANCIA ---
+  {
     id: 'bordeaux',
     name: 'AOC Bordeaux',
     country: 'Francia',
     type: 'Tinto / Blanco',
-    color: '#722F37', // Vino Burdeos
+    color: '#722F37',
     center: [44.84, -0.57],
     zoom: 9,
     coordinates: [
@@ -76,42 +97,82 @@ const WINE_REGIONS: WineRegion[] = [
     ],
   },
   {
-    id: 'rias-baixas',
-    name: 'D.O. Rías Baixas',
-    country: 'España',
-    type: 'Blanco (Albariño)',
-    color: '#1B4D3E', // Verde Esmeralda / Olivo
-    center: [42.43, -8.72],
+    id: 'champagne',
+    name: 'AOC Champagne',
+    country: 'Francia',
+    type: 'Espumoso',
+    color: '#D4AF37',
+    center: [49.04, 3.95],
     zoom: 10,
     coordinates: [
-      [42.58, -8.85], [42.55, -8.65], [42.35, -8.60], [42.15, -8.70],
-      [42.18, -8.90], [42.40, -8.80]
+      [49.25, 3.80], [49.30, 4.05], [49.22, 4.30], [49.00, 4.25],
+      [48.85, 4.40], [48.75, 4.10], [48.80, 3.85], [49.05, 3.75]
     ],
   },
   {
-    id: 'priorat',
-    name: 'D.O.Ca. Priorat',
-    country: 'España',
-    type: 'Tinto Robusto',
-    color: '#4A0E17', // Púrpura / Garnacha
-    center: [41.20, 0.82],
-    zoom: 11,
+    id: 'bourgogne',
+    name: 'AOC Bourgogne (Borgona)',
+    country: 'Francia',
+    type: 'Pinot Noir / Chardonnay',
+    color: '#6B1D2F',
+    center: [47.05, 4.83],
+    zoom: 9,
     coordinates: [
-      [41.28, 0.78], [41.29, 0.92], [41.20, 0.96], [41.12, 0.88],
-      [41.14, 0.75]
+      [47.35, 4.90], [47.20, 5.05], [46.80, 4.85], [46.65, 4.65],
+      [46.85, 4.55], [47.15, 4.70]
     ],
   },
+
+  // --- ITALIA ---
+  {
+    id: 'chianti',
+    name: 'DOCG Chianti Classico',
+    country: 'Italia',
+    type: 'Tinto (Sangiovese)',
+    color: '#8B0000',
+    center: [43.55, 11.30],
+    zoom: 10,
+    coordinates: [
+      [43.70, 11.20], [43.68, 11.45], [43.45, 11.48], [43.35, 11.30],
+      [43.45, 11.15]
+    ],
+  },
+  {
+    id: 'barolo',
+    name: 'DOCG Barolo (Piamonte)',
+    country: 'Italia',
+    type: 'Tinto (Nebbiolo)',
+    color: '#5C061C',
+    center: [44.61, 7.96],
+    zoom: 11,
+    coordinates: [
+      [44.66, 7.92], [44.65, 8.02], [44.57, 8.01], [44.56, 7.91]
+    ],
+  },
+
+  // --- PORTUGAL ---
+  {
+    id: 'douro',
+    name: 'DOC Douro',
+    country: 'Portugal',
+    type: 'Oporto / Tinto',
+    color: '#3B1425',
+    center: [41.15, -7.50],
+    zoom: 10,
+    coordinates: [
+      [41.28, -7.80], [41.30, -7.25], [41.05, -7.15], [41.00, -7.70]
+    ],
+  }
 ];
 
-// --- CARGA DINÁMICA CON TIPADO EXPLÍCITO ---
 const DynamicLeafletMap = dynamic<InnerMapProps>(
   () => import('./InnerWineMap'),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 gap-2">
-        <Sparkles className="w-5 h-5 animate-spin text-stone-500" />
-        <span className="text-xs font-medium uppercase tracking-wider">Cargando Mapa de Vinos...</span>
+      <div className="w-full h-full bg-stone-950 flex items-center justify-center text-stone-500 gap-2 font-mono text-xs">
+        <Sparkles className="w-4 h-4 animate-spin text-amber-500" />
+        <span>CARGANDO REGIONES Y MEMORIAS...</span>
       </div>
     ),
   }
@@ -122,8 +183,15 @@ export default function MapComponent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memories, setMemories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [selectedCountry, setSelectedCountry] = useState<string>('todos');
+  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'private' | 'shared' | 'public'>('all');
+
+  // CONTROL DE CAPAS
   const [showRegions, setShowRegions] = useState(true);
+  const [showMemories, setShowMemories] = useState(true);
+
+  // SELECCIÓN Y PESTAÑAS DEL SIDEBAR
+  const [activeTab, setActiveTab] = useState<'regions' | 'memories'>('regions');
   const [selectedRegion, setSelectedRegion] = useState<WineRegion | null>(null);
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -157,7 +225,7 @@ export default function MapComponent() {
     const { data, error } = await supabase.from('memories').insert([
       {
         user_id: user?.id || null,
-        author_name: user?.email || 'Catador Anónimo',
+        author_name: user?.email ? user.email.split('@')[0] : 'Catador Anónimo',
         title: formData.title,
         description: formData.desc,
         latitude: lat,
@@ -174,152 +242,258 @@ export default function MapComponent() {
     }
   };
 
-  const selectRegionHandler = (region: WineRegion) => {
-    setSelectedRegion(region);
-    setFlyTarget({ center: region.center, zoom: region.zoom });
-  };
+  // Países disponibles para el filtro
+  const countries = ['todos', ...Array.from(new Set(WINE_REGIONS.map((r) => r.country)))];
+
+  // Filtrado de Regiones
+  const filteredRegions = WINE_REGIONS.filter((r) => {
+    const matchesCountry = selectedCountry === 'todos' || r.country === selectedCountry;
+    const matchesSearch =
+      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.type.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCountry && matchesSearch;
+  });
+
+  // Filtrado de Memorias por Visibilidad y Búsqueda
+  const filteredMemories = memories.filter((m) => {
+    const matchesSearch =
+      m.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesVis = visibilityFilter === 'all' || m.visibility === visibilityFilter;
+    return matchesSearch && matchesVis;
+  });
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-stone-100 font-sans text-stone-900 flex">
-      {/* PANEL LATERAL MODERNO */}
+    <div className="relative w-full h-screen overflow-hidden bg-stone-950 text-stone-100 flex font-sans antialiased">
+      
+      {/* PANEL LATERAL */}
       <aside
-        className={`absolute top-0 left-0 bottom-0 z-20 w-80 bg-white/90 backdrop-blur-xl border-r border-stone-200/80 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`h-full bg-stone-900 border-r border-stone-800 transition-all duration-300 ease-in-out flex flex-col z-[1000] shrink-0 ${
+          isSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 overflow-hidden'
         }`}
       >
-        <div className="p-5 border-b border-stone-200/60 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-stone-900 text-amber-400 rounded-2xl shadow-md">
-              <Wine className="w-5 h-5" />
+        {/* CABECERA */}
+        <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              <Wine className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-stone-900 tracking-tight">Atlas des Vins</h2>
-              <p className="text-[11px] text-stone-500 font-medium">Terroirs & Champagnes</p>
+              <h1 className="text-sm font-semibold tracking-wide text-stone-100">Atlas des Vins</h1>
+              <p className="text-[10px] text-stone-500">Regiones & Memorias de Cata</p>
             </div>
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="text-stone-400 hover:text-stone-700 p-1.5 rounded-xl transition"
+            className="p-1.5 text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition"
+            title="Ocultar panel"
           >
-            <X className="w-5 h-5" />
+            <PanelLeftClose className="w-4 h-4" />
           </button>
         </div>
 
-        {/* CONTROLES */}
-        <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
-          <span className="text-xs font-semibold text-stone-700 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-stone-500" />
-            Capa de Terroirs / D.O.
-          </span>
-          <button
-            onClick={() => setShowRegions(!showRegions)}
-            className={`w-9 h-5 rounded-full transition-colors relative p-0.5 ${
-              showRegions ? 'bg-stone-900' : 'bg-stone-300'
-            }`}
-          >
-            <div
-              className={`w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
-                showRegions ? 'translate-x-4' : 'translate-x-0'
+        {/* VISIBILIDAD DE CAPAS */}
+        <div className="p-3 border-b border-stone-800 bg-stone-950/40 space-y-2">
+          <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+            Capas en Mapa
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setShowRegions(!showRegions)}
+              className={`flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg border transition ${
+                showRegions ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-stone-900 border-stone-800 text-stone-500'
               }`}
-            />
-          </button>
+            >
+              <span className="flex items-center gap-1.5 font-medium truncate">
+                <Layers className="w-3.5 h-3.5" />
+                Regiones
+              </span>
+              {showRegions ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            </button>
+
+            <button
+              onClick={() => setShowMemories(!showMemories)}
+              className={`flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg border transition ${
+                showMemories ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-stone-900 border-stone-800 text-stone-500'
+              }`}
+            >
+              <span className="flex items-center gap-1.5 font-medium truncate">
+                <MapPin className="w-3.5 h-3.5" />
+                Memorias
+              </span>
+              {showMemories ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
 
-        {/* BÚSQUEDA */}
-        <div className="p-4 border-b border-stone-100">
-          <div className="flex items-center gap-2.5 bg-stone-100/80 px-3.5 py-2.5 rounded-2xl border border-stone-200/60 focus-within:border-stone-400 transition">
-            <Search className="w-4 h-4 text-stone-400 shrink-0" />
+        {/* PESTAÑAS, FILTROS Y BÚSQUEDA */}
+        <div className="p-3 border-b border-stone-800 bg-stone-900 space-y-2.5">
+          <div className="flex bg-stone-950 p-1 rounded-lg border border-stone-800 text-xs font-medium">
+            <button
+              onClick={() => setActiveTab('regions')}
+              className={`flex-1 py-1.5 rounded-md transition ${
+                activeTab === 'regions' ? 'bg-stone-800 text-stone-100 shadow-sm' : 'text-stone-500 hover:text-stone-300'
+              }`}
+            >
+              Regiones ({filteredRegions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('memories')}
+              className={`flex-1 py-1.5 rounded-md transition ${
+                activeTab === 'memories' ? 'bg-stone-800 text-stone-100 shadow-sm' : 'text-stone-500 hover:text-stone-300'
+              }`}
+            >
+              Memorias ({filteredMemories.length})
+            </button>
+          </div>
+
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar denominación o vino..."
-              className="bg-transparent text-xs outline-none w-full text-stone-800 placeholder-stone-400 font-medium"
+              placeholder={activeTab === 'regions' ? "Buscar D.O., variedad..." : "Buscar nota de cata..."}
+              className="w-full bg-stone-950 border border-stone-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-stone-200 placeholder-stone-600 focus:outline-none focus:border-stone-700 transition"
             />
           </div>
+
+          {/* Filtros específicos según pestaña */}
+          {activeTab === 'regions' ? (
+            <div className="flex items-center gap-2">
+              <Filter className="w-3 h-3 text-stone-500" />
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="w-full bg-stone-950 border border-stone-800 rounded-md py-1 px-2 text-[11px] text-stone-300 focus:outline-none"
+              >
+                {countries.map((c) => (
+                  <option key={c} value={c}>
+                    {c === 'todos' ? 'Todos los países' : c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex gap-1 text-[10px]">
+              {(['all', 'private', 'shared', 'public'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setVisibilityFilter(mode)}
+                  className={`flex-1 py-1 rounded border capitalize text-center ${
+                    visibilityFilter === mode
+                      ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 font-semibold'
+                      : 'bg-stone-950 border-stone-800 text-stone-500'
+                  }`}
+                >
+                  {mode === 'all' ? 'Todas' : mode === 'private' ? 'Privadas' : mode === 'shared' ? 'Amigos' : 'Públicas'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* LISTA DE DENOMINACIONES */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
-          <div className="flex items-center justify-between px-1 mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
-              Grandes Regiones
-            </span>
-            <span className="text-[10px] font-medium text-stone-400">
-              {WINE_REGIONS.length} D.O.
-            </span>
-          </div>
-
-          {WINE_REGIONS.filter((r) =>
-            r.name.toLowerCase().includes(searchQuery.toLowerCase())
-          ).map((region) => {
-            const isSelected = selectedRegion?.id === region.id;
-            return (
-              <button
-                key={region.id}
-                onClick={() => selectRegionHandler(region)}
-                className={`w-full text-left p-3.5 rounded-2xl border transition-all duration-200 flex items-center justify-between group ${
-                  isSelected
-                    ? 'bg-stone-900 text-white border-stone-900 shadow-xl scale-[1.01]'
-                    : 'bg-white border-stone-200/80 hover:border-stone-300 text-stone-800 hover:shadow-md'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="w-3.5 h-3.5 rounded-full shrink-0 ring-2 ring-white/20 shadow-sm"
-                    style={{ backgroundColor: region.color }}
-                  />
-                  <div>
-                    <h4 className="font-bold text-xs leading-snug">{region.name}</h4>
+        {/* LISTA DE ELEMENTOS */}
+        <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scrollbar">
+          {activeTab === 'regions' ? (
+            filteredRegions.map((region) => {
+              const isSelected = selectedRegion?.id === region.id;
+              return (
+                <button
+                  key={region.id}
+                  onClick={() => {
+                    setSelectedRegion(region);
+                    setFlyTarget({ center: region.center, zoom: region.zoom });
+                  }}
+                  className={`w-full text-left p-2.5 rounded-lg border transition flex items-center justify-between group ${
+                    isSelected
+                      ? 'bg-stone-800 border-stone-600 text-white shadow-sm'
+                      : 'bg-stone-950/40 border-stone-800/60 hover:bg-stone-800/40 hover:border-stone-700 text-stone-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <span
-                      className={`text-[10px] font-medium ${
-                        isSelected ? 'text-stone-300' : 'text-stone-500'
-                      }`}
-                    >
-                      {region.country} • {region.type}
+                      className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                      style={{ backgroundColor: region.color }}
+                    />
+                    <div className="truncate">
+                      <div className="text-xs font-medium truncate">{region.name}</div>
+                      <div className="text-[10px] text-stone-500 truncate mt-0.5">
+                        {region.country} · {region.type}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight
+                    className={`w-3.5 h-3.5 shrink-0 transition-transform ${
+                      isSelected ? 'text-amber-400 translate-x-0.5' : 'text-stone-600 group-hover:text-stone-400'
+                    }`}
+                  />
+                </button>
+              );
+            })
+          ) : (
+            filteredMemories.length > 0 ? (
+              filteredMemories.map((mem) => (
+                <button
+                  key={mem.id}
+                  onClick={() => setFlyTarget({ center: [mem.latitude, mem.longitude], zoom: 12 })}
+                  className="w-full text-left p-2.5 rounded-lg border border-stone-800/60 bg-stone-950/40 hover:bg-stone-800/40 hover:border-stone-700 transition space-y-1 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-stone-200 truncate">{mem.title}</span>
+                    <span className="text-[10px] text-stone-500 flex items-center gap-1">
+                      {mem.visibility === 'private' && <Lock className="w-3 h-3 text-red-400" />}
+                      {mem.visibility === 'shared' && <Users className="w-3 h-3 text-amber-400" />}
+                      {mem.visibility === 'public' && <Globe className="w-3 h-3 text-emerald-400" />}
                     </span>
                   </div>
-                </div>
-                <ChevronRight
-                  className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${
-                    isSelected ? 'text-amber-400' : 'text-stone-400'
-                  }`}
-                />
-              </button>
-            );
-          })}
+                  <p className="text-[10px] text-stone-400 line-clamp-2">{mem.description}</p>
+                </button>
+              ))
+            ) : (
+              <div className="text-center py-8 text-stone-600 text-xs">
+                No hay memorias guardadas en esta categoría.
+              </div>
+            )
+          )}
         </div>
 
-        {/* ACCIÓN INFERIOR */}
-        <div className="p-4 border-t border-stone-200/80 bg-stone-50/80 backdrop-blur-md">
+        {/* BOTÓN AGREGAR */}
+        <div className="p-3 border-t border-stone-800 bg-stone-950/80">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="w-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold py-3 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition active:scale-95"
+            className="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-xs py-2 px-3 rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-98"
           >
-            <Plus className="w-4 h-4 text-amber-400" />
+            <Plus className="w-4 h-4" />
             <span>Registrar Cata / Memoria</span>
           </button>
         </div>
       </aside>
 
-      {/* BOTÓN DESPLEGAR SIDEBAR */}
+      {/* BOTÓN REABRIR PANEL */}
       {!isSidebarOpen && (
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md border border-stone-200/80 p-3 rounded-2xl shadow-xl text-stone-800 hover:bg-stone-50 transition active:scale-95"
+          className="absolute top-4 left-4 z-[1001] bg-stone-900 border border-stone-700 p-2.5 rounded-xl shadow-xl text-stone-200 hover:bg-stone-800 transition flex items-center gap-2 text-xs font-medium"
         >
-          <Wine className="w-5 h-5 text-stone-900" />
+          <PanelLeftOpen className="w-4 h-4 text-amber-400" />
+          <span>Panel</span>
         </button>
       )}
 
-      {/* MAPA PRINCIPAL */}
-      <div className="flex-1 h-full relative">
+      {/* CONTENEDOR DEL MAPA */}
+      <div className="flex-1 h-full relative bg-stone-950">
         <DynamicLeafletMap
-          regions={WINE_REGIONS}
+          regions={filteredRegions}
           showRegions={showRegions}
+          showMemories={showMemories}
           selectedRegion={selectedRegion}
-          onSelectRegion={selectRegionHandler}
-          memories={memories}
+          onSelectRegion={(reg) => {
+            setSelectedRegion(reg);
+            setFlyTarget({ center: reg.center, zoom: reg.zoom });
+          }}
+          memories={filteredMemories}
           flyTarget={flyTarget}
         />
       </div>

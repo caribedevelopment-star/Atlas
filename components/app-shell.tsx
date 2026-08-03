@@ -8,9 +8,16 @@ export function AppShell({
   showNav?: boolean;
 }) {
   return (
-    <div className="mx-auto min-h-screen w-full max-w-md bg-background">
-      <div className={showNav ? 'pb-24' : ''}>{children}</div>
-      {showNav && <BottomNav />}
+    <div className="w-full h-screen overflow-hidden bg-background text-foreground flex flex-col relative">
+      <main className="flex-1 w-full h-full relative overflow-hidden">
+        {children}
+      </main>
+      {/* Si usas navegación inferior en móviles, puedes condicionarla o quitarla según la página */}
+      {showNav && (
+        <div className="md:hidden">
+          <BottomNav />
+        </div>
+      )}
     </div>
   );
 }

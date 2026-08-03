@@ -2,8 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
+  Map as MapIcon,
   Wine,
+  FileText,
+  BookOpen,
+  User,
   Search,
   Plus,
   Layers,
@@ -27,7 +33,6 @@ import 'leaflet/dist/leaflet.css';
 
 export type { WineRegion };
 
-// REGIONES VINÍCOLAS POR PAÍS (DOMINIO VINOS)
 const WINE_REGIONS: WineRegion[] = [
   {
     id: 'rioja',
@@ -97,25 +102,31 @@ const DynamicLeafletMap = dynamic<InnerMapProps>(
 );
 
 export default function MapComponent() {
+  const pathname = usePathname();
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // SECCIÓN INDEPENDIENTE DE MEMORIAS (VIAJES Y EXPERIENCIAS)
   const [travelMemories, setTravelMemories] = useState<any[]>([]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<string>('todos');
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'private' | 'shared' | 'public'>('all');
 
-  // CONTROL INDEPENDIENTE DE CAPAS
   const [showRegions, setShowRegions] = useState(true);
   const [showMemories, setShowMemories] = useState(true);
 
-  // SELECCIÓN Y PESTAÑAS
   const [activeDomain, setActiveDomain] = useState<'wine' | 'travel'>('wine');
   const [selectedRegion, setSelectedRegion] = useState<WineRegion | null>(null);
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const navItems = [
+    { name: 'Mapa', href: '/home', icon: MapIcon },
+    { name: 'Memorias', href: '/memories', icon: Plane },
+    { name: 'Vinos', href: '/wines', icon: Wine },
+    { name: 'Artículos', href: '/articles', icon: FileText },
+    { name: 'Libros', href: '/books', icon: BookOpen },
+    { name: 'Perfil', href: '/profile', icon: User },
+  ];
 
   useEffect(() => {
     fetchTravelMemories();
@@ -128,17 +139,15 @@ export default function MapComponent() {
     }
   }, []);
 
-  // Carga únicamente registros pertenecientes a la sección / módulo de VIAJES
   const fetchTravelMemories = async () => {
     const { data, error } = await supabase
-      .from('travel_memories') // Tabla o filtro exclusivo para viajes
+      .from('travel_memories')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (!error && data) {
       setTravelMemories(data);
     } else {
-      // Fallback a tabla general si aún no separaste las tablas en Supabase
       const { data: generalData } = await supabase
         .from('memories')
         .select('*')
@@ -190,7 +199,7 @@ export default function MapComponent() {
   });
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-stone-950 text-stone-100 flex font-sans antialiased">
+    <div className="relative w-full h-full bg-stone-950 text-stone-100 flex font-sans antialiased overflow-hidden">
       
       {/* SIDEBAR DE NAVEGACIÓN */}
       <aside
@@ -198,30 +207,54 @@ export default function MapComponent() {
           isSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 overflow-hidden'
         }`}
       >
-        {/* CABECERA */}
-        <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/60">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              {activeDomain === 'wine' ? <Wine className="w-4 h-4" /> : <Plane className="w-4 h-4" />}
+        {/* MENÚ GENERAL DE SECCIONES DE LA APLICACIÓN */}
+        <div className="p-3 border-b border-stone-800 bg-stone-950">
+          <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2 px-1">
+            Secciones
+          </div>
+          <nav className="grid grid-cols-3 gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg border text-[10px] font-medium transition ${
+                    isActive
+                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
+                      : 'bg-stone-900 border-stone-800/80 text-stone-400 hover:text-stone-200 hover:bg-stone-800'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 mb-1" />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* CABECERA DEL PANEL */}
+        <div className="p-3 border-b border-stone-800 flex items-center justify-between bg-stone-950/60">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              {activeDomain === 'wine' ? <Wine className="w-3.5 h-3.5" /> : <Plane className="w-3.5 h-3.5" />}
             </div>
             <div>
-              <h1 className="text-sm font-semibold tracking-wide text-stone-100">
+              <h1 className="text-xs font-semibold text-stone-100">
                 {activeDomain === 'wine' ? 'Atlas de Vinos' : 'Bitácora de Viajes'}
               </h1>
-              <p className="text-[10px] text-stone-500">
-                {activeDomain === 'wine' ? 'Regiones Vitivinícolas' : 'Memorias & Itinerarios'}
-              </p>
             </div>
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="p-1.5 text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition"
+            className="p-1 text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition"
           >
             <PanelLeftClose className="w-4 h-4" />
           </button>
         </div>
 
-        {/* CONTROLES DE CAPAS VISIBLES EN MAPA */}
+        {/* CONTROLES DE CAPAS */}
         <div className="p-3 border-b border-stone-800 bg-stone-950/40 space-y-2">
           <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
             Capas del Mapa
@@ -256,7 +289,7 @@ export default function MapComponent() {
           </div>
         </div>
 
-        {/* CAMBIO DE SECCIÓN: VINOS vs VIAJES */}
+        {/* CAMBIO DE SECCIÓN Y FILTROS */}
         <div className="p-3 border-b border-stone-800 bg-stone-900 space-y-2.5">
           <div className="flex bg-stone-950 p-1 rounded-lg border border-stone-800 text-xs font-medium">
             <button
@@ -324,7 +357,7 @@ export default function MapComponent() {
           )}
         </div>
 
-        {/* LISTADO SEGÚN SECCIÓN ACTIVA */}
+        {/* LISTADO */}
         <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scrollbar">
           {activeDomain === 'wine' ? (
             filteredRegions.map((region) => {
@@ -414,7 +447,7 @@ export default function MapComponent() {
         </button>
       )}
 
-      {/* CONTENEDOR MAPA */}
+      {/* CONTENEDOR MAPA COMPLETO */}
       <div className="flex-1 h-full relative bg-stone-950">
         <DynamicLeafletMap
           regions={filteredRegions}
@@ -439,3 +472,4 @@ export default function MapComponent() {
     </div>
   );
 }
+

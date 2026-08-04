@@ -1,19 +1,48 @@
 // components/MapComponent.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Eye, Wine, ChevronRight, Layers, PanelLeftClose, PanelLeft, Navigation } from 'lucide-react';
-import type { MapInnerProps } from './MapInner';
+import L from 'leaflet';
 
-const MapInner = dynamic<MapInnerProps>(() => import('./MapInner'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
-      Cargando visor cartográfico...
-    </div>
-  ),
-});
+// Importación dinámica aislada de componentes de Leaflet sin SSR
+const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
+const Polygon = dynamic(() => import('react-leaflet').then((m) => m.Polygon), { ssr: false });
+const Polyline = dynamic(() => import('react-leaflet').then((m) => m.Polyline), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
+
+const customIcon = typeof window !== 'undefined'
+  ? new L.Icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+    })
+  : null;
+
+const REGIONS = {
+  rioja: [
+    [42.55, -2.85],
+    [42.60, -2.40],
+    [42.30, -2.10],
+    [42.15, -2.50],
+  ] as [number, number][],
+  ribera: [
+    [41.75, -4.10],
+    [41.80, -3.30],
+    [41.60, -3.30],
+    [41.55, -4.10],
+  ] as [number, number][],
+};
+
+const ROUTE_MEMORIES = [
+  [42.465, -2.445],
+  [42.518, -2.585],
+  [42.562, -2.618],
+] as [number, number][];
 
 const WINE_REGIONS = [
   { id: 'rioja', name: 'D.O.Ca. Rioja', country: 'España', type: 'Tinto / Blanco' },
@@ -24,9 +53,15 @@ export default function MapComponent() {
   const [showRegions, setShowRegions] = useState(true);
   const [showRoutes, setShowRoutes] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-zinc-950">
+      {/* Botón flotante para panel */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         className="absolute top-4 left-4 z-[500] p-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-700/60 text-zinc-200 hover:text-white shadow-2xl backdrop-blur-xl transition-all"
@@ -34,6 +69,7 @@ export default function MapComponent() {
         {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
       </button>
 
+      {/* Panel Flotante Glassmorphism */}
       <aside
         className={`absolute top-4 left-4 bottom-4 w-80 z-[400] bg-zinc-950/85 backdrop-blur-2xl border border-zinc-800/80 rounded-3xl shadow-2xl flex flex-col transition-all duration-300 ${
           isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-[calc(100%+2rem)] opacity-0 pointer-events-none'
@@ -103,8 +139,55 @@ export default function MapComponent() {
         </div>
       </aside>
 
+      {/* Mapa Renderizado en Cliente */}
       <div className="w-full h-full">
-        <MapInner showRegions={showRegions} showRoutes={showRoutes} />
+        {mounted ? (
+          <MapContainer
+            center={[42.0, -3.5]}
+            zoom={7}
+            zoomControl={false}
+            style={{ width: '100%', height: '100%', background: '#09090b' }}
+          >
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; CARTO'
+              maxZoom={19}
+            />
+
+            {showRegions &&
+              Object.entries(REGIONS).map(([key, coords]) => (
+                <Polygon
+                  key={key}
+                  positions={coords}
+                  pathOptions={{
+                    color: '#f59e0b',
+                    fillColor: '#d97706',
+                    fillOpacity: 0.25,
+                    weight: 2,
+                    dashArray: '4, 4',
+                  }}
+                />
+              ))}
+
+            {showRoutes && (
+              <>
+                <Polyline
+                  positions={ROUTE_MEMORIES}
+                  pathOptions={{ color: '#fbbf24', weight: 3, opacity: 0.8 }}
+                />
+                {ROUTE_MEMORIES.map((pt, i) => (
+                  <Marker key={i} position={pt} icon={customIcon || undefined}>
+                    <Popup>Memoria {i + 1} de la Ruta</Popup>
+                  </Marker>
+                ))}
+              </>
+            )}
+          </MapContainer>
+        ) : (
+          <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
+            Cargando visor cartográfico...
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import * as maplibregl from 'maplibre-gl';
 
-interface Memory {
+export interface Memory {
   id: string;
   title: string;
   latitude: number;
@@ -12,30 +11,39 @@ interface Memory {
   description?: string;
 }
 
-interface MapProps {
+export interface MapComponentProps {
   memories?: Memory[];
 }
 
-export default function MapComponent({ memories = [] }: MapProps) {
+export default function MapComponent({ memories = [] }: MapComponentProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
+    const linkId = 'maplibre-style';
+    if (!document.getElementById(linkId)) {
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css';
+      document.head.appendChild(link);
+    }
+
     if (map.current || !mapContainer.current) return;
 
-    // Mapa vectorial oscuro profesional 100% gratuito (sin tokens ni tarjeta)
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-      center: [-3.70379, 40.416775], // Madrid
+      center: [-3.70379, 40.416775],
       zoom: 5.5,
-      pitch: 40, // Inclinación 3D
+      pitch: 40,
     });
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
     return () => {
       map.current?.remove();
+      map.current = null;
     };
   }, []);
 
@@ -60,7 +68,7 @@ export default function MapComponent({ memories = [] }: MapProps) {
         </div>
       `);
 
-      new maplibregl.Marker(el)
+      new maplibregl.Marker({ element: el })
         .setLngLat([memory.longitude, memory.latitude])
         .setPopup(popup)
         .addTo(map.current!);

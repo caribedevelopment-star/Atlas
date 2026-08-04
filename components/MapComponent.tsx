@@ -25,12 +25,13 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
     if (typeof window === 'undefined' || map.current || !mapContainer.current) return;
 
     try {
+      // Usamos el estilo vectorial oficial y público de MapLibre (o Demotiles)
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [-3.70379, 40.416775],
         zoom: 5.5,
-        pitch: 40,
+        pitch: 0,
       });
 
       map.current.addControl(
@@ -41,6 +42,12 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
       map.current.on('load', () => {
         map.current?.resize();
       });
+
+      // Capturamos cualquier error de renderizado para evitar la pantalla negra de error
+      map.current.on('error', (e) => {
+        console.warn('MapLibre intentó cargar una capa no disponible:', e);
+      });
+
     } catch (err) {
       console.error('Error al inicializar el mapa:', err);
     }

@@ -222,13 +222,23 @@ export default function WinesPage() {
                   {popularWines.map((wine) => (
                     <div key={wine.id} className="bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700/80 rounded-3xl overflow-hidden backdrop-blur-xl transition duration-200 flex flex-col justify-between group">
                       <div>
-                        <div className="relative w-full h-48 bg-zinc-950 flex items-center justify-center overflow-hidden">
-                          {wine.image_url ? (
-                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                        <div className="relative w-full h-48 bg-zinc-950 flex items-center justify-center overflow-hidden border-b border-zinc-800/50">
+                          {wine.image_url && wine.image_url.trim() !== '' ? (
+                            <img
+                              src={wine.image_url}
+                              alt={wine.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
                           ) : (
-                            <Wine className="w-10 h-10 text-zinc-700" />
+                            <div className="flex flex-col items-center justify-center gap-1.5 text-zinc-600">
+                              <Wine className="w-8 h-8 text-rose-500/40" />
+                              <span className="text-[10px] font-mono text-zinc-500">Sin fotografía</span>
+                            </div>
                           )}
-                          <div className="absolute top-3 right-3 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-rose-400 border border-rose-500/20 flex items-center gap-1">
+                          <div className="absolute top-3 right-3 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-rose-400 border border-rose-500/20 flex items-center gap-1 z-10">
                             <Star className="w-3 h-3 fill-rose-400 text-rose-400" />
                             <span>{wine.rating}</span>
                           </div>
@@ -288,13 +298,23 @@ export default function WinesPage() {
                   {communityWines.map((wine) => (
                     <div key={wine.id} className="bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700/80 rounded-3xl overflow-hidden backdrop-blur-xl transition duration-200 flex flex-col justify-between group">
                       <div>
-                        <div className="relative w-full h-52 bg-zinc-950 flex items-center justify-center overflow-hidden">
-                          {wine.image_url ? (
-                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                        <div className="relative w-full h-52 bg-zinc-950 flex items-center justify-center overflow-hidden border-b border-zinc-800/50">
+                          {wine.image_url && wine.image_url.trim() !== '' ? (
+                            <img
+                              src={wine.image_url}
+                              alt={wine.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
                           ) : (
-                            <Wine className="w-10 h-10 text-zinc-700" />
+                            <div className="flex flex-col items-center justify-center gap-1.5 text-zinc-600">
+                              <Wine className="w-8 h-8 text-rose-500/40" />
+                              <span className="text-[10px] font-mono text-zinc-500">Sin fotografía</span>
+                            </div>
                           )}
-                          <div className="absolute top-3 right-3 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-rose-400 border border-rose-500/20 flex items-center gap-1">
+                          <div className="absolute top-3 right-3 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-rose-400 border border-rose-500/20 flex items-center gap-1 z-10">
                             <Star className="w-3 h-3 fill-rose-400 text-rose-400" />
                             <span>{wine.rating}</span>
                           </div>

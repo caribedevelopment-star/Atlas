@@ -5,12 +5,12 @@ import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import { Memory } from '@/components/MapComponent';
 
-// Forzamos deshabilitar SSR por completo para el mapa
+// Carga 100% en el cliente sin SSR
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[calc(100vh-4rem)] bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
-      Cargando mapa interactivo...
+      Cargando mapa 3D interactivo...
     </div>
   ),
 });
@@ -20,17 +20,11 @@ export default function HomePage() {
 
   useEffect(() => {
     async function loadMemories() {
-      try {
-        const { data, error } = await supabase
-          .from('memories')
-          .select('id, title, description, latitude, longitude');
+      const { data } = await supabase
+        .from('memories')
+        .select('id, title, description, latitude, longitude');
 
-        if (!error && data) {
-          setMemories(data);
-        }
-      } catch (e) {
-        console.error('Error cargando recuerdos:', e);
-      }
+      if (data) setMemories(data);
     }
 
     loadMemories();

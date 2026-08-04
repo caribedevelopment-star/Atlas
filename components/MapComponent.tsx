@@ -22,34 +22,29 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
   const markersRef = useRef<maplibregl.Marker[]>([]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || map.current || !mapContainer.current) return;
+    if (typeof window === 'undefined' || !mapContainer.current || map.current) return;
 
     try {
-      // Usamos el estilo vectorial oficial y público de MapLibre (o Demotiles)
+      // Usamos el servidor de estilos gratuito y libre OpenFreeMap Liberty Dark
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://demotiles.maplibre.org/style.json',
-        center: [-3.70379, 40.416775],
+        style: 'https://tiles.openfreemap.org/styles/dark',
+        center: [-3.70379, 40.416775], // Madrid
         zoom: 5.5,
-        pitch: 0,
+        pitch: 45, // Inclinación 3D
+        bearing: -17, // Ángulo dinámico
       });
 
       map.current.addControl(
-        new maplibregl.NavigationControl({ showCompass: false }),
+        new maplibregl.NavigationControl({ showCompass: true }),
         'top-right'
       );
 
       map.current.on('load', () => {
         map.current?.resize();
       });
-
-      // Capturamos cualquier error de renderizado para evitar la pantalla negra de error
-      map.current.on('error', (e) => {
-        console.warn('MapLibre intentó cargar una capa no disponible:', e);
-      });
-
-    } catch (err) {
-      console.error('Error al inicializar el mapa:', err);
+    } catch (e) {
+      console.error('Error al inicializar el mapa:', e);
     }
 
     return () => {
@@ -60,10 +55,10 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
     };
   }, []);
 
+  // Actualización de marcadores neón
   useEffect(() => {
     if (!map.current) return;
 
-    // Limpiar marcadores
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
@@ -75,13 +70,12 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
       if (!memory.latitude || !memory.longitude) return;
 
       const el = document.createElement('div');
-      el.className = 'custom-marker';
-      el.style.width = '14px';
-      el.style.height = '14px';
-      el.style.backgroundColor = '#ffffff';
+      el.style.width = '16px';
+      el.style.height = '16px';
+      el.style.backgroundColor = '#38bdf8'; // Azul Neón
       el.style.borderRadius = '50%';
       el.style.border = '2px solid #09090b';
-      el.style.boxShadow = '0 0 10px rgba(255,255,255,0.5)';
+      el.style.boxShadow = '0 0 15px #38bdf8, 0 0 30px #38bdf8';
       el.style.cursor = 'pointer';
 
       const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(`
@@ -108,13 +102,13 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
       map.current.fitBounds(bounds, {
         padding: 80,
         maxZoom: 14,
-        duration: 1000,
+        duration: 1200,
       });
     }
   }, [memories]);
 
   return (
-    <div className="w-full h-full min-h-[500px] relative">
+    <div className="w-full h-full min-h-[500px] relative bg-zinc-950">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
     </div>
   );

@@ -32,7 +32,7 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans relative overflow-x-hidden">
-      {/* Cabecera Escritorio */}
+      {/* Cabecera Superior (Escritorio) */}
       <header className="hidden md:flex h-16 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl px-6 items-center justify-between shrink-0 z-50 sticky top-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-white text-zinc-950 font-mono font-bold flex items-center justify-center text-sm shadow-sm">
@@ -72,7 +72,7 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
         </button>
       </header>
 
-      {/* Cabecera Móvil delgada */}
+      {/* Cabecera Superior (Móvil) */}
       <header className="md:hidden flex h-14 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl px-4 items-center justify-between sticky top-0 z-50">
         <span className="font-semibold tracking-tight text-sm text-white">Atlas</span>
         <button
@@ -85,15 +85,15 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
         </button>
       </header>
 
-      {/* Área Principal adaptada para evitar que la barra inferior la tape */}
-      <main className="flex-1 w-full relative pb-20 md:pb-0 flex flex-col">
+      {/* Contenido Principal con espacio suficiente para la barra inferior */}
+      <main className="flex-1 w-full relative pb-16 md:pb-0 flex flex-col">
         {children}
       </main>
 
-      {/* Navegación Móvil Fija */}
+      {/* Navegación móvil global (ÚNICA) */}
       <BottomNav />
 
-      {/* Modal */}
+      {/* Modal global */}
       <CreateMemoryModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

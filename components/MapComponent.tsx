@@ -13,14 +13,38 @@ import {
   Loader2,
 } from 'lucide-react';
 import L from 'leaflet';
+import { useMap } from 'react-leaflet';
 import { createClient } from '@/utils/supabase/client';
 
+// Carga dinámica de Leaflet para evitar SSR
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
 const Polygon = dynamic(() => import('react-leaflet').then((m) => m.Polygon), { ssr: false });
 const Polyline = dynamic(() => import('react-leaflet').then((m) => m.Polyline), { ssr: false });
 const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
+
+// Componente para recalcular las dimensiones del mapa y evitar los huecos negros
+function MapInvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
+  return null;
+}
 
 const createCustomPin = (color: string) => {
   if (typeof window === 'undefined') return undefined;
@@ -241,6 +265,9 @@ export default function MapComponent() {
             zoomControl={false}
             style={{ width: '100%', height: '100%', background: '#09090b' }}
           >
+            {/* Forzar recálculo del viewport del mapa */}
+            <MapInvalidateSize />
+
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://carto.com/">CARTO</a>'

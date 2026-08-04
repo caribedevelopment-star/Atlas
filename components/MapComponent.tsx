@@ -21,14 +21,13 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainer.current || mapInstance.current) return;
 
-    // Carga de la librería únicamente en runtime dentro del navegador
     Promise.all([
       import('maplibre-gl'),
       import('maplibre-gl/dist/maplibre-gl.css')
     ]).then(([maplibregl]) => {
       if (!mapContainer.current || mapInstance.current) return;
 
-      const map = new maplibregl.default.Map({
+      const map = new maplibregl.Map({
         container: mapContainer.current,
         style: 'https://tiles.openfreemap.org/styles/dark',
         center: [-3.70379, 40.416775],
@@ -38,7 +37,7 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
       });
 
       map.addControl(
-        new maplibregl.default.NavigationControl({ showCompass: true }),
+        new maplibregl.NavigationControl({ showCompass: true }),
         'top-right'
       );
 

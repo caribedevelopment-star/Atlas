@@ -144,7 +144,7 @@ export default function LibraryPage() {
   const booksCount = items.filter((i) => i.type === 'my_book_pdf').length;
 
   return (
-    <AppShell showNav={true}>
+    <AppShell>
       <div className="flex flex-col h-full bg-stone-950 text-stone-100 p-4 md:p-6 space-y-5 overflow-y-auto custom-scrollbar">
         
         {/* CABECERA */}

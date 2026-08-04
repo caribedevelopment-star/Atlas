@@ -8,41 +8,63 @@ interface ProfileRow {
   avatar_url: string | null;
 }
 
-const DEFAULT_NETWORK_USERS: NetworkUser[] = [
-  { id: 'usr-1', username: 'camila', full_name: 'Camila R.', relationship: 'circle' },
-  { id: 'usr-2', username: 'santiago', full_name: 'Santiago M.', relationship: 'circle' },
-  { id: 'usr-3', username: 'mateo_arch', full_name: 'Mateo V.', relationship: 'network' },
-  { id: 'usr-4', username: 'lucia_design', full_name: 'Lucía B.', relationship: 'network' },
-  { id: 'usr-5', username: 'elena_urban', full_name: 'Elena P.', relationship: 'public' },
-  { id: 'usr-6', username: 'david_p', full_name: 'David P.', relationship: 'public' },
-];
-
 export async function fetchUserNetwork(currentUserId: string): Promise<NetworkUser[]> {
   try {
-    // 1. Obtener los demás perfiles registrados en la tabla 'profiles'
-    const { data: profiles, error } = await supabase
+    // 1. Obtener los perfiles registrados
+    const { data: profiles, error: profileErr } = await supabase
       .from('profiles')
       .select('id, username, full_name, avatar_url')
       .neq('id', currentUserId);
 
-    // Si ocurre un error o la tabla no tiene datos, retorna el mock por defecto
-    if (error || !profiles || profiles.length === 0) {
-      console.warn('Usando mock por falta de perfiles en BD:', error?.message);
-      return DEFAULT_NETWORK_USERS;
+    if (profileErr || !profiles) {
+      console.error('Error al obtener perfiles:', profileErr);
+      return [];
     }
 
-    // 2. Mapear y distribuir a los usuarios reales en los niveles de red
-    const relationships: ('circle' | 'network' | 'public')[] = ['circle', 'network', 'public'];
+    // 2. Obtener las relaciones guardadas por el usuario actual
+    const { data: relationships } = await supabase
+      .from('user_relationships')
+      .select('target_user_id, relationship')
+      .eq('user_id', currentUserId);
 
-    return (profiles as ProfileRow[]).map((p, index) => ({
+    const relMap = new Map<string, 'circle' | 'network' | 'public'>();
+    relationships?.forEach((r) => {
+      relMap.set(r.target_user_id, r.relationship as 'circle' | 'network' | 'public');
+    });
+
+    // 3. Mapear usuarios con su relación (por defecto 'public')
+    return (profiles as ProfileRow[]).map((p) => ({
       id: p.id,
       username: p.username || 'usuario',
-      full_name: p.full_name || '',
+      full_name: p.full_name || 'Usuario Atlas',
       avatar_url: p.avatar_url || undefined,
-      relationship: relationships[index % 3], // Distribuye los usuarios entre las 3 órbitas
+      relationship: relMap.get(p.id) || 'public',
     }));
   } catch (err) {
-    console.error('Error al obtener la red de usuarios:', err);
-    return DEFAULT_NETWORK_USERS;
+    console.error('Error en fetchUserNetwork:', err);
+    return [];
+  }
+}
+
+export async function updateUserRelationship(
+  currentUserId: string,
+  targetUserId: string,
+  newRelationship: 'circle' | 'network' | 'public'
+) {
+  const { error } = await supabase
+    .from('user_relationships')
+    .upsert(
+      {
+        user_id: currentUserId,
+        target_user_id: targetUserId,
+        relationship: newRelationship,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,target_user_id' }
+    );
+
+  if (error) {
+    console.error('Error al actualizar relación:', error.message);
+    throw error;
   }
 }

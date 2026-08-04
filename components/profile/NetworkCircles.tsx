@@ -20,9 +20,15 @@ interface NetworkCirclesProps {
   };
   users: NetworkUser[];
   onSelectUser?: (user: NetworkUser) => void;
+  onRelationshipChange?: (userId: string, newRelationship: 'circle' | 'network' | 'public') => void;
 }
 
-export default function NetworkCircles({ currentUser, users, onSelectUser }: NetworkCirclesProps) {
+export default function NetworkCircles({
+  currentUser,
+  users,
+  onSelectUser,
+  onRelationshipChange,
+}: NetworkCirclesProps) {
   const [selectedUser, setSelectedUser] = useState<NetworkUser | null>(null);
 
   const circleUsers = users.filter((u) => u.relationship === 'circle');
@@ -32,6 +38,15 @@ export default function NetworkCircles({ currentUser, users, onSelectUser }: Net
   const handleUserClick = (user: NetworkUser) => {
     setSelectedUser(user);
     if (onSelectUser) onSelectUser(user);
+  };
+
+  const handleLevelChange = (newLevel: 'circle' | 'network' | 'public') => {
+    if (!selectedUser) return;
+    const updated = { ...selectedUser, relationship: newLevel };
+    setSelectedUser(updated);
+    if (onRelationshipChange) {
+      onRelationshipChange(selectedUser.id, newLevel);
+    }
   };
 
   return (
@@ -137,18 +152,18 @@ export default function NetworkCircles({ currentUser, users, onSelectUser }: Net
         </span>
       </motion.div>
 
-      {/* POPUP DE DETALLE AL HACER CLICK */}
+      {/* POPUP CON BOTONES PARA CAMBIAR DE NIVEL DE CÍRCULO */}
       <AnimatePresence>
         {selectedUser && (
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-2 z-40 bg-zinc-900 border border-zinc-800 p-3 rounded-2xl shadow-2xl w-[240px] text-left"
+            className="absolute bottom-2 z-40 bg-zinc-900 border border-zinc-800 p-3.5 rounded-2xl shadow-2xl w-[260px] text-left"
           >
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center text-xs font-bold text-white">
+                <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center text-xs font-bold text-white">
                   {selectedUser.avatar_url ? (
                     <img src={selectedUser.avatar_url} alt={selectedUser.username} className="w-full h-full object-cover" />
                   ) : (
@@ -160,12 +175,47 @@ export default function NetworkCircles({ currentUser, users, onSelectUser }: Net
                   <p className="text-[10px] text-zinc-400 mt-0.5">{selectedUser.full_name}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedUser(null)} className="text-zinc-500 hover:text-white text-xs">
+              <button onClick={() => setSelectedUser(null)} className="text-zinc-500 hover:text-white text-xs p-1">
                 ✕
               </button>
             </div>
-            <div className="pt-2 border-t border-zinc-800 text-[10px] font-mono text-zinc-400 flex justify-between">
-              <span className="capitalize">Nivel: {selectedUser.relationship}</span>
+
+            <p className="text-[10px] font-mono text-zinc-400 mb-1.5 uppercase tracking-wider">Mover a:</p>
+
+            <div className="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => handleLevelChange('circle')}
+                className={`py-1 rounded-lg text-[9px] font-mono font-medium transition ${
+                  selectedUser.relationship === 'circle'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Círculo
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLevelChange('network')}
+                className={`py-1 rounded-lg text-[9px] font-mono font-medium transition ${
+                  selectedUser.relationship === 'network'
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Red
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLevelChange('public')}
+                className={`py-1 rounded-lg text-[9px] font-mono font-medium transition ${
+                  selectedUser.relationship === 'public'
+                    ? 'bg-zinc-800 text-zinc-200 border border-zinc-700'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Global
+              </button>
             </div>
           </motion.div>
         )}
@@ -191,8 +241,10 @@ function AvatarBubble({
 }) {
   return (
     <motion.div
+      layout
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       whileHover={{ scale: 1.25, zIndex: 35 }}
       onClick={onClick}
       style={{ left: `${x}%`, top: `${y}%` }}
@@ -207,7 +259,7 @@ function AvatarBubble({
           </span>
         )}
       </div>
-      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-zinc-200 border border-zinc-800 text-[9px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none">
+      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-zinc-200 border border-zinc-800 text-[9px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none z-30">
         @{user.username}
       </span>
     </motion.div>

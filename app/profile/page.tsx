@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import NetworkCircles, { NetworkUser } from '@/components/profile/NetworkCircles';
-import { fetchUserNetwork } from '@/lib/network';
+import { fetchUserNetwork, updateUserRelationship } from '@/lib/network';
 import { useRouter } from 'next/navigation';
 import { MapPin, LogOut, Edit3, Save, X, Sparkles } from 'lucide-react';
 
@@ -93,6 +93,22 @@ export default function ProfilePage() {
 
     loadUserData();
   }, [router]);
+
+  // Manejar el cambio interactivo y la persistencia en Supabase
+  const handleRelationshipChange = async (targetUserId: string, newRelationship: 'circle' | 'network' | 'public') => {
+    if (!profile) return;
+
+    // Actualización optimista de UI
+    setNetworkUsers((prev) =>
+      prev.map((u) => (u.id === targetUserId ? { ...u, relationship: newRelationship } : u))
+    );
+
+    try {
+      await updateUserRelationship(profile.id, targetUserId, newRelationship);
+    } catch (err) {
+      console.error('No se pudo guardar la relación en Supabase:', err);
+    }
+  };
 
   const handleSave = async () => {
     if (!profile) return;
@@ -292,6 +308,7 @@ export default function ProfilePage() {
           <NetworkCircles
             currentUser={{ username: profile.username, avatar_url: profile.avatar_url }}
             users={networkUsers}
+            onRelationshipChange={handleRelationshipChange}
           />
         )}
       </div>

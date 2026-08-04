@@ -17,14 +17,15 @@ const NAV_ITEMS = [
 
 interface AppShellProps {
   children: React.ReactNode;
+  showNav?: boolean; // Ajuste para evitar el fallo de Vercel
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, showNav = true }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const handleCreateSubmit = (data: any) => {
+  const handleCreateSubmit = () => {
     setIsCreateModalOpen(false);
     router.refresh();
   };
@@ -40,24 +41,26 @@ export function AppShell({ children }: AppShellProps) {
           <span className="font-semibold tracking-tight text-sm text-white">Atlas</span>
         </div>
 
-        <nav className="flex items-center gap-1 bg-zinc-900/60 p-1 rounded-2xl border border-zinc-800/80">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname?.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-4 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-zinc-800 text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {showNav && (
+          <nav className="flex items-center gap-1 bg-zinc-900/60 p-1 rounded-2xl border border-zinc-800/80">
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname?.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-4 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                    isActive
+                      ? 'bg-zinc-800 text-white shadow-sm'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Botón Nuevo activando el Modal */}
         <button
@@ -77,7 +80,7 @@ export function AppShell({ children }: AppShellProps) {
 
       <BottomNav />
 
-      {/* Modal para añadir nuevas memorias con sus props pasadas */}
+      {/* Modal de creación de memorias */}
       <CreateMemoryModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

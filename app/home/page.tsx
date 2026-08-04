@@ -8,7 +8,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[calc(100vh-4rem)] bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
-      Cargando mapa e interfaz...
+      Cargando mapa interactivo...
     </div>
   ),
 });

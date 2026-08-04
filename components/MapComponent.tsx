@@ -3,9 +3,10 @@
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Eye, Wine, Search, ChevronRight, Layers, PanelLeftClose, PanelLeft, Navigation } from 'lucide-react';
+import { Eye, Wine, ChevronRight, Layers, PanelLeftClose, PanelLeft, Navigation } from 'lucide-react';
+import type { MapInnerProps } from './MapInner';
 
-const MapInner = dynamic(() => import('./MapInner'), {
+const MapInner = dynamic<MapInnerProps>(() => import('./MapInner'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
@@ -26,7 +27,6 @@ export default function MapComponent() {
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-zinc-950">
-      {/* Botón flotante para panel */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         className="absolute top-4 left-4 z-[500] p-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-700/60 text-zinc-200 hover:text-white shadow-2xl backdrop-blur-xl transition-all"
@@ -34,7 +34,6 @@ export default function MapComponent() {
         {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
       </button>
 
-      {/* Panel Flotante Glassmorphism */}
       <aside
         className={`absolute top-4 left-4 bottom-4 w-80 z-[400] bg-zinc-950/85 backdrop-blur-2xl border border-zinc-800/80 rounded-3xl shadow-2xl flex flex-col transition-all duration-300 ${
           isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-[calc(100%+2rem)] opacity-0 pointer-events-none'
@@ -104,7 +103,6 @@ export default function MapComponent() {
         </div>
       </aside>
 
-      {/* Lienzo del Mapa */}
       <div className="w-full h-full">
         <MapInner showRegions={showRegions} showRoutes={showRoutes} />
       </div>

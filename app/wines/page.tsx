@@ -469,3 +469,4 @@ export default function WinesPage() {
     </div>
   );
 }
+

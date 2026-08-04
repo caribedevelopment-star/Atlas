@@ -5,30 +5,46 @@ import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import { Memory } from '@/components/MapComponent';
 
-// Carga 100% en el cliente sin SSR
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[calc(100vh-4rem)] bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
-      Cargando mapa 3D interactivo...
+      Cargando mapa interactivo...
     </div>
   ),
 });
 
 export default function HomePage() {
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    async function loadMemories() {
-      const { data } = await supabase
-        .from('memories')
-        .select('id, title, description, latitude, longitude');
+    setMounted(true);
 
-      if (data) setMemories(data);
+    async function loadMemories() {
+      try {
+        const { data, error } = await supabase
+          .from('memories')
+          .select('id, title, description, latitude, longitude');
+
+        if (!error && data) {
+          setMemories(data);
+        }
+      } catch (e) {
+        console.error('Error cargando recuerdos:', e);
+      }
     }
 
     loadMemories();
   }, []);
+
+  if (!mounted) {
+    return (
+      <div className="w-full h-[calc(100vh-4rem)] bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
+        Iniciando mapa...
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-[calc(100vh-4rem)] relative">

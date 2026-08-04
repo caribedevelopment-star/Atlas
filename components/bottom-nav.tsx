@@ -2,54 +2,44 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  MapIcon,
-  MemoriesIcon,
-  WineIcon,
-  ArticlesIcon,
-  BookIcon,
-  ProfileIcon,
-} from './icons';
+import { Home, Compass, Wine, User, Sparkles, BookOpen } from 'lucide-react';
 
-const items = [
-  { href: '/home', label: 'Map', Icon: MapIcon },
-  { href: '/memories', label: 'Memories', Icon: MemoriesIcon },
-  { href: '/wines', label: 'Wines', Icon: WineIcon },
-  { href: '/articles', label: 'Articles', Icon: ArticlesIcon },
-  { href: '/books', label: 'Books', Icon: BookIcon },
-  { href: '/profile', label: 'Profile', Icon: ProfileIcon },
-];
-
-export function BottomNav() {
+export default function BottomNav() {
   const pathname = usePathname();
 
+  const navItems = [
+    { href: '/home', label: 'Inicio', icon: Home },
+    { href: '/memories', label: 'Mapa', icon: Compass },
+    { href: '/wines', label: 'Vinos', icon: Wine },
+    { href: '/library', label: 'Biblioteca', icon: BookOpen },
+    { href: '/profile', label: 'Perfil', icon: User },
+  ];
+
   return (
-    <nav
-      aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 backdrop-blur-xl"
-    >
-      <ul className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)] pt-2">
-        {items.map(({ href, label, Icon }) => {
-          const active =
-            pathname === href || pathname.startsWith(href + '/');
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-xl border-t border-zinc-800/80 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      <div className="max-w-md mx-auto flex items-center justify-around">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname.startsWith(item.href);
+
           return (
-            <li key={href} className="flex-1">
-              <Link
-                href={href}
-                aria-current={active ? 'page' : undefined}
-                className={`flex flex-col items-center gap-1 rounded-md py-1.5 text-[11px] font-medium transition-colors ${
-                  active
-                    ? 'text-olive'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Icon width={22} height={22} strokeWidth={active ? 1.9 : 1.6} />
-                <span>{label}</span>
-              </Link>
-            </li>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center py-1 px-2 min-w-[56px] rounded-xl transition-all duration-200 ${
+                isActive
+                  ? 'text-white font-medium bg-zinc-800/50 scale-105'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
+              <span className="text-[10px] font-mono mt-1 tracking-tight">
+                {item.label}
+              </span>
+            </Link>
           );
         })}
-      </ul>
+      </div>
     </nav>
   );
 }

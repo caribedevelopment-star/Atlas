@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 'use client';
 
 import Link from 'next/link';
@@ -6,6 +5,13 @@ import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const pathname = usePathname();
+
+  // Rutas donde NO queremos que se muestre el Navbar
+  const hiddenRoutes = ['/', '/login', '/register'];
+
+  if (hiddenRoutes.includes(pathname)) {
+    return null;
+  }
 
   const navItems = [
     { href: '/home', label: 'Home' },

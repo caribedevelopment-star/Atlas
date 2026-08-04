@@ -1,76 +1,43 @@
+// components/Navbar.tsx
+'use client';
 
-"use client";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Plus } from 'lucide-react';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-const navItems = [
-  { label: "Home", href: "/home" },
-  { label: "Memories", href: "/memories" },
-  { label: "Wines", href: "/wines" },
-  { label: "Library", href: "/library" },
-  { label: "AI Test", href: "/ai-test" },
-  { label: "Profile", href: "/profile" },
+const NAV_ITEMS = [
+  { label: 'Home', href: '/home' },
+  { label: 'Memories', href: '/memories' },
+  { label: 'Wines', href: '/wines' },
+  { label: 'Library', href: '/library' },
+  { label: 'Profile', href: '/profile' },
 ];
 
-export function Navbar() {
+export default function Navbar() {
   const pathname = usePathname();
 
-  // No mostrar la barra en la página de login
-  if (pathname === "/login") return null;
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-surface-border bg-background/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand/Logo */}
-        <Link href="/home" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-xl bg-accent text-accent-foreground flex items-center justify-center font-bold text-lg group-hover:scale-105 transition-transform">
-            A
-          </div>
-          <span className="font-bold tracking-tight text-lg text-foreground">Atlas</span>
-        </Link>
-
-        {/* Links de Navegación */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? "bg-surface-hover text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-surface/50"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Acceso Rápido / User indicator */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/memories/new"
-            className="atlas-button-primary text-xs !py-2 !px-3"
-          >
-            <span>+ Nuevo</span>
-          </Link>
+    <header className="h-16 border-b border-zinc-800/80 bg-zinc-950 px-6 flex items-center justify-between sticky top-0 z-50">
+      {/* Brand Logo */}
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-950 font-bold flex items-center justify-center text-sm">
+          A
         </div>
+        <span className="font-bold tracking-wider text-base text-white">Atlas</span>
       </div>
 
-      {/* Navegación Mobile inferior / auxiliar */}
-      <nav className="md:hidden flex items-center justify-around border-t border-surface-border py-2 px-2 bg-surface">
-        {navItems.map((item) => {
+      {/* Main Nav Links (Sin AI Test) */}
+      <nav className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
+        {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`text-xs px-2.5 py-1.5 rounded-lg ${
-                isActive ? "bg-surface-hover text-foreground font-semibold" : "text-muted-foreground"
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                isActive
+                  ? 'bg-zinc-800 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
               }`}
             >
               {item.label}
@@ -78,6 +45,12 @@ export function Navbar() {
           );
         })}
       </nav>
+
+      {/* Action Button */}
+      <button className="bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all">
+        <Plus className="w-3.5 h-3.5 stroke-[3]" />
+        <span>Nuevo</span>
+      </button>
     </header>
   );
 }

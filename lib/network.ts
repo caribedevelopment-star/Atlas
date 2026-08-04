@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { NetworkUser } from '@/components/profile/NetworkCircles';
 
 interface ProfileRow {
@@ -8,15 +8,6 @@ interface ProfileRow {
   avatar_url: string | null;
 }
 
-interface CircleRow {
-  requester_id: string;
-  addressee_id: string;
-}
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-// MOCK DE RESPALDO: Si aún no hay usuarios en tu base de datos de Supabase, se muestran estos.
 const DEFAULT_NETWORK_USERS: NetworkUser[] = [
   { id: 'usr-1', username: 'camila', full_name: 'Camila R.', relationship: 'circle' },
   { id: 'usr-2', username: 'santiago', full_name: 'Santiago M.', relationship: 'circle' },
@@ -27,41 +18,31 @@ const DEFAULT_NETWORK_USERS: NetworkUser[] = [
 ];
 
 export async function fetchUserNetwork(currentUserId: string): Promise<NetworkUser[]> {
-  if (!supabaseUrl || !supabaseAnonKey) {
+  try {
+    // 1. Obtener los demás perfiles registrados en la tabla 'profiles'
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('id, username, full_name, avatar_url')
+      .neq('id', currentUserId);
+
+    // Si ocurre un error o la tabla no tiene datos, retorna el mock por defecto
+    if (error || !profiles || profiles.length === 0) {
+      console.warn('Usando mock por falta de perfiles en BD:', error?.message);
+      return DEFAULT_NETWORK_USERS;
+    }
+
+    // 2. Mapear y distribuir a los usuarios reales en los niveles de red
+    const relationships: ('circle' | 'network' | 'public')[] = ['circle', 'network', 'public'];
+
+    return (profiles as ProfileRow[]).map((p, index) => ({
+      id: p.id,
+      username: p.username || 'usuario',
+      full_name: p.full_name || '',
+      avatar_url: p.avatar_url || undefined,
+      relationship: relationships[index % 3], // Distribuye los usuarios entre las 3 órbitas
+    }));
+  } catch (err) {
+    console.error('Error al obtener la red de usuarios:', err);
     return DEFAULT_NETWORK_USERS;
   }
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  // 1. Obtener perfiles reales de la BD
-  const { data: profiles, error } = await supabase
-    .from('profiles')
-    .select('id, username, full_name, avatar_url')
-    .neq('id', currentUserId);
-
-  if (error || !profiles || profiles.length === 0) {
-    return DEFAULT_NETWORK_USERS;
-  }
-
-  // 2. Obtener círculos aceptados
-  const { data: circles } = await supabase
-    .from('circles')
-    .select('requester_id, addressee_id')
-    .eq('status', 'accepted')
-    .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`);
-
-  const circleUserIds = new Set<string>();
-  (circles as CircleRow[] | null)?.forEach((c) => {
-    if (c.requester_id !== currentUserId) circleUserIds.add(c.requester_id);
-    if (c.addressee_id !== currentUserId) circleUserIds.add(c.addressee_id);
-  });
-
-  // 3. Formatear red
-  return (profiles as ProfileRow[]).map((p) => ({
-    id: p.id,
-    username: p.username || 'usuario',
-    full_name: p.full_name || '',
-    avatar_url: p.avatar_url || undefined,
-    relationship: circleUserIds.has(p.id) ? 'circle' : 'public',
-  }));
 }

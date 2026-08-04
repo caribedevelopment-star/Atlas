@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import BottomNav from '@/components/bottom-nav';
 import CreateMemoryModal from '@/components/CreateMemoryModal';
@@ -21,7 +21,13 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleCreateSubmit = (data: any) => {
+    setIsCreateModalOpen(false);
+    router.refresh();
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans relative overflow-x-hidden">
@@ -55,6 +61,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Botón Nuevo activando el Modal */}
         <button
+          type="button"
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
         >
@@ -70,10 +77,12 @@ export function AppShell({ children }: AppShellProps) {
 
       <BottomNav />
 
-      {/* Modal para añadir nuevas memorias */}
+      {/* Modal para añadir nuevas memorias con sus props pasadas */}
       <CreateMemoryModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        availableFriends={[]}
+        onSubmit={handleCreateSubmit}
       />
     </div>
   );

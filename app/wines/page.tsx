@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Wine, Plus, Star, ShoppingBag, Tag, Loader2, Globe, AlertCircle, RefreshCw, Camera, Store } from 'lucide-react';
+import { Wine, Plus, Star, ShoppingBag, Tag, Loader2, Globe, AlertCircle, RefreshCw, Camera, Store, X } from 'lucide-react';
 import CaniaAssistant from '@/components/CaniaAssistant';
 
 interface WineItem {
@@ -99,7 +98,7 @@ export default function WinesPage() {
             price: price ? parseFloat(price) : null,
             tasting_notes: tastingNotes,
             image_url: publicImageUrl,
-            is_popular: false, // Los añadidos por la interfaz son de usuario
+            is_popular: false,
           },
         ])
         .select();
@@ -123,39 +122,37 @@ export default function WinesPage() {
     }
   };
 
-  // Filtrado general por tienda
   const filteredWines = selectedStore === 'Todos'
     ? wines
     : wines.filter(w => w.supermarket?.toLowerCase() === selectedStore.toLowerCase());
 
-  // Separación por categoría (Populares de Supermercado vs Usuarios)
   const popularWines = filteredWines.filter(w => w.is_popular === true);
   const communityWines = filteredWines.filter(w => !w.is_popular);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 pb-24">
-      <div className="max-w-5xl mx-auto space-y-10">
+    <div className="min-h-screen bg-zinc-950 p-4 sm:p-6 font-sans text-zinc-100 pb-24 selection:bg-zinc-800">
+      <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Cabecera */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 border border-zinc-800/80 p-6 rounded-3xl backdrop-blur-xl">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <Wine className="w-6 h-6 text-rose-600" />
+              <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <Wine className="w-5 h-5 text-rose-500" />
                 Bodega Abierta
               </h1>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Globe className="w-3 h-3" /> Pública
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-zinc-400 mt-1">
               Catálogo de vinos destacados por supermercado y comunidad
             </p>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-md transition self-start sm:self-auto"
+            className="bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-lg shadow-rose-950/40 transition self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Añadir Vino</span>
@@ -168,10 +165,10 @@ export default function WinesPage() {
             <button
               key={store}
               onClick={() => setSelectedStore(store)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+              className={`px-4 py-2 rounded-xl text-xs font-mono transition whitespace-nowrap ${
                 selectedStore === store
-                  ? 'bg-rose-900 text-white shadow-sm'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                  : 'bg-zinc-900/40 text-zinc-400 border border-zinc-800/80 hover:text-white hover:bg-zinc-900'
               }`}
             >
               {store}
@@ -181,13 +178,13 @@ export default function WinesPage() {
 
         {/* Estado de Error o Carga */}
         {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-3xl p-6 text-center max-w-md mx-auto my-8 shadow-sm">
-            <AlertCircle className="w-10 h-10 text-red-600 mx-auto mb-3" />
-            <h3 className="font-bold text-red-950 mb-1">Error de conexión</h3>
-            <p className="text-xs text-red-700 leading-relaxed mb-4">{error}</p>
+          <div className="bg-red-950/30 border border-red-900/50 rounded-3xl p-6 text-center max-w-md mx-auto my-8">
+            <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+            <h3 className="font-bold text-red-200 text-sm mb-1">Error de conexión</h3>
+            <p className="text-xs text-red-400 leading-relaxed mb-4">{error}</p>
             <button
               onClick={fetchWines}
-              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+              className="inline-flex items-center gap-2 bg-red-900/50 hover:bg-red-800/50 text-red-200 border border-red-700/50 text-xs font-semibold px-4 py-2 rounded-xl transition"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Reintentar
@@ -196,69 +193,70 @@ export default function WinesPage() {
         ) : loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm animate-pulse">
-                <div className="w-full h-48 bg-slate-100 flex items-center justify-center relative" />
-                <div className="p-5 space-y-3">
-                  <div className="h-4 bg-slate-200 rounded-md w-3/4" />
-                  <div className="h-3 bg-slate-100 rounded-md w-1/2" />
-                  <div className="h-8 bg-slate-50 rounded-xl w-full" />
+              <div key={n} className="bg-zinc-900/40 border border-zinc-800/80 rounded-3xl overflow-hidden animate-pulse p-5 space-y-4">
+                <div className="w-full h-44 bg-zinc-800/60 rounded-2xl" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-zinc-800/80 rounded w-3/4" />
+                  <div className="h-3 bg-zinc-800/40 rounded w-1/2" />
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-10">
             
             {/* SECCIÓN 1: MÁS VENDIDOS EN SUPERMERCADOS */}
             <section className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-                <Store className="w-5 h-5 text-rose-600" />
+              <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+                <Store className="w-4 h-4 text-rose-500" />
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Más vendidos en supermercados</h2>
-                  <p className="text-xs text-slate-500">Referencias habituales en lineales comerciales</p>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Más vendidos en supermercados</h2>
+                  <p className="text-xs text-zinc-400">Referencias habituales en lineales comerciales</p>
                 </div>
               </div>
 
               {popularWines.length === 0 ? (
-                <p className="text-xs text-slate-400 italic py-4">No hay vinos destacados en esta selección.</p>
+                <p className="text-xs text-zinc-500 italic py-4 font-mono">No hay vinos destacados en esta selección.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {popularWines.map((wine) => (
-                    <div key={wine.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div key={wine.id} className="bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700/80 rounded-3xl overflow-hidden backdrop-blur-xl transition duration-200 flex flex-col justify-between group">
                       <div>
-                        <div className="relative w-full h-48 bg-slate-100 flex items-center justify-center overflow-hidden">
+                        <div className="relative w-full h-48 bg-zinc-950 flex items-center justify-center overflow-hidden">
                           {wine.image_url ? (
-                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover" />
+                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                           ) : (
-                            <Wine className="w-12 h-12 text-slate-300" />
+                            <Wine className="w-10 h-10 text-zinc-700" />
                           )}
-                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 flex items-center gap-1 shadow">
-                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          <div className="absolute top-3 right-3 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-rose-400 border border-rose-500/20 flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-rose-400 text-rose-400" />
                             <span>{wine.rating}</span>
                           </div>
                         </div>
 
-                        <div className="p-5">
-                          <h3 className="font-bold text-slate-900 text-base">{wine.name}</h3>
-                          <p className="text-xs text-slate-500 font-medium mt-0.5">
-                            {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
-                          </p>
+                        <div className="p-5 space-y-3">
+                          <div>
+                            <h3 className="font-bold text-white text-sm group-hover:text-rose-400 transition">{wine.name}</h3>
+                            <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                              {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
+                            </p>
+                          </div>
 
-                          <div className="flex items-center justify-between mt-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium">
-                            <div className="flex items-center gap-1.5 text-slate-600">
-                              <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
+                          <div className="flex items-center justify-between text-xs bg-zinc-950/40 p-2.5 rounded-xl border border-zinc-800/40 font-mono">
+                            <div className="flex items-center gap-1.5 text-zinc-400">
+                              <ShoppingBag className="w-3.5 h-3.5 text-zinc-500" />
                               <span>{wine.supermarket || 'Supermercado'}</span>
                             </div>
                             {wine.price && (
-                              <div className="flex items-center gap-1 text-emerald-700 font-bold">
-                                <Tag className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-1 text-emerald-400 font-semibold">
+                                <Tag className="w-3 h-3" />
                                 <span>{wine.price.toFixed(2)} €</span>
                               </div>
                             )}
                           </div>
 
                           {wine.tasting_notes && (
-                            <p className="text-xs text-slate-600 mt-3 line-clamp-2 italic">
+                            <p className="text-xs text-zinc-300 italic line-clamp-2 leading-relaxed">
                               "{wine.tasting_notes}"
                             </p>
                           )}
@@ -272,57 +270,59 @@ export default function WinesPage() {
 
             {/* SECCIÓN 2: SUBIDOS POR LA COMUNIDAD */}
             <section className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-                <Camera className="w-5 h-5 text-indigo-600" />
+              <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+                <Camera className="w-4 h-4 text-sky-400" />
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Subidos por la comunidad</h2>
-                  <p className="text-xs text-slate-500">Fotografías reales y recomendaciones de los usuarios</p>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Subidos por la comunidad</h2>
+                  <p className="text-xs text-zinc-400">Fotografías reales y recomendaciones de los usuarios</p>
                 </div>
               </div>
 
               {communityWines.length === 0 ? (
-                <div className="text-center py-8 bg-white rounded-3xl border border-slate-200 p-6">
-                  <Camera className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs font-medium text-slate-500">Aún no hay vinos subidos por la comunidad en esta categoría.</p>
+                <div className="text-center py-8 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800 p-6">
+                  <Camera className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+                  <p className="text-xs font-mono text-zinc-500">Aún no hay vinos subidos por la comunidad en esta categoría.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {communityWines.map((wine) => (
-                    <div key={wine.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div key={wine.id} className="bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700/80 rounded-3xl overflow-hidden backdrop-blur-xl transition duration-200 flex flex-col justify-between group">
                       <div>
-                        <div className="relative w-full h-56 bg-slate-900 flex items-center justify-center overflow-hidden">
+                        <div className="relative w-full h-52 bg-zinc-950 flex items-center justify-center overflow-hidden">
                           {wine.image_url ? (
-                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover" />
+                            <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                           ) : (
-                            <Wine className="w-12 h-12 text-slate-600" />
+                            <Wine className="w-10 h-10 text-zinc-700" />
                           )}
-                          <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1 shadow">
-                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          <div className="absolute top-3 right-3 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-rose-400 border border-rose-500/20 flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-rose-400 text-rose-400" />
                             <span>{wine.rating}</span>
                           </div>
                         </div>
 
-                        <div className="p-5">
-                          <h3 className="font-bold text-slate-900 text-base">{wine.name}</h3>
-                          <p className="text-xs text-slate-500 font-medium mt-0.5">
-                            {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
-                          </p>
+                        <div className="p-5 space-y-3">
+                          <div>
+                            <h3 className="font-bold text-white text-sm group-hover:text-rose-400 transition">{wine.name}</h3>
+                            <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                              {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
+                            </p>
+                          </div>
 
-                          <div className="flex items-center justify-between mt-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium">
-                            <div className="flex items-center gap-1.5 text-slate-600">
-                              <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
+                          <div className="flex items-center justify-between text-xs bg-zinc-950/40 p-2.5 rounded-xl border border-zinc-800/40 font-mono">
+                            <div className="flex items-center gap-1.5 text-zinc-400">
+                              <ShoppingBag className="w-3.5 h-3.5 text-zinc-500" />
                               <span>{wine.supermarket || 'Comunidad'}</span>
                             </div>
                             {wine.price && (
-                              <div className="flex items-center gap-1 text-emerald-700 font-bold">
-                                <Tag className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-1 text-emerald-400 font-semibold">
+                                <Tag className="w-3 h-3" />
                                 <span>{wine.price.toFixed(2)} €</span>
                               </div>
                             )}
                           </div>
 
                           {wine.tasting_notes && (
-                            <p className="text-xs text-slate-600 mt-3 line-clamp-3 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p className="text-xs text-zinc-300 italic leading-relaxed bg-zinc-950/40 p-3 rounded-2xl border border-zinc-800/40">
                               "{wine.tasting_notes}"
                             </p>
                           )}
@@ -340,52 +340,63 @@ export default function WinesPage() {
 
       {/* Modal para añadir vino */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 font-sans">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Añadir Nuevo Vino</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl font-sans text-zinc-100 relative space-y-4">
+            
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Wine className="w-4 h-4 text-rose-500" /> Añadir Nuevo Vino
+              </h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-zinc-500 hover:text-white p-1 rounded-lg transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            <form onSubmit={handleAddWine} className="space-y-4">
+            <form onSubmit={handleAddWine} className="space-y-3 text-xs">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre del Vino</label>
+                <label className="block font-mono text-zinc-400 mb-1">Nombre del Vino</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ej. Marqués de Riscal"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-white outline-none focus:border-rose-500/50 transition font-sans"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Bodega</label>
+                  <label className="block font-mono text-zinc-400 mb-1">Bodega</label>
                   <input
                     type="text"
                     value={winery}
                     onChange={(e) => setWinery(e.target.value)}
                     placeholder="Ej. Riscal"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-white outline-none focus:border-rose-500/50 transition font-sans"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Añada (Año)</label>
+                  <label className="block font-mono text-zinc-400 mb-1">Añada (Año)</label>
                   <input
                     type="number"
                     value={vintage}
                     onChange={(e) => setVintage(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-white outline-none focus:border-rose-500/50 transition font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Supermercado/Tienda</label>
+                  <label className="block font-mono text-zinc-400 mb-1">Supermercado/Tienda</label>
                   <select
                     value={supermarket}
                     onChange={(e) => setSupermarket(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800 bg-white"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-white outline-none focus:border-rose-500/50 transition font-sans"
                   >
                     <option value="Mercadona">Mercadona</option>
                     <option value="Lidl">Lidl</option>
@@ -396,20 +407,20 @@ export default function WinesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Precio (€)</label>
+                  <label className="block font-mono text-zinc-400 mb-1">Precio (€)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="Ej. 12.50"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-white outline-none focus:border-rose-500/50 transition font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Puntuación (1 al 5)</label>
+                <label className="block font-mono text-zinc-400 mb-1">Puntuación (1 al 5)</label>
                 <input
                   type="number"
                   min="1"
@@ -417,43 +428,43 @@ export default function WinesPage() {
                   step="0.5"
                   value={rating}
                   onChange={(e) => setRating(Number(e.target.value))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-white outline-none focus:border-rose-500/50 transition font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Notas de Cata</label>
+                <label className="block font-mono text-zinc-400 mb-1">Notas de Cata</label>
                 <textarea
                   rows={2}
                   value={tastingNotes}
                   onChange={(e) => setTastingNotes(e.target.value)}
                   placeholder="Sensaciones, maridaje..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-white outline-none focus:border-rose-500/50 transition font-sans resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Foto del Vino</label>
+                <label className="block font-mono text-zinc-400 mb-1">Foto del Vino</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+                  className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-zinc-700 file:text-xs file:font-mono file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700 cursor-pointer"
                 />
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-3 flex justify-end gap-2 border-t border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-4 py-2 font-mono text-zinc-400 hover:text-white rounded-xl transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800 disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-950/40 disabled:opacity-50 flex items-center gap-1.5 transition"
                 >
                   {uploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Guardar Vino</span>
@@ -469,4 +480,3 @@ export default function WinesPage() {
     </div>
   );
 }
-

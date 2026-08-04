@@ -2,46 +2,42 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, Wine, BookOpen, User } from 'lucide-react';
+import { Home, MapPin, Wine, Library, User } from 'lucide-react';
+
+const NAV_ITEMS = [
+  { label: 'Home', href: '/home', icon: Home },
+  { label: 'Memorias', href: '/memories', icon: MapPin },
+  { label: 'Vinos', href: '/wines', icon: Wine },
+  { label: 'Librería', href: '/library', icon: Library },
+  { label: 'Perfil', href: '/profile', icon: User },
+];
 
 export default function BottomNav() {
   const pathname = usePathname();
 
-  const navItems = [
-    { href: '/home', label: 'Inicio', icon: Home },
-    { href: '/memories', label: 'Mapa', icon: Compass },
-    { href: '/wines', label: 'Vinos', icon: Wine },
-    { href: '/library', label: 'Biblioteca', icon: BookOpen },
-    { href: '/profile', label: 'Perfil', icon: User },
-  ];
-
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] pointer-events-none px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
-      <nav className="pointer-events-auto max-w-sm mx-auto bg-zinc-950/80 backdrop-blur-2xl border border-zinc-800/80 rounded-3xl p-1.5 shadow-2xl flex items-center justify-around transition-all duration-300">
-        {navItems.map((item) => {
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800/80 px-4 py-2 pb-safe">
+      <div className="flex items-center justify-around max-w-md mx-auto">
+        {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname.startsWith(item.href);
+          const isActive = pathname?.startsWith(item.href);
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-2xl transition-all duration-200 active:scale-95 ${
-                isActive ? 'text-white' : 'text-zinc-400 hover:text-zinc-200'
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl text-[10px] font-medium transition-all ${
+                isActive
+                  ? 'text-white bg-zinc-800/60'
+                  : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
-              {isActive && (
-                <span className="absolute inset-0 bg-zinc-800/80 border border-zinc-700/50 rounded-2xl -z-10 transition-all duration-300" />
-              )}
-
-              <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-105 text-white' : 'text-zinc-400'}`} />
-              <span className={`text-[11px] font-medium mt-1 tracking-tight transition-colors ${isActive ? 'text-white' : 'text-zinc-400'}`}>
-                {item.label}
-              </span>
+              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-1.5'}`} />
+              <span>{item.label}</span>
             </Link>
           );
         })}
-      </nav>
-    </div>
+      </div>
+    </nav>
   );
 }

@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 
 interface AppShellProps {
   children: React.ReactNode;
-  showNav?: boolean; // Ajuste para evitar el fallo de Vercel
+  showNav?: boolean;
 }
 
 export function AppShell({ children, showNav = true }: AppShellProps) {
@@ -32,7 +32,7 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans relative overflow-x-hidden">
-      {/* Cabecera Superior Única */}
+      {/* Cabecera Escritorio */}
       <header className="hidden md:flex h-16 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl px-6 items-center justify-between shrink-0 z-50 sticky top-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-white text-zinc-950 font-mono font-bold flex items-center justify-center text-sm shadow-sm">
@@ -62,7 +62,6 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
           </nav>
         )}
 
-        {/* Botón Nuevo activando el Modal */}
         <button
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
@@ -73,14 +72,28 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
         </button>
       </header>
 
-      {/* Contenido Principal */}
-      <main className="flex-1 w-full relative pb-28 md:pb-0">
+      {/* Cabecera Móvil delgada */}
+      <header className="md:hidden flex h-14 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl px-4 items-center justify-between sticky top-0 z-50">
+        <span className="font-semibold tracking-tight text-sm text-white">Atlas</span>
+        <button
+          type="button"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-white text-zinc-950 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
+        >
+          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Nuevo</span>
+        </button>
+      </header>
+
+      {/* Área Principal adaptada para evitar que la barra inferior la tape */}
+      <main className="flex-1 w-full relative pb-20 md:pb-0 flex flex-col">
         {children}
       </main>
 
+      {/* Navegación Móvil Fija */}
       <BottomNav />
 
-      {/* Modal de creación de memorias */}
+      {/* Modal */}
       <CreateMemoryModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

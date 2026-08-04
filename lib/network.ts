@@ -1,4 +1,4 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { NetworkUser } from '@/components/profile/NetworkCircles';
 
 interface ProfileRow {
@@ -13,8 +13,11 @@ interface CircleRow {
   addressee_id: string;
 }
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
 export async function fetchUserNetwork(currentUserId: string): Promise<NetworkUser[]> {
-  const supabase = createClientComponentClient();
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // 1. Obtener todos los perfiles excepto el actual
   const { data: profiles, error: profilesError } = await supabase
@@ -58,3 +61,4 @@ export async function fetchUserNetwork(currentUserId: string): Promise<NetworkUs
     };
   });
 }
+

@@ -1,6 +1,7 @@
+'use client';
+
 import NetworkCircles, { NetworkUser } from '@/components/profile/NetworkCircles';
 
-// Ejemplo de datos mapeados directamente desde la consulta de Supabase (profiles + circles):
 const MOCK_NETWORK_USERS: NetworkUser[] = [
   { id: '1', username: 'camila', full_name: 'Camila R.', relationship: 'circle', memories_count: 14 },
   { id: '2', username: 'santiago', full_name: 'Santiago M.', relationship: 'circle', memories_count: 8 },
@@ -13,7 +14,6 @@ const MOCK_NETWORK_USERS: NetworkUser[] = [
 export default function ProfilePage() {
   const currentUser = {
     username: 'alessandro',
-    avatar_url: undefined, // O la URL de Supabase Storage
   };
 
   return (
@@ -26,7 +26,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Círculo Interactivo */}
         <NetworkCircles
           currentUser={currentUser}
           users={MOCK_NETWORK_USERS}

@@ -1,7 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { supabase } from '@/lib/supabase';
+import { Memory } from '@/components/MapComponent';
 
+// Forzamos deshabilitar SSR por completo para el mapa
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
@@ -12,9 +16,29 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
 });
 
 export default function HomePage() {
+  const [memories, setMemories] = useState<Memory[]>([]);
+
+  useEffect(() => {
+    async function loadMemories() {
+      try {
+        const { data, error } = await supabase
+          .from('memories')
+          .select('id, title, description, latitude, longitude');
+
+        if (!error && data) {
+          setMemories(data);
+        }
+      } catch (e) {
+        console.error('Error cargando recuerdos:', e);
+      }
+    }
+
+    loadMemories();
+  }, []);
+
   return (
     <div className="w-full h-[calc(100vh-4rem)] relative">
-      <MapComponent />
+      <MapComponent memories={memories} />
     </div>
   );
 }

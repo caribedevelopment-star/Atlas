@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css'; // Asegura la carga de estilos de MapLibre
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 export interface Memory {
   id: string;
@@ -22,43 +22,51 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
   const markersRef = useRef<maplibregl.Marker[]>([]);
 
   useEffect(() => {
-    if (map.current || !mapContainer.current) return;
+    if (typeof window === 'undefined' || map.current || !mapContainer.current) return;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-      center: [-3.70379, 40.416775],
-      zoom: 5.5,
-      pitch: 40,
-    });
+    try {
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+        center: [-3.70379, 40.416775],
+        zoom: 5.5,
+        pitch: 40,
+      });
 
-    map.current.addControl(
-      new maplibregl.NavigationControl({ showCompass: false }),
-      'top-right'
-    );
+      map.current.addControl(
+        new maplibregl.NavigationControl({ showCompass: false }),
+        'top-right'
+      );
 
-    // Forzar al mapa a recalcular su tamaño apenas se renderiza
-    map.current.on('load', () => {
-      map.current?.resize();
-    });
+      map.current.on('load', () => {
+        map.current?.resize();
+      });
+    } catch (err) {
+      console.error('Error al inicializar el mapa:', err);
+    }
 
     return () => {
-      map.current?.remove();
-      map.current = null;
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
   useEffect(() => {
     if (!map.current) return;
 
+    // Limpiar marcadores
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    if (memories.length === 0) return;
+    if (!memories || memories.length === 0) return;
 
     const bounds = new maplibregl.LngLatBounds();
 
     memories.forEach((memory) => {
+      if (!memory.latitude || !memory.longitude) return;
+
       const el = document.createElement('div');
       el.className = 'custom-marker';
       el.style.width = '14px';
@@ -68,14 +76,6 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
       el.style.border = '2px solid #09090b';
       el.style.boxShadow = '0 0 10px rgba(255,255,255,0.5)';
       el.style.cursor = 'pointer';
-      el.style.transition = 'transform 0.2s ease';
-
-      el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.3)';
-      });
-      el.addEventListener('mouseleave', () => {
-        el.style.transform = 'scale(1)';
-      });
 
       const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(`
         <div style="color: #09090b; font-family: sans-serif; padding: 4px;">
@@ -106,6 +106,9 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
     }
   }, [memories]);
 
-  // Se asigna altura fija/relativa directa al div contenedor
-  return <div ref={mapContainer} className="w-full h-full min-h-[500px]" />;
+  return (
+    <div className="w-full h-full min-h-[500px] relative">
+      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+    </div>
+  );
 }

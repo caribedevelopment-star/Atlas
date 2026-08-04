@@ -1,138 +1,102 @@
+// components/MapInner.tsx
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Polygon, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Polygon, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-export interface WineRegion {
-  id: string;
-  name: string;
-  country: string;
-  type: string;
-  color: string;
-  coordinates: [number, number][];
-  center: [number, number];
-  zoom: number;
-}
+// Fix para iconos por defecto de Leaflet en Next.js
+const customIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 
-export interface InnerMapProps {
-  regions: WineRegion[];
-  showRegions: boolean;
-  showMemories: boolean;
-  selectedRegion: WineRegion | null;
-  onSelectRegion: (region: WineRegion) => void;
-  memories: any[];
-  flyTarget: { center: [number, number]; zoom: number } | null;
-}
-
-function MapFlyControl({ flyTarget }: { flyTarget: { center: [number, number]; zoom: number } | null }) {
+// Forzar recalculo de dimensiones del mapa al cargar
+function MapResizeHandler() {
   const map = useMap();
   useEffect(() => {
-    if (flyTarget) {
-      map.flyTo(flyTarget.center, flyTarget.zoom, { animate: true, duration: 1.2 });
-    }
-  }, [flyTarget, map]);
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+  }, [map]);
   return null;
 }
 
-export default function InnerWineMap({
-  regions,
-  showRegions,
-  showMemories,
-  selectedRegion,
-  onSelectRegion,
-  memories,
-  flyTarget,
-}: InnerMapProps) {
-  const initialCenter: [number, number] = [46.0, 2.0];
+const REGIONS = {
+  rioja: [
+    [42.55, -2.85],
+    [42.60, -2.40],
+    [42.30, -2.10],
+    [42.15, -2.50],
+  ] as [number, number][],
+  ribera: [
+    [41.75, -4.10],
+    [41.80, -3.30],
+    [41.60, -3.30],
+    [41.55, -4.10],
+  ] as [number, number][],
+};
 
-  // Instanciación segura del icono dentro del componente
-  const winePinIcon = useMemo(() => {
-    return L.divIcon({
-      className: 'wine-pin-custom',
-      html: `
-        <div style="
-          width: 30px;
-          height: 30px;
-          background-color: #f59e0b;
-          border: 2px solid #0c0a09;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-          cursor: pointer;
-        ">
-          🍷
-        </div>
-      `,
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
-    });
-  }, []);
+const ROUTE_MEMORIES = [
+  [42.465, -2.445], // Logroño
+  [42.518, -2.585], // Haro
+  [42.562, -2.618], // Laguardia
+] as [number, number][];
 
+interface MapInnerProps {
+  showRegions: boolean;
+  showRoutes: boolean;
+}
+
+export default function MapInner({ showRegions, showRoutes }: MapInnerProps) {
   return (
     <MapContainer
-      center={initialCenter}
-      zoom={6}
+      center={[42.0, -3.5]}
+      zoom={7}
       zoomControl={false}
-      className="w-full h-full bg-stone-950"
+      style={{ width: '100%', height: '100%', background: '#09090b' }}
     >
+      <MapResizeHandler />
+
+      {/* CartoDB Dark Matter retina tiles */}
       <TileLayer
-        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; CARTO'
+        maxZoom={19}
       />
 
-      <MapFlyControl flyTarget={flyTarget} />
-
-      {/* CAPA DE REGIONES DE VINO */}
+      {/* Polígonos D.O. */}
       {showRegions &&
-        regions.map((region) => {
-          const isSelected = selectedRegion?.id === region.id;
-          return (
-            <Polygon
-              key={region.id}
-              positions={region.coordinates}
-              pathOptions={{
-                color: region.color,
-                fillColor: region.color,
-                fillOpacity: isSelected ? 0.5 : 0.25,
-                weight: isSelected ? 2.5 : 1,
-                dashArray: isSelected ? '' : '4, 4',
-              }}
-              eventHandlers={{
-                click: () => onSelectRegion(region),
-              }}
-            >
-              <Popup className="custom-dark-popup">
-                <div className="p-1 text-stone-900 max-w-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block">
-                    {region.country}
-                  </span>
-                  <h4 className="font-bold text-sm">{region.name}</h4>
-                  <p className="text-xs text-stone-600 mt-0.5">{region.type}</p>
-                </div>
-              </Popup>
-            </Polygon>
-          );
-        })}
-
-      {/* CAPA DE MEMORIAS / CATAS */}
-      {showMemories &&
-        memories.map((mem) => (
-          <Marker key={mem.id} position={[mem.latitude, mem.longitude]} icon={winePinIcon}>
-            <Popup className="custom-dark-popup">
-              <div className="p-1 text-stone-900">
-                <h4 className="font-bold text-xs">{mem.title}</h4>
-                <p className="text-[11px] text-stone-600 mt-1">{mem.description}</p>
-                <span className="text-[9px] text-amber-700 font-semibold block mt-1">
-                  Por: {mem.author_name || 'Catador'}
-                </span>
-              </div>
-            </Popup>
-          </Marker>
+        Object.entries(REGIONS).map(([key, coords]) => (
+          <Polygon
+            key={key}
+            positions={coords}
+            pathOptions={{
+              color: '#f59e0b',
+              fillColor: '#d97706',
+              fillOpacity: 0.25,
+              weight: 2,
+              dashArray: '4, 4',
+            }}
+          />
         ))}
+
+      {/* Rutas de Viajes */}
+      {showRoutes && (
+        <>
+          <Polyline
+            positions={ROUTE_MEMORIES}
+            pathOptions={{ color: '#fbbf24', weight: 3, opacity: 0.8 }}
+          />
+          {ROUTE_MEMORIES.map((pt, i) => (
+            <Marker key={i} position={pt} icon={customIcon}>
+              <Popup>Memoria {i + 1} de la Ruta</Popup>
+            </Marker>
+          ))}
+        </>
+      )}
     </MapContainer>
   );
 }

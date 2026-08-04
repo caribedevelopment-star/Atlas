@@ -1,24 +1,21 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { Navbar } from "@/components/Navbar";
+// app/layout.tsx
+import './globals.css';
+import 'leaflet/dist/leaflet.css'; // Importante para que Leaflet no salga en gris
 
-export const metadata: Metadata = {
-  title: "Atlas | Personal Vault",
-  description: "Personal journal, collection tracker, and memories vault.",
+export const metadata = {
+  title: 'Atlas',
+  description: 'A personal memory journal',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es" className="dark">
-      <body className="bg-background text-foreground antialiased min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
+      <body className="bg-zinc-950 text-zinc-100 antialiased selection:bg-amber-500/30">
+        {children}
       </body>
     </html>
   );

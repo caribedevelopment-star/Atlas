@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { AppShell } from '@/components/app-shell';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
@@ -14,10 +13,8 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
 
 export default function HomePage() {
   return (
-    <AppShell>
-      <div className="w-full h-[calc(100vh-4rem)] relative">
-        <MapComponent />
-      </div>
-    </AppShell>
+    <div className="w-full h-[calc(100vh-4rem)] relative">
+      <MapComponent />
+    </div>
   );
 }

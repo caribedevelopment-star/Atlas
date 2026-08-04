@@ -22,6 +22,14 @@ interface ProfileData {
   };
 }
 
+// Datos de fallback para garantizar que siempre haya usuarios en los 3 anillos
+const FALLBACK_NETWORK_USERS: NetworkUser[] = [
+  { id: '1', username: 'us', full_name: 'User US', relationship: 'public' },
+  { id: '2', username: 'lucia', full_name: 'Lucía G.', relationship: 'circle' },
+  { id: '3', username: 'marcos', full_name: 'Marcos R.', relationship: 'network' },
+  { id: '4', username: 'elena', full_name: 'Elena P.', relationship: 'circle' },
+];
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [networkUsers, setNetworkUsers] = useState<NetworkUser[]>([]);
@@ -68,8 +76,17 @@ export default function ProfilePage() {
       setFormData(defaultProfile);
 
       // 2. Cargar red de círculos (Amigos / Contactos)
-      const network = await fetchUserNetwork(userId);
-      setNetworkUsers(network);
+      try {
+        const network = await fetchUserNetwork(userId);
+        if (network && network.length > 0) {
+          setNetworkUsers(network);
+        } else {
+          setNetworkUsers(FALLBACK_NETWORK_USERS);
+        }
+      } catch (error) {
+        console.error('Error al cargar la red de usuarios:', error);
+        setNetworkUsers(FALLBACK_NETWORK_USERS);
+      }
 
       setLoading(false);
     }

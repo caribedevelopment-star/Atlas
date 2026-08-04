@@ -9,14 +9,16 @@ export interface Memory {
   longitude: number;
   description?: string;
   category?: string;
-  is_private?: boolean; // Para filtrar entre privado y compartido
+  is_private?: boolean;
+  date?: string;
 }
 
 export interface MapComponentProps {
   memories?: Memory[];
+  onOpenNewMemoryModal?: () => void;
 }
 
-export default function MapComponent({ memories = [] }: MapComponentProps) {
+export default function MapComponent({ memories = [], onOpenNewMemoryModal }: MapComponentProps) {
   const [MapModule, setMapModule] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'circulo' | 'extendida' | 'global' | 'personal'>('global');
   const [showWineRegions, setShowWineRegions] = useState(false);
@@ -25,18 +27,19 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
   useEffect(() => {
     let isMounted = true;
 
-    // Inyectar CSS global para los efectos de latido en los círculos de regiones
+    // Inyectar estilos globales CSS para el latido real de los círculos de vino y rutas
     if (!document.getElementById('map-custom-animations')) {
       const style = document.createElement('style');
       style.id = 'map-custom-animations';
       style.innerHTML = `
-        @keyframes pulse-ring {
-          0% { transform: scale(0.95); opacity: 0.4; }
-          50% { transform: scale(1.05); opacity: 0.8; }
-          100% { transform: scale(0.95); opacity: 0.4; }
+        @keyframes radar-pulse {
+          0% { transform: scale(0.9); opacity: 0.3; }
+          50% { transform: scale(1.15); opacity: 0.7; }
+          100% { transform: scale(0.9); opacity: 0.3; }
         }
-        .wine-pulse-circle {
-          animation: pulse-ring 3s infinite ease-in-out;
+        .leaflet-interactive.wine-pulsing-region {
+          animation: radar-pulse 4s infinite ease-in-out;
+          transform-origin: center;
         }
       `;
       document.head.appendChild(style);
@@ -64,22 +67,25 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
       });
 
       const InteractiveMap = () => {
-        // Filtrar memorias según el selector de privacidad
         const filteredMemories = memories.filter((mem) => {
           if (privacyFilter === 'public') return !mem.is_private;
           if (privacyFilter === 'private') return mem.is_private;
-          return true; // 'all'
+          return true;
         });
 
         const centerLat = filteredMemories.length > 0 && filteredMemories[0].latitude ? filteredMemories[0].latitude : 40.416775;
         const centerLng = filteredMemories.length > 0 && filteredMemories[0].longitude ? filteredMemories[0].longitude : -3.70379;
 
-        // Coordenadas para la línea de ruta de viajes
-        const routeCoordinates = filteredMemories
+        // Ordenar memorias cronológicamente para que la línea del viaje conecte los puntos en orden de ruta
+        const sortedMemories = [...filteredMemories].sort((a, b) => {
+          if (!a.date || !b.date) return 0;
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        });
+
+        const routeCoordinates = sortedMemories
           .filter(m => m.latitude && m.longitude)
           .map(m => [m.latitude, m.longitude] as [number, number]);
 
-        // Regiones de Denominación de Origen de España
         const wineRegions = [
           { name: 'D.O. Ca. Rioja', lat: 42.4658, lng: -2.4456, radius: 45000, color: '#f43f5e' },
           { name: 'D.O. Ribera del Duero', lat: 41.6050, lng: -3.8876, radius: 40000, color: '#f43f5e' },
@@ -90,10 +96,10 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
 
         return (
           <div className="relative w-full h-full">
-            {/* Controles flotantes superiores */}
+            {/* Controles superiores */}
             <div className="absolute top-4 left-4 right-4 z-[999] flex flex-wrap items-center justify-between gap-3 pointer-events-none">
               
-              {/* Selector de Modos de Red */}
+              {/* Modos de Red */}
               <div className="pointer-events-auto flex items-center gap-1 bg-zinc-900/90 border border-zinc-800 backdrop-blur-md p-1.5 rounded-2xl shadow-2xl">
                 {(['circulo', 'extendida', 'global', 'personal'] as const).map((mode) => (
                   <button
@@ -110,9 +116,8 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
                 ))}
               </div>
 
-              {/* Controles Derechos: Privacidad y Capa de Vinos */}
+              {/* Filtros de Privacidad y Vinos */}
               <div className="pointer-events-auto flex items-center gap-2">
-                {/* Selector de Privacidad */}
                 <select
                   value={privacyFilter}
                   onChange={(e: any) => setPrivacyFilter(e.target.value)}
@@ -123,7 +128,6 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
                   <option value="private">Red: Privados</option>
                 </select>
 
-                {/* Botón D.O. Vinos España */}
                 <button
                   onClick={() => setShowWineRegions(!showWineRegions)}
                   className={`px-4 py-2 rounded-2xl text-xs font-mono font-semibold backdrop-blur-md border transition flex items-center gap-2 shadow-xl ${
@@ -149,20 +153,31 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               />
 
-              {/* Líneas de ruta de viajes conectando las memorias secuencialmente */}
+              {/* Líneas de ruta de viajes conectadas */}
               {routeCoordinates.length > 1 && (
-                <RL.Polyline
-                  positions={routeCoordinates}
-                  pathOptions={{
-                    color: '#38bdf8',
-                    weight: 3,
-                    opacity: 0.8,
-                    dashArray: viewMode === 'personal' ? '8, 8' : undefined,
-                  }}
-                />
+                <>
+                  <RL.Polyline
+                    positions={routeCoordinates}
+                    pathOptions={{
+                      color: '#38bdf8',
+                      weight: 4,
+                      opacity: 0.9,
+                      dashArray: viewMode === 'personal' ? '6, 10' : undefined,
+                    }}
+                  />
+                  {/* Sombra exterior luminosa para la ruta */}
+                  <RL.Polyline
+                    positions={routeCoordinates}
+                    pathOptions={{
+                      color: '#0284c7',
+                      weight: 8,
+                      opacity: 0.3,
+                    }}
+                  />
+                </>
               )}
 
-              {/* Regiones de Vino (D.O.) con animación dinámica simulada en propiedades */}
+              {/* Regiones de Vino con latido dinámico real */}
               {showWineRegions && wineRegions.map((region, idx) => (
                 <RL.Circle
                   key={idx}
@@ -171,15 +186,15 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
                   pathOptions={{
                     color: region.color,
                     fillColor: region.color,
-                    fillOpacity: 0.25,
+                    fillOpacity: 0.3,
                     weight: 2,
-                    className: 'wine-pulse-circle',
+                    className: 'wine-pulsing-region',
                   }}
                 >
                   <RL.Popup>
                     <div style={{ color: '#000', fontFamily: 'sans-serif', padding: '2px' }}>
                       <strong style={{ fontSize: '12px', display: 'block' }}>{region.name}</strong>
-                      <span style={{ fontSize: '10px', color: '#666' }}>Denominación de Origen Protegida</span>
+                      <span style={{ fontSize: '10px', color: '#666' }}>Región Denominación de Origen</span>
                     </div>
                   </RL.Popup>
                 </RL.Circle>
@@ -200,8 +215,8 @@ export default function MapComponent({ memories = [] }: MapComponentProps) {
                         pathOptions={{
                           color: mem.is_private ? '#fbbf24' : '#38bdf8',
                           fillColor: mem.is_private ? '#fbbf24' : '#38bdf8',
-                          fillOpacity: 0.06,
-                          weight: 1,
+                          fillOpacity: 0.08,
+                          weight: 1.5,
                           dashArray: '4, 4',
                         }}
                       />

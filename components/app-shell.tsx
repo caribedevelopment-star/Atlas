@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { label: 'Profile', href: '/profile' },
 ];
 
-interface AppShellProps {
+export interface AppShellProps {
   children: React.ReactNode;
   showNav?: boolean;
 }
@@ -78,7 +78,7 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
         <button
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-white text-zinc-950 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
+          className="bg-white text-zinc-950 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>Nuevo</span>
@@ -90,7 +90,7 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
         {children}
       </main>
 
-      {/* Navegación móvil global (ÚNICA) */}
+      {/* Navegación móvil global */}
       <BottomNav />
 
       {/* Modal global */}

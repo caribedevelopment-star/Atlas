@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Plus } from 'lucide-react';
+import BottomNav from '@/components/bottom-nav';
 
 const NAV_ITEMS = [
   { label: 'Home', href: '/home' },
@@ -23,7 +24,8 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
   return (
     <div className="h-screen w-screen flex flex-col bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
       {showNav && (
-        <header className="h-16 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-[1000]">
+        /* hidden md:flex oculta la barra superior rígida en móviles y la activa solo en pantallas medianas/escritorio */
+        <header className="hidden md:flex h-16 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 items-center justify-between shrink-0 z-[1000]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-950 font-bold flex items-center justify-center text-sm shadow-sm">
               A
@@ -57,7 +59,13 @@ export function AppShell({ children, showNav = true }: AppShellProps) {
         </header>
       )}
 
-      <main className="flex-1 relative w-full h-full overflow-hidden">{children}</main>
+      {/* Área del mapa/contenido con espacio abajo para la barra inferior en móvil */}
+      <main className="flex-1 relative w-full h-full overflow-hidden pb-16 md:pb-0">
+        {children}
+      </main>
+
+      {/* Navegación inferior flotante para móviles */}
+      {showNav && <BottomNav />}
     </div>
   );
 }

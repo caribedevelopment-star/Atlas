@@ -1,36 +1,65 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import NetworkCircles, { NetworkUser } from '@/components/profile/NetworkCircles';
+import { fetchUserNetwork } from '@/lib/network';
 
-const MOCK_NETWORK_USERS: NetworkUser[] = [
-  { id: '1', username: 'camila', full_name: 'Camila R.', relationship: 'circle', memories_count: 14 },
-  { id: '2', username: 'santiago', full_name: 'Santiago M.', relationship: 'circle', memories_count: 8 },
-  { id: '3', username: 'mateo_arch', full_name: 'Mateo V.', relationship: 'network', memories_count: 22 },
-  { id: '4', username: 'lucia_design', full_name: 'Lucía B.', relationship: 'network', memories_count: 5 },
-  { id: '5', username: 'elena_urban', full_name: 'Elena P.', relationship: 'public', memories_count: 31 },
-  { id: '6', username: 'david_p', full_name: 'David P.', relationship: 'public', memories_count: 3 },
-];
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function ProfilePage() {
-  const currentUser = {
+  const [currentUser, setCurrentUser] = useState<{ username: string; avatar_url?: string }>({
     username: 'alessandro',
-  };
+  });
+  const [networkUsers, setNetworkUsers] = useState<NetworkUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function initProfile() {
+      // Intentar obtener usuario en sesión, o usar usuario predeterminado
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
+
+      const activeUsername = user?.user_metadata?.username || user?.email?.split('@')[0] || 'alessandro';
+      const activeUserId = user?.id || 'demo-user-id';
+
+      setCurrentUser({
+        username: activeUsername,
+        avatar_url: user?.user_metadata?.avatar_url,
+      });
+
+      // Cargar red de usuarios
+      const network = await fetchUserNetwork(activeUserId);
+      setNetworkUsers(network);
+      setLoading(false);
+    }
+
+    initProfile();
+  }, []);
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6">
       <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-3xl p-6 backdrop-blur-md">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <div>
             <h2 className="text-lg font-bold text-white tracking-tight">Tu Red & Círculos</h2>
-            <p className="text-xs text-zinc-400">Visualización interactiva de usuarios en la red Atlas</p>
+            <p className="text-xs text-zinc-400">Órbitas de interacción en Atlas</p>
           </div>
         </div>
 
-        <NetworkCircles
-          currentUser={currentUser}
-          users={MOCK_NETWORK_USERS}
-          onSelectUser={(user) => console.log('Usuario seleccionado:', user)}
-        />
+        {loading ? (
+          <div className="py-20 text-center text-xs font-mono text-zinc-500">
+            Cargando órbitas de red...
+          </div>
+        ) : (
+          <NetworkCircles
+            currentUser={currentUser}
+            users={networkUsers}
+            onSelectUser={(u) => console.log('Usuario seleccionado:', u)}
+          />
+        )}
       </div>
     </div>
   );

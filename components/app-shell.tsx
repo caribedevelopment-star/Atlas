@@ -15,57 +15,55 @@ const NAV_ITEMS = [
 
 interface AppShellProps {
   children: React.ReactNode;
-  showNav?: boolean;
 }
 
-export function AppShell({ children, showNav = true }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
-      {showNav && (
-        /* hidden md:flex oculta la barra superior rígida en móviles y la activa solo en pantallas medianas/escritorio */
-        <header className="hidden md:flex h-16 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 items-center justify-between shrink-0 z-[1000]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-950 font-bold flex items-center justify-center text-sm shadow-sm">
-              A
-            </div>
-            <span className="font-bold tracking-wider text-base text-white">Atlas</span>
+    <div className="min-h-screen w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans relative overflow-x-hidden">
+      
+      {/* Header Superior: Exclusivo para Escritorio (md:flex) */}
+      <header className="hidden md:flex h-16 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl px-6 items-center justify-between shrink-0 z-50 sticky top-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-white text-zinc-950 font-mono font-bold flex items-center justify-center text-sm shadow-sm">
+            A
           </div>
+          <span className="font-semibold tracking-tight text-sm text-white">Atlas</span>
+        </div>
 
-          <nav className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
-            {NAV_ITEMS.map((item) => {
-              const isActive = pathname?.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-zinc-800 text-white shadow-sm'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+        <nav className="flex items-center gap-1 bg-zinc-900/60 p-1 rounded-2xl border border-zinc-800/80">
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname?.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`px-4 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                  isActive
+                    ? 'bg-zinc-800 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-          <button className="bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all">
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>Nuevo</span>
-          </button>
-        </header>
-      )}
+        <button className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all active:scale-95">
+          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Nuevo</span>
+        </button>
+      </header>
 
-      {/* Área del mapa/contenido con espacio abajo para la barra inferior en móvil */}
-      <main className="flex-1 relative w-full h-full overflow-hidden pb-16 md:pb-0">
+      {/* Área Principal de Contenido */}
+      <main className="flex-1 w-full relative pb-28 md:pb-0">
         {children}
       </main>
 
-      {/* Navegación inferior flotante para móviles */}
-      {showNav && <BottomNav />}
+      {/* Floating Bottom Nav para Móviles */}
+      <BottomNav />
     </div>
   );
 }

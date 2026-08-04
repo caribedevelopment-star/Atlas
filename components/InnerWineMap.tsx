@@ -5,7 +5,6 @@ import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-// Fix para iconos por defecto de Leaflet en Next.js
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -13,13 +12,13 @@ const customIcon = new L.Icon({
   iconAnchor: [12, 41],
 });
 
-// Forzar recalculo de dimensiones del mapa al cargar
 function MapResizeHandler() {
   const map = useMap();
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       map.invalidateSize();
-    }, 200);
+    }, 250);
+    return () => clearTimeout(timer);
   }, [map]);
   return null;
 }
@@ -40,12 +39,12 @@ const REGIONS = {
 };
 
 const ROUTE_MEMORIES = [
-  [42.465, -2.445], // Logroño
-  [42.518, -2.585], // Haro
-  [42.562, -2.618], // Laguardia
+  [42.465, -2.445],
+  [42.518, -2.585],
+  [42.562, -2.618],
 ] as [number, number][];
 
-interface MapInnerProps {
+export interface MapInnerProps {
   showRegions: boolean;
   showRoutes: boolean;
 }
@@ -60,14 +59,12 @@ export default function MapInner({ showRegions, showRoutes }: MapInnerProps) {
     >
       <MapResizeHandler />
 
-      {/* CartoDB Dark Matter retina tiles */}
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; CARTO'
         maxZoom={19}
       />
 
-      {/* Polígonos D.O. */}
       {showRegions &&
         Object.entries(REGIONS).map(([key, coords]) => (
           <Polygon
@@ -83,7 +80,6 @@ export default function MapInner({ showRegions, showRoutes }: MapInnerProps) {
           />
         ))}
 
-      {/* Rutas de Viajes */}
       {showRoutes && (
         <>
           <Polyline

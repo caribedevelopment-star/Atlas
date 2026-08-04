@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import L from 'leaflet';
 import { useMap } from 'react-leaflet';
-import { createClient } from '@/utils/supabase/client';
+import { createBrowserClient } from '@supabase/ssr';
 
 // Carga dinámica de Leaflet para evitar SSR
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
@@ -24,7 +24,6 @@ const Polyline = dynamic(() => import('react-leaflet').then((m) => m.Polyline), 
 const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
 
-// Componente para recalcular las dimensiones del mapa y evitar los huecos negros
 function MapInvalidateSize() {
   const map = useMap();
   useEffect(() => {
@@ -114,7 +113,10 @@ export default function MapComponent() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -142,7 +144,6 @@ export default function MapComponent() {
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-zinc-950">
-      {/* Botón Flotante para Abrir/Cerrar Panel */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -152,7 +153,6 @@ export default function MapComponent() {
         {isOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
       </button>
 
-      {/* Panel Flotante Glassmorphism */}
       <aside
         className={`absolute top-4 left-4 bottom-20 md:bottom-4 w-[calc(100%-2rem)] md:w-80 z-[900] bg-zinc-950/90 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ease-in-out ${
           isOpen ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-[calc(100%+2rem)] opacity-0 pointer-events-none'
@@ -171,7 +171,6 @@ export default function MapComponent() {
             </div>
           </div>
 
-          {/* Selector de Capas */}
           <div className="space-y-2">
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
               Capas del Mapa
@@ -211,7 +210,6 @@ export default function MapComponent() {
             </div>
           </div>
 
-          {/* Memorias en Tiempo Real */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
@@ -256,7 +254,6 @@ export default function MapComponent() {
         </div>
       </aside>
 
-      {/* Visor Cartográfico Principal */}
       <div className="w-full h-full">
         {mounted ? (
           <MapContainer
@@ -265,7 +262,6 @@ export default function MapComponent() {
             zoomControl={false}
             style={{ width: '100%', height: '100%', background: '#09090b' }}
           >
-            {/* Forzar recálculo del viewport del mapa */}
             <MapInvalidateSize />
 
             <TileLayer

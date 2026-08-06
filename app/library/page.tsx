@@ -20,6 +20,7 @@ import {
   Loader2,
   FolderArchive
 } from 'lucide-react';
+import { importDriveBooks } from '@/lib/library/repository';
 
 // URL y ID fijo de tu carpeta de Google Drive
 const DRIVE_FOLDER_ID = '1-mPlI7w39RgskUim3MILyMY4GTpJMlHG';
@@ -59,6 +60,8 @@ export default function LibraryPage() {
   // Modal para añadir contenido
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newSubtitle, setNewSubtitle] = useState('');
   const [newCategory, setNewCategory] = useState('Urbanismo y Arquitectura');
@@ -123,6 +126,18 @@ export default function LibraryPage() {
     setSaving(false);
   };
 
+  const handleDriveImport = async () => {
+    setImporting(true); setImportMessage(null);
+    try {
+      const result = await importDriveBooks();
+      await fetchLibraryItems();
+      setImportMessage(result.imported ? `${result.imported} libros añadidos. ${result.skipped} ya estaban en Atlas.` : `Los ${result.total} libros ya estaban sincronizados.`);
+      setActiveTab('my_books_pdf');
+    } catch (cause) {
+      setImportMessage(cause instanceof Error ? cause.message : 'No se pudo importar la carpeta.');
+    } finally { setImporting(false); }
+  };
+
   // Filtrado
   const filteredItems = items.filter((item) => {
     const matchesTab =
@@ -159,6 +174,14 @@ export default function LibraryPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => void handleDriveImport()}
+              disabled={importing}
+              className="bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-60 font-semibold text-xs py-2 px-3.5 rounded-xl flex items-center gap-1.5 transition active:scale-95"
+            >
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              <span>{importing ? 'Sincronizando…' : 'Importar carpeta'}</span>
+            </button>
             <a
               href={DRIVE_FOLDER_DIRECT_URL}
               target="_blank"
@@ -177,6 +200,8 @@ export default function LibraryPage() {
             </button>
           </div>
         </div>
+
+        {importMessage && <p role="status" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300">{importMessage}</p>}
 
         {/* BUSCADOR Y FILTROS */}
         <div className="space-y-3 bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-800/80 backdrop-blur-sm">

@@ -85,9 +85,9 @@ export default function MapComponent() {
   const initialCenter: [number, number] = userLocation || [40.41678, -3.70379];
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-slate-50 font-sans text-slate-900">
+    <div className="relative h-full w-full overflow-hidden bg-slate-50 font-sans text-slate-900">
       <div className="absolute inset-0 z-0">
-        <MapContainer center={initialCenter} zoom={13} zoomControl={false} className="w-full h-full">
+        <MapContainer center={initialCenter} zoom={13} zoomControl={false} className="h-full w-full">
           <TileLayer
             attribution='&copy; CARTO'
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -112,24 +112,24 @@ export default function MapComponent() {
         </MapContainer>
       </div>
 
-      <header className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none gap-2">
-        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-slate-200 p-2.5 px-4 rounded-2xl pointer-events-auto w-full max-w-md shadow-lg">
+      <header className="pointer-events-none absolute inset-x-3 top-3 z-10 flex flex-col gap-2 sm:inset-x-4 sm:top-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="pointer-events-auto flex min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2.5 shadow-lg backdrop-blur-md sm:max-w-md sm:gap-3 sm:px-4">
           <Search className="w-5 h-5 text-slate-400 shrink-0" />
-          <input type="text" placeholder="Buscar memorias..." className="bg-transparent border-none outline-none text-sm w-full text-slate-800 placeholder-slate-400" />
+          <input type="text" placeholder="Buscar memorias..." className="min-w-0 flex-1 border-none bg-transparent text-sm text-slate-800 outline-none placeholder-slate-400" />
         </div>
 
-        <div className="flex items-center gap-2 pointer-events-auto shrink-0">
-          <Link href="/memories" className="bg-white/90 text-slate-700 font-medium px-4 py-2.5 rounded-2xl border border-slate-200 shadow-lg flex items-center gap-2 text-sm">
+        <div className="pointer-events-auto grid grid-cols-[auto_1fr] gap-2 sm:flex sm:shrink-0 sm:items-center">
+          <Link href="/memories" className="flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2.5 text-sm font-medium text-slate-700 shadow-lg backdrop-blur-md sm:px-4">
             <BookOpen className="w-4 h-4 text-purple-600" />
             <span className="hidden sm:inline">Memorias</span>
           </Link>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-2 text-sm transition"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-3 py-2.5 text-sm font-medium text-white shadow-lg transition hover:bg-slate-800 active:scale-[0.99] sm:px-4"
           >
             <Plus className="w-4 h-4" />
-            <span>Añadir lugar</span>
+            <span className="truncate">Añadir lugar</span>
           </button>
         </div>
       </header>

@@ -7,7 +7,7 @@ import { AppShell } from '@/components/app-shell';
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[calc(100vh-4rem)] bg-slate-50 flex items-center justify-center text-slate-500 font-sans text-sm">
+    <div className="flex h-[calc(100dvh-7rem)] w-full items-center justify-center bg-slate-50 px-4 text-center font-sans text-sm text-slate-500 sm:h-[calc(100dvh-6rem)]">
       Obteniendo ubicación y cargando mapa...
     </div>
   ),
@@ -16,7 +16,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
 export default function HomePage() {
   return (
     <AppShell>
-      <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden bg-slate-50">
+      <div className="relative h-[calc(100dvh-7rem)] w-full overflow-hidden bg-slate-50 sm:h-[calc(100dvh-6rem)]">
         <MapComponent />
       </div>
     </AppShell>

@@ -59,28 +59,28 @@ export default function LandingPage() {
   }
   
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background px-6">
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <p className="mb-6 text-xs font-medium uppercase tracking-[0.3em] text-olive">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background px-4 sm:px-6">
+      <div className="flex flex-1 flex-col items-center justify-center px-1 py-10 text-center">
+        <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.24em] text-olive sm:mb-6 sm:text-xs sm:tracking-[0.3em]">
           A personal memory journal
         </p>
 
-        <h1 className="text-6xl font-semibold tracking-[0.02em]">ATLAS</h1>
+        <h1 className="text-[clamp(3.25rem,18vw,4.5rem)] font-semibold tracking-[0.02em]">ATLAS</h1>
 
-        <p className="mt-5 max-w-xs text-pretty text-lg leading-relaxed text-muted-foreground">
+        <p className="mt-4 max-w-xs text-pretty text-base leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
           Places disappear. Stories remain.
         </p>
       </div>
 
-      <div className="pb-12">
-       <div className="space-y-4">
+      <div className="pb-[max(2rem,env(safe-area-inset-bottom))]">
+       <div className="space-y-3.5 sm:space-y-4">
 
   <input
     type="email"
     placeholder="Correo electrónico"
     value={email}
     onChange={(e) => setEmail(e.target.value)}
-    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+    className="min-h-12 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-base outline-none focus:border-olive"
   />
 
   <input
@@ -88,27 +88,27 @@ export default function LandingPage() {
     placeholder="Contraseña"
     value={password}
     onChange={(e) => setPassword(e.target.value)}
-    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+    className="min-h-12 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-base outline-none focus:border-olive"
   />
 
   <button
     onClick={signIn}
     disabled={loading}
-    className="w-full rounded-lg bg-primary px-6 py-4 text-primary-foreground shadow-soft-lg"
+    className="min-h-12 w-full rounded-2xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-soft-lg transition active:scale-[0.99] disabled:opacity-60 sm:py-4"
   >
     Entrar
   </button>
 
   <button
     onClick={signInGoogle}
-    className="w-full rounded-lg border border-gray-300 bg-white px-6 py-4"
+    className="min-h-12 w-full rounded-2xl border border-gray-300 bg-white px-6 py-3.5 text-sm font-semibold transition active:scale-[0.99] sm:py-4"
   >
     Continuar con Google
   </button>
 
   <button
     onClick={signUp}
-    className="w-full text-sm text-muted-foreground hover:underline"
+    className="min-h-11 w-full rounded-2xl text-sm font-medium text-muted-foreground hover:underline"
   >
     Crear una cuenta
   </button>

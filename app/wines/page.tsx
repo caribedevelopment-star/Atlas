@@ -118,27 +118,27 @@ export default function WinesPage() {
     : wines.filter(w => w.supermarket?.toLowerCase() === selectedStore.toLowerCase());
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 pb-24">
-      <div className="max-w-5xl mx-auto">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div className="min-h-dvh overflow-x-hidden bg-slate-50 px-4 py-5 pb-32 font-sans text-slate-800 sm:p-6 sm:pb-28">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-6 flex min-w-0 flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h1 className="flex min-w-0 items-center gap-2 text-[clamp(1.5rem,7vw,1.875rem)] font-bold text-slate-900">
                 <Wine className="w-6 h-6 text-rose-600" />
                 Bodega Abierta
               </h1>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
                 <Globe className="w-3 h-3" /> Pública
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="mt-1 max-w-prose text-xs leading-relaxed text-slate-500">
               Catálogo de vinos destacados por supermercado y comunidad
             </p>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-md transition self-start sm:self-auto"
+            className="flex min-h-11 w-full items-center justify-center gap-2 self-start rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-slate-800 active:scale-[0.99] sm:w-auto sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Añadir Vino</span>
@@ -146,12 +146,12 @@ export default function WinesPage() {
         </header>
 
         {/* Filtro por supermercados */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
+        <div className="no-scrollbar -mx-4 mb-5 flex snap-x items-center gap-2 overflow-x-auto px-4 pb-3 sm:mx-0 sm:mb-6 sm:px-0">
           {STORES.map((store) => (
             <button
               key={store}
               onClick={() => setSelectedStore(store)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+              className={`min-h-10 snap-start whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition ${
                 selectedStore === store
                   ? 'bg-rose-900 text-white shadow-sm'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
@@ -167,17 +167,17 @@ export default function WinesPage() {
             <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
           </div>
         ) : filteredWines.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 py-10 text-center sm:p-8 sm:py-12">
             <Wine className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-600">No hay vinos registrados para esta selección.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {filteredWines.map((wine) => (
-              <div key={wine.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
-                <div className="relative w-full h-48 bg-slate-100 flex items-center justify-center">
+              <div key={wine.id} className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+                <div className="relative flex h-44 w-full items-center justify-center bg-slate-100 sm:h-48">
                   {wine.image_url ? (
-                    <img src={wine.image_url} alt={wine.name} className="w-full h-full object-cover" />
+                    <img src={wine.image_url} alt={wine.name} className="h-full w-full object-cover" />
                   ) : (
                     <Wine className="w-12 h-12 text-slate-300" />
                   )}
@@ -187,13 +187,13 @@ export default function WinesPage() {
                   </div>
                 </div>
 
-                <div className="p-5">
-                  <h3 className="font-bold text-slate-900 text-base">{wine.name}</h3>
+                <div className="p-4 sm:p-5">
+                  <h3 className="truncate text-base font-bold text-slate-900">{wine.name}</h3>
                   <p className="text-xs text-slate-500 font-medium mt-0.5">
                     {wine.winery} {wine.vintage ? `• ${wine.vintage}` : ''}
                   </p>
 
-                  <div className="flex items-center justify-between mt-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium">
+                  <div className="mt-3 flex min-w-0 items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50 p-2.5 text-xs font-medium">
                     <div className="flex items-center gap-1.5 text-slate-600">
                       <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
                       <span>{wine.supermarket || 'No especificado'}</span>
@@ -220,9 +220,9 @@ export default function WinesPage() {
 
       {/* Modal para añadir vino */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 font-sans">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Añadir Nuevo Vino</h3>
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-900/40 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-slate-100 bg-white p-4 font-sans shadow-2xl sm:p-6">
+            <h3 className="mb-4 text-lg font-bold text-slate-900">Añadir Nuevo Vino</h3>
 
             <form onSubmit={handleAddWine} className="space-y-4">
               <div>
@@ -233,11 +233,11 @@ export default function WinesPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ej. Marqués de Riscal"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Bodega</label>
                   <input
@@ -245,7 +245,7 @@ export default function WinesPage() {
                     value={winery}
                     onChange={(e) => setWinery(e.target.value)}
                     placeholder="Ej. Riscal"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                    className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
                   />
                 </div>
                 <div>
@@ -254,18 +254,18 @@ export default function WinesPage() {
                     type="number"
                     value={vintage}
                     onChange={(e) => setVintage(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                    className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Supermercado/Tienda</label>
                   <select
                     value={supermarket}
                     onChange={(e) => setSupermarket(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800 bg-white"
+                    className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
                   >
                     <option value="Mercadona">Mercadona</option>
                     <option value="Lidl">Lidl</option>
@@ -283,7 +283,7 @@ export default function WinesPage() {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="Ej. 12.50"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                    className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
                   />
                 </div>
               </div>
@@ -297,7 +297,7 @@ export default function WinesPage() {
                   step="0.5"
                   value={rating}
                   onChange={(e) => setRating(Number(e.target.value))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
                 />
               </div>
 
@@ -308,7 +308,7 @@ export default function WinesPage() {
                   value={tastingNotes}
                   onChange={(e) => setTastingNotes(e.target.value)}
                   placeholder="Sensaciones, maridaje..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+                  className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
                 />
               </div>
 
@@ -318,22 +318,22 @@ export default function WinesPage() {
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+                  className="w-full cursor-pointer text-xs text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-slate-100 file:px-4 file:py-2.5 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
                 />
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="min-h-11 rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800 disabled:opacity-50 flex items-center gap-1.5"
+                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-slate-800 disabled:opacity-50"
                 >
                   {uploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Guardar Vino</span>

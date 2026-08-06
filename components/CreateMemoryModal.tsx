@@ -51,13 +51,13 @@ export default function CreateMemoryModal({ isOpen, onClose, availableFriends, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 relative font-sans text-slate-800">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-900/40 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-slate-100 bg-white p-4 font-sans text-slate-800 shadow-2xl sm:p-6">
+        <button onClick={onClose} className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Añadir Memoria al Mapa</h3>
+        <h3 className="mb-4 pr-10 text-lg font-bold text-slate-900">Añadir Memoria al Mapa</h3>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -68,7 +68,7 @@ export default function CreateMemoryModal({ isOpen, onClose, availableFriends, o
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ej. Cena de cumpleaños"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+              className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
             />
           </div>
 
@@ -79,7 +79,7 @@ export default function CreateMemoryModal({ isOpen, onClose, availableFriends, o
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               placeholder="¿Qué pasó aquí?"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+              className="min-h-11 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-base outline-none focus:border-slate-800 sm:text-sm"
             />
           </div>
 
@@ -90,7 +90,7 @@ export default function CreateMemoryModal({ isOpen, onClose, availableFriends, o
               <button
                 type="button"
                 onClick={() => setVisibility('public')}
-                className={`flex flex-col items-center p-3 rounded-2xl border text-xs font-medium gap-1 transition ${
+                className={`flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-[11px] font-medium transition sm:p-3 sm:text-xs ${
                   visibility === 'public' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-slate-200 text-slate-500'
                 }`}
               >
@@ -101,7 +101,7 @@ export default function CreateMemoryModal({ isOpen, onClose, availableFriends, o
               <button
                 type="button"
                 onClick={() => setVisibility('shared')}
-                className={`flex flex-col items-center p-3 rounded-2xl border text-xs font-medium gap-1 transition ${
+                className={`flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-[11px] font-medium transition sm:p-3 sm:text-xs ${
                   visibility === 'shared' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-slate-200 text-slate-500'
                 }`}
               >
@@ -112,7 +112,7 @@ export default function CreateMemoryModal({ isOpen, onClose, availableFriends, o
               <button
                 type="button"
                 onClick={() => setVisibility('private')}
-                className={`flex flex-col items-center p-3 rounded-2xl border text-xs font-medium gap-1 transition ${
+                className={`flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-[11px] font-medium transition sm:p-3 sm:text-xs ${
                   visibility === 'private' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-slate-200 text-slate-500'
                 }`}
               >
@@ -140,11 +140,11 @@ export default function CreateMemoryModal({ isOpen, onClose, availableFriends, o
             </div>
           )}
 
-          <div className="pt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="min-h-11 rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">
               Cancelar
             </button>
-            <button type="submit" className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800">
+            <button type="submit" className="min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-slate-800">
               Guardar memoria
             </button>
           </div>

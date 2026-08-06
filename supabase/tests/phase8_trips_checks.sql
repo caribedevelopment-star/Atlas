@@ -1,0 +1,15 @@
+begin;
+select plan(12);
+select has_table('public','trips','trips exists');
+select has_table('public','trip_stops','trip stops exist');
+select has_table('public','trip_participants','trip participants exist');
+select has_table('public','trip_wines','trip wines exist');
+select has_table('public','trip_photos','trip photos exist');
+select col_is_unique('public','trip_stops',array['trip_id','position'],'stop positions are unique');
+select policies_are('public','trips',array['trips_select','trips_insert','trips_update','trips_delete'],'trip policies are installed');
+select function_returns('public','atlas_reorder_trip_stops',array['uuid','uuid[]'],'void','reorder RPC exists');
+select ok(public.atlas_trip_can_view('00000000-0000-0000-0000-000000000001','private','00000000-0000-0000-0000-000000000001'),'owner sees a private trip');
+select ok(not public.atlas_trip_can_view('00000000-0000-0000-0000-000000000001','private','00000000-0000-0000-0000-000000000002'),'another user cannot see a private trip');
+select ok(public.atlas_trip_can_view('00000000-0000-0000-0000-000000000001','public','00000000-0000-0000-0000-000000000002'),'authenticated user sees a public trip');
+select ok(not public.atlas_trip_can_view('00000000-0000-0000-0000-000000000001','friends','00000000-0000-0000-0000-000000000002'),'friends visibility requires a persisted reciprocal friendship');
+select * from finish(); rollback;

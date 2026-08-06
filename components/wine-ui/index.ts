@@ -11,3 +11,7 @@ export * from './WineRatingBadge';
 export * from './WineSearchField';
 export * from './WineStatTile';
 export * from './WineToolbar';
+export * from './types';
+export * from './WineFieldList';
+export * from './WineParticipantStack';
+export * from './WinePhotoStrip';

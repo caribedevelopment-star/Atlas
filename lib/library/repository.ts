@@ -17,9 +17,21 @@ export async function importDriveBooks(): Promise<{ imported: number; skipped: n
   const known = new Set((existing ?? []).map((item) => item.drive_file_id).filter(Boolean));
   const pending = result.files.filter((file) => !known.has(file.id));
   if (pending.length) {
-    const rows = pending.map((file) => ({ user_id: auth.user.id, title: file.title, author: 'Biblioteca personal', type: 'my_book_pdf', status: 'backlog', category: 'Libros', description: null, drive_file_id: file.id, published_date: new Date().toISOString().slice(0, 10), read_progress: 0, visibility: 'private' }));
+    const publishedDate = new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+    const rows = pending.map((file) => ({
+      title: file.title,
+      subtitle: null,
+      author: 'Biblioteca Personal',
+      type: 'my_book_pdf',
+      status: 'backlog',
+      category: 'Libros',
+      description: null,
+      drive_file_id: file.id,
+      published_date: publishedDate,
+      read_progress: 0,
+    }));
     const { error } = await supabase.from('library_items').insert(rows);
-    if (error) throw error;
+    if (error) throw new Error(`Supabase no pudo importar los libros: ${error.message}`);
   }
   return { imported: pending.length, skipped: result.files.length - pending.length, total: result.files.length };
 }

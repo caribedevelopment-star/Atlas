@@ -30,6 +30,7 @@ export function WineBottleImage({
         src={src || '/images/wine-rioja.png'}
         alt={alt}
         fill
+        unoptimized={Boolean(src?.startsWith('http'))}
         priority={priority}
         sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 220px"
         className={cx(variant === 'cover' ? 'object-cover' : 'object-contain p-5', imageClassName)}

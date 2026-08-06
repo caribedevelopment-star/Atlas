@@ -41,8 +41,7 @@ function getOwnerName(user?: WineOwner | string | null) {
 
 const visibilityLabels: Record<WineVisibility, string> = {
   private: 'Privado',
-  circle: 'Círculo',
-  network: 'Red',
+  friends: 'Amigos',
   public: 'Público',
 };
 

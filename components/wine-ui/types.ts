@@ -1,4 +1,4 @@
-export type WineVisibility = 'private' | 'circle' | 'network' | 'public';
+export type WineVisibility = 'private' | 'friends' | 'public';
 
 export interface WineParticipant {
   id: string;

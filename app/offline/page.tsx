@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import { MapPin } from 'lucide-react';
+export default function OfflinePage(){return <main className="flex min-h-screen items-center justify-center bg-zinc-950 p-6 text-center text-white"><section className="max-w-sm"><span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-zinc-950"><MapPin/></span><h1 className="mt-6 text-3xl font-semibold">Atlas está sin conexión</h1><p className="mt-3 text-sm leading-6 text-zinc-400">Por seguridad, tus memorias y datos privados no se guardan offline. Recupera la conexión para volver a tu archivo.</p><Link href="/home" className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-zinc-950">Reintentar</Link></section></main>}

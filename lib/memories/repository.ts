@@ -38,11 +38,15 @@ export async function listMapMemories(): Promise<ProfileMemory[]> {
   return (data ?? []).map((row) => normalizeMemory(row as Row));
 }
 
-export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility: WineVisibility; latitude?: number; longitude?: number; city?: string; country?: string }
+export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility: WineVisibility; participantIds: string[]; latitude?: number; longitude?: number; city?: string; country?: string }
 export async function createMemory(input: CreateMemoryInput): Promise<string> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error('Debes iniciar sesión para guardar una memoria.');
-  const { data, error } = await supabase.from('memories').insert({ user_id: auth.user.id, title: input.title.trim(), location_name: input.location.trim() || null, city: input.city || null, country: input.country || null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.visibility, tagged_friends: [] }).select('id').single();
-  if (error) throw error;
+  if (!input.title.trim()) throw new Error('Escribe un título para la memoria.');
+  const payload = { user_id: auth.user.id, title: input.title.trim(), location_name: input.location.trim() || null, city: input.city || null, country: input.country || null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.participantIds.length && input.visibility === 'private' ? 'friends' : input.visibility, tagged_friends: input.participantIds };
+  const { data, error } = await supabase.from('memories').insert(payload).select('id').single();
+  if (error) throw new Error(memorySaveMessage(error));
   return String(data.id);
 }
+
+function memorySaveMessage(error: { code?: string; message?: string }): string { if (error.code === '42501') return 'No tienes permiso para guardar esta memoria. Revisa tu sesión.'; if (error.code === 'PGRST204') return `La tabla de memorias no está actualizada: ${error.message ?? 'falta una columna requerida'}.`; return error.message || 'No se pudo guardar la memoria.'; }

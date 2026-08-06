@@ -21,3 +21,10 @@ export async function updateUserRelationship(currentUserId: string, targetUserId
   const { error } = await supabase.from('user_relationships').upsert({ user_id: currentUserId, target_user_id: targetUserId, relationship, updated_at: new Date().toISOString() }, { onConflict: 'user_id,target_user_id' });
   if (error) throw error;
 }
+
+export async function listShareableUsers(): Promise<NetworkUser[]> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error('Debes iniciar sesión para seleccionar participantes.');
+  const users = await fetchUserNetwork(data.user.id);
+  return users.filter((user) => user.relationship === 'circle');
+}

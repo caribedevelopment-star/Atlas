@@ -9,6 +9,8 @@ import { saveTrip } from '@/lib/trips/repository';
 import type { WineVisibility } from '@/types/wine';
 import { PlaceAutocomplete } from '@/components/place-autocomplete';
 import type { AtlasPlace } from '@/lib/places/repository';
+import { ParticipantPicker } from '@/components/participant-picker';
+import { useShareableUsers } from '@/hooks/use-shareable-users';
 
 type Mode = 'memory' | 'trip';
 type Stop = { key: string; title: string; city: string; country: string; latitude: string; longitude: string };
@@ -23,19 +25,20 @@ export default function NewMemoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [stops, setStops] = useState<Stop[]>([blankStop('stop-1'), blankStop('stop-2')]);
   const [memoryLocation,setMemoryLocation]=useState(''); const [memoryPlace,setMemoryPlace]=useState<AtlasPlace|null>(null);
+  const [participantIds,setParticipantIds]=useState<string[]>([]); const shareable=useShareableUsers();
   const validStops = useMemo(() => stops.filter((stop) => stop.title.trim() && validCoordinate(stop.latitude, stop.longitude)), [stops]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError(null); const data = new FormData(event.currentTarget);
     try {
       if (mode === 'memory') {
-        await createMemory({ title: String(data.get('title')), location: memoryLocation, date: String(data.get('date')), description: String(data.get('description')), visibility, latitude:memoryPlace?.latitude, longitude:memoryPlace?.longitude, city:memoryPlace?.city, country:memoryPlace?.country });
+        await createMemory({ title: String(data.get('title')), location: memoryLocation, date: String(data.get('date')), description: String(data.get('description')), visibility, participantIds, latitude:memoryPlace?.latitude, longitude:memoryPlace?.longitude, city:memoryPlace?.city, country:memoryPlace?.country });
       } else {
         if (validStops.length < 2) throw new Error('Añade al menos dos paradas con coordenadas válidas.');
         if (new Set(validStops.map((stop) => `${stop.latitude},${stop.longitude}`)).size !== validStops.length) throw new Error('Hay paradas duplicadas. Revisa sus coordenadas.');
         const startDate = String(data.get('startDate')); const endDate = String(data.get('endDate'));
         if (endDate < startDate) throw new Error('La fecha final no puede ser anterior al inicio.');
-        await saveTrip({ title: String(data.get('title')), description: String(data.get('description')), coverImageUrl: '', startDate, endDate, visibility, stops: validStops.map((stop) => ({ title: stop.title.trim(), city: stop.city.trim() || undefined, country: stop.country.trim() || undefined, latitude: Number(stop.latitude), longitude: Number(stop.longitude) })), participantIds: [], wineIds: [], photos: [] });
+        await saveTrip({ title: String(data.get('title')), description: String(data.get('description')), coverImageUrl: '', startDate, endDate, visibility, stops: validStops.map((stop) => ({ title: stop.title.trim(), city: stop.city.trim() || undefined, country: stop.country.trim() || undefined, latitude: Number(stop.latitude), longitude: Number(stop.longitude) })), participantIds, wineIds: [], photos: [] });
       }
       router.push('/home'); router.refresh();
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se pudo guardar.'); } finally { setSaving(false); }
@@ -49,6 +52,7 @@ export default function NewMemoryPage() {
       <label className="block text-sm font-medium text-zinc-300">Título<input name="title" required maxLength={160} autoFocus placeholder={mode === 'memory' ? 'Cena bajo las estrellas' : 'Costa norte, verano'} className={field}/></label>
       {mode === 'memory' ? <div className="grid gap-4 sm:grid-cols-2"><PlaceAutocomplete label="Lugar" value={memoryLocation} onChange={(value)=>{setMemoryLocation(value);setMemoryPlace(null)}} onSelect={setMemoryPlace} placeholder="Escribe una ciudad o calle"/><Field label="Fecha" name="date" type="date" defaultValue={today} icon={<CalendarDays/>}/></div> : <><div className="grid gap-4 sm:grid-cols-2"><Field label="Inicio" name="startDate" type="date" defaultValue={today} required icon={<CalendarDays/>}/><Field label="Fin" name="endDate" type="date" defaultValue={today} required icon={<CalendarDays/>}/></div><Stops stops={stops} setStops={setStops}/></>}
       <label className="block text-sm font-medium text-zinc-300">Notas<textarea name="description" rows={4} maxLength={2000} placeholder="¿Qué quieres recordar?" className={`${field} h-auto resize-none py-3 leading-6`}/></label>
+      <ParticipantPicker users={shareable.users} selected={participantIds} onChange={setParticipantIds} loading={shareable.loading} error={shareable.error}/>
       <Visibility value={visibility} onChange={setVisibility}/>
       {error && <p role="alert" className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}
       <button disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-4 text-sm font-semibold text-zinc-950 shadow-xl transition hover:bg-zinc-200 active:scale-[.99] disabled:opacity-60">{saving ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4"/>}{saving ? 'Guardando…' : mode === 'memory' ? 'Guardar memoria' : 'Guardar viaje'}</button>

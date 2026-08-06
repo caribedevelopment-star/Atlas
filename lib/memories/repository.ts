@@ -40,6 +40,12 @@ export async function listMapMemories(): Promise<ProfileMemory[]> {
 
 export async function listMyMemories(): Promise<ProfileMemory[]> { const {data:auth,error:authError}=await supabase.auth.getUser(); if(authError||!auth.user)throw new Error('Debes iniciar sesión para ver tus memorias.'); const {data,error}=await supabase.from('memories').select('*').eq('user_id',auth.user.id).order('created_at',{ascending:false}); if(error)throw error; return (data??[]).map((row)=>normalizeMemory(row as Row)); }
 
+export async function getMemory(id: string): Promise<ProfileMemory> {
+  const { data, error } = await supabase.from('memories').select('*').eq('id', id).single();
+  if (error) throw error;
+  return normalizeMemory(data as Row);
+}
+
 export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility: WineVisibility; participantIds: string[]; latitude?: number; longitude?: number; city?: string; country?: string }
 export async function createMemory(input: CreateMemoryInput): Promise<string> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
@@ -49,6 +55,14 @@ export async function createMemory(input: CreateMemoryInput): Promise<string> {
   const { data, error } = await supabase.from('memories').insert(payload).select('id').single();
   if (error) throw new Error(memorySaveMessage(error));
   return String(data.id);
+}
+
+export async function updateMemory(id: string, input: CreateMemoryInput): Promise<void> {
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) throw new Error('Debes iniciar sesión para editar esta memoria.');
+  const payload = { title: input.title.trim(), location_name: input.location.trim() || null, city: input.city || null, country: input.country || null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.participantIds.length && input.visibility === 'private' ? 'friends' : input.visibility, tagged_friends: input.participantIds };
+  const { error } = await supabase.from('memories').update(payload).eq('id', id).eq('user_id', auth.user.id);
+  if (error) throw new Error(memorySaveMessage(error));
 }
 
 function memorySaveMessage(error: { code?: string; message?: string }): string { if (error.code === '42501') return 'No tienes permiso para guardar esta memoria. Revisa tu sesión.'; if (error.code === 'PGRST204') return `La tabla de memorias no está actualizada: ${error.message ?? 'falta una columna requerida'}.`; return error.message || 'No se pudo guardar la memoria.'; }

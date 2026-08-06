@@ -1,22 +1,9 @@
 import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import AppShell from '@/components/app-shell';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-export const metadata: Metadata = {
-  title: 'ATLAS — Places disappear. Stories remain.',
-  description:
-    'A personal memory journal with collaborative knowledge. Capture the places, wines, and stories that matter.',
-  openGraph: {
-    title: 'ATLAS',
-    description: 'Places disappear. Stories remain.',
-    type: 'website',
-  },
+export const metadata = {
+  title: 'Atlas — Cartografía Personal',
+  description: 'Un espacio personal de exploración y recuerdos',
 };
 
 export default function RootLayout({
@@ -25,8 +12,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} bg-background`}>
-      <body className="font-sans antialiased">{children}</body>
+    <html lang="es" className="dark h-full">
+      <body className="bg-zinc-950 text-zinc-100 antialiased h-full overflow-x-hidden selection:bg-zinc-800">
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

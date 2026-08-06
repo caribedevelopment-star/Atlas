@@ -1,24 +1,35 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { AppShell } from '@/components/app-shell';
 
-// Carga el mapa de forma dinámica (solo cliente) con fondo claro y geolocalización
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[calc(100vh-4rem)] bg-slate-50 flex items-center justify-center text-slate-500 font-sans text-sm">
-      Obteniendo ubicación y cargando mapa...
+    <div className="h-[calc(100dvh-8rem)] w-full md:h-[calc(100dvh-4rem)] bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
+      Cargando mapa interactivo...
     </div>
   ),
 });
 
 export default function HomePage() {
-  return (
-    <AppShell>
-      <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden bg-slate-50">
-        <MapComponent />
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="h-[calc(100dvh-8rem)] w-full md:h-[calc(100dvh-4rem)] bg-zinc-950 flex items-center justify-center text-zinc-500 font-mono text-xs">
+        Iniciando mapa...
       </div>
-    </AppShell>
+    );
+  }
+
+  return (
+    <div className="h-[calc(100dvh-8rem)] w-full md:h-[calc(100dvh-4rem)] relative">
+      <MapComponent />
+    </div>
   );
 }

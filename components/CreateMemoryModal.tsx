@@ -1,151 +1,244 @@
-
 'use client';
 
-import React, { useState } from 'react';
-import { Lock, Globe, Users, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { X, MapPin, Calendar, Wine, Users } from 'lucide-react';
 
-export type VisibilityMode = 'public' | 'private' | 'shared';
-
-export interface Friend {
+export interface UserProfile {
   id: string;
-  name: string;
+  full_name?: string;
+  email?: string;
+  avatar_url?: string;
 }
 
-interface Props {
+export interface CreateMemoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  availableFriends: Friend[];
-  onSubmit: (memory: { title: string; desc: string; visibility: VisibilityMode; sharedWith: string[] }) => void;
+  availableFriends?: UserProfile[];
+  onSubmit?: (data?: any) => void;
 }
 
-export default function CreateMemoryModal({ isOpen, onClose, availableFriends, onSubmit }: Props) {
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
-  const [visibility, setVisibility] = useState<VisibilityMode>('public');
+export default function CreateMemoryModal({
+  isOpen,
+  onClose,
+  availableFriends = [],
+  onSubmit,
+}: CreateMemoryModalProps) {
+  const [activeUsers, setActiveUsers] = useState<UserProfile[]>(availableFriends);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
+  const [title, setTitle] = useState('');
+  const [location, setLocation] = useState('');
+  const [wine, setWine] = useState('');
+  const [date, setDate] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (availableFriends && availableFriends.length > 0) {
+      setActiveUsers(availableFriends);
+      return;
+    }
+
+    async function fetchActiveUsers() {
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, avatar_url');
+
+      if (!error && users) {
+        setActiveUsers(users);
+      }
+    }
+
+    fetchActiveUsers();
+  }, [isOpen, availableFriends, supabase]);
 
   const toggleFriend = (id: string) => {
     setSelectedFriends((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((fId) => fId !== id) : [...prev, id]
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    
-    onSubmit({
-      title,
-      desc,
-      visibility,
-      sharedWith: visibility === 'shared' ? selectedFriends : [],
-    });
+    setLoading(true);
 
-    setTitle('');
-    setDesc('');
-    setVisibility('public');
-    setSelectedFriends([]);
+    const memoryData = {
+      title,
+      location,
+      wine,
+      date,
+      description,
+      friends: selectedFriends,
+    };
+
+    if (onSubmit) {
+      await onSubmit(memoryData);
+    } else {
+      try {
+        const { error } = await supabase.from('memories').insert([
+          {
+            title,
+            location_name: location,
+            wine_name: wine,
+            memory_date: date,
+            description,
+            tagged_friends: selectedFriends,
+          },
+        ]);
+
+        if (error) throw error;
+      } catch (err) {
+        console.error('Error al guardar el recuerdo:', err);
+      }
+    }
+
+    setLoading(false);
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 relative font-sans text-slate-800">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+    <div className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md p-6 text-white shadow-2xl relative">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors"
+        >
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Añadir Memoria al Mapa</h3>
+        <h3 className="text-base font-semibold mb-4">Añadir Recuerdo</h3>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Título</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-1">
+              Título
+            </label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ej. Cena de cumpleaños"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+              placeholder="Ej. Cata en bodega o cena especial"
+              className="w-full rounded-xl bg-zinc-800/80 border border-zinc-700/60 p-2.5 text-xs text-white focus:outline-none focus:border-zinc-500"
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">
+                Ubicación
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Ciudad o Bodega"
+                  className="w-full rounded-xl bg-zinc-800/80 border border-zinc-700/60 pl-8 p-2.5 text-xs text-white focus:outline-none focus:border-zinc-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">
+                Fecha
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full rounded-xl bg-zinc-800/80 border border-zinc-700/60 pl-8 p-2.5 text-xs text-white focus:outline-none focus:border-zinc-500"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Historia</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-1">
+              Vino / Cata
+            </label>
+            <div className="relative">
+              <Wine className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+              <input
+                type="text"
+                value={wine}
+                onChange={(e) => setWine(e.target.value)}
+                placeholder="Nombre del vino, cepa o cosecha"
+                className="w-full rounded-xl bg-zinc-800/80 border border-zinc-700/60 pl-8 p-2.5 text-xs text-white focus:outline-none focus:border-zinc-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-400 mb-1">
+              Descripción
+            </label>
             <textarea
               rows={2}
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              placeholder="¿Qué pasó aquí?"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-800"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Notas de cata o detalles de la memoria..."
+              className="w-full rounded-xl bg-zinc-800/80 border border-zinc-700/60 p-2.5 text-xs text-white focus:outline-none focus:border-zinc-500 resize-none"
             />
           </div>
 
-          {/* PRIVACIDAD */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-2">¿Quién puede ver esta memoria?</label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setVisibility('public')}
-                className={`flex flex-col items-center p-3 rounded-2xl border text-xs font-medium gap-1 transition ${
-                  visibility === 'public' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-slate-200 text-slate-500'
-                }`}
-              >
-                <Globe className="w-4 h-4" />
-                <span>Pública</span>
-              </button>
+            <label className="block text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" /> Círculo de Amigos
+            </label>
+            <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-1">
+              {activeUsers.map((user) => {
+                const isSelected = selectedFriends.includes(user.id);
+                const displayName = user.full_name || user.email || 'Usuario';
 
-              <button
-                type="button"
-                onClick={() => setVisibility('shared')}
-                className={`flex flex-col items-center p-3 rounded-2xl border text-xs font-medium gap-1 transition ${
-                  visibility === 'shared' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-slate-200 text-slate-500'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                <span>Elegir amigos</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setVisibility('private')}
-                className={`flex flex-col items-center p-3 rounded-2xl border text-xs font-medium gap-1 transition ${
-                  visibility === 'private' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-slate-200 text-slate-500'
-                }`}
-              >
-                <Lock className="w-4 h-4" />
-                <span>Solo yo</span>
-              </button>
+                return (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={() => toggleFriend(user.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs flex items-center gap-2 border transition-all ${
+                      isSelected
+                        ? 'bg-white text-zinc-950 border-white font-medium'
+                        : 'bg-zinc-800/60 text-zinc-400 border-zinc-700/60 hover:border-zinc-500'
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-zinc-600 text-[9px] flex items-center justify-center font-bold uppercase">
+                      {displayName.charAt(0)}
+                    </div>
+                    <span>{displayName}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* SELECCIÓN DE AMIGOS */}
-          {visibility === 'shared' && (
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1 max-h-32 overflow-y-auto">
-              <span className="text-[11px] font-semibold text-slate-500 block mb-1">Selecciona contactos:</span>
-              {availableFriends.map((friend) => (
-                <label key={friend.id} className="flex items-center justify-between text-xs p-1.5 hover:bg-slate-100 rounded-lg cursor-pointer">
-                  <span>{friend.name}</span>
-                  <input
-                    type="checkbox"
-                    checked={selectedFriends.includes(friend.id)}
-                    onChange={() => toggleFriend(friend.id)}
-                    className="accent-indigo-600"
-                  />
-                </label>
-              ))}
-            </div>
-          )}
-
-          <div className="pt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+            >
               Cancelar
             </button>
-            <button type="submit" className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl shadow-md hover:bg-slate-800">
-              Guardar memoria
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 text-xs font-semibold bg-white text-zinc-950 rounded-xl hover:bg-zinc-200 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Guardando...' : 'Guardar Recuerdo'}
             </button>
           </div>
         </form>

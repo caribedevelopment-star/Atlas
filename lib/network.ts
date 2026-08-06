@@ -32,13 +32,13 @@ export async function fetchUserNetwork(currentUserId: string): Promise<NetworkUs
       relMap.set(r.target_user_id, r.relationship as 'circle' | 'network' | 'public');
     });
 
-    // 3. Mapear usuarios con su relación (por defecto 'public')
-    return (profiles as ProfileRow[]).map((p) => ({
+    // 3. Devolver únicamente relaciones persistidas; no fabricar miembros públicos.
+    return (profiles as ProfileRow[]).filter((p) => relMap.has(p.id)).map((p) => ({
       id: p.id,
       username: p.username || 'usuario',
       full_name: p.full_name || 'Usuario Atlas',
       avatar_url: p.avatar_url || undefined,
-      relationship: relMap.get(p.id) || 'public',
+      relationship: relMap.get(p.id)!,
     }));
   } catch (err) {
     console.error('Error en fetchUserNetwork:', err);

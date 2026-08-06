@@ -1,282 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowRight, Eye, EyeOff, Globe2, Loader2, Lock, Mail, Map, ShieldCheck, Sparkles, Wine } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { Mail, Lock, Loader2, Compass, Heart, Map, ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {
-  const router = useRouter();
-
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  async function handleAuth(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email || !password) {
-      setMessage('Por favor, rellena todos los campos.');
-      return;
-    }
-
-    setLoading(true);
-    setMessage('');
-
-    try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          setMessage(error.message);
-        } else {
-          router.push('/home');
-        }
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/home`,
-          },
-        });
-
-        if (error) {
-          setMessage(error.message);
-        } else {
-          setMessage('¡Cuenta creada! Revisa tu correo electrónico para confirmar.');
-        }
-      }
-    } catch (err: any) {
-      setMessage(err.message || 'Ocurrió un error inesperado.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signInGoogle() {
-    setMessage('');
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/home`,
-        },
-      });
-    } catch (err: any) {
-      setMessage(err.message || 'Error al conectar con Google.');
-    }
-  }
-
-  return (
-    <main className="min-h-screen bg-stone-950 flex flex-col lg:flex-row text-stone-100">
-      {/* Editorial / Left Showcase Panel */}
-      <div className="flex-1 lg:flex flex-col justify-between p-8 lg:p-16 bg-stone-900 border-r border-stone-800 relative overflow-hidden select-none">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a2a2a_1px,transparent_1px),linear-gradient(to_bottom,#2a2a2a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-8 lg:mb-16">
-            <div className="w-10 h-10 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center font-extrabold text-xl shadow-md">
-              A
-            </div>
-            <span className="font-sans text-xl font-black tracking-[0.2em] text-white">ATLAS</span>
-          </div>
-
-          <div className="max-w-xl">
-            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-stone-400 mb-4">
-              A personal memory journal
-            </p>
-            <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
-              Places disappear. <br />
-              <span className="text-stone-400 font-serif italic">Stories remain.</span>
-            </h1>
-            <p className="text-stone-300 text-base lg:text-lg leading-relaxed mb-8 max-w-md">
-              Un espacio íntimo y sin ruido social para documentar tus viajes, registrar tus mejores experiencias gastronómicas y guardar los vinos que marcan cada momento de tu vida.
-            </p>
-          </div>
-        </div>
-
-        {/* Feature Cards Grid */}
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 lg:mt-0">
-          <div className="p-5 rounded-2xl bg-stone-800/60 border border-stone-700/60 backdrop-blur-sm">
-            <div className="p-2 w-10 h-10 rounded-lg bg-stone-700/50 flex items-center justify-center mb-4 text-stone-200">
-              <Compass className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-sm text-stone-100 mb-1">Diario de Viajes</h3>
-            <p className="text-xs text-stone-400 leading-normal">Tus memorias geolocalizadas ordenadas cronológicamente.</p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-stone-800/60 border border-stone-700/60 backdrop-blur-sm">
-            <div className="p-2 w-10 h-10 rounded-lg bg-stone-700/50 flex items-center justify-center mb-4 text-stone-200">
-              <Heart className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-sm text-stone-100 mb-1">Bodega Abierta</h3>
-            <p className="text-xs text-stone-400 leading-normal">Vinos excelentes categorizados por precio y supermercado.</p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-stone-800/60 border border-stone-700/60 backdrop-blur-sm">
-            <div className="p-2 w-10 h-10 rounded-lg bg-stone-700/50 flex items-center justify-center mb-4 text-stone-200">
-              <Map className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-sm text-stone-100 mb-1">Mapa Interactivo</h3>
-            <p className="text-xs text-stone-400 leading-normal">Ubica visualmente tus historias sobre el mapa del mundo.</p>
-          </div>
-        </div>
-
-        <div className="relative z-10 hidden lg:block text-stone-500 text-xs mt-8">
-          &copy; {new Date().getFullYear()} Atlas. No followers. No likes. No noise.
-        </div>
-      </div>
-
-      {/* Right Auth Panel */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 lg:p-16 bg-stone-950 relative">
-        <div className="w-full max-w-md bg-stone-900 border border-stone-800 rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold tracking-tight text-white">
-              {isLogin ? 'Bienvenido de nuevo' : 'Comienza tu viaje'}
-            </h2>
-            <p className="text-xs text-stone-400 mt-1">
-              {isLogin ? 'Accede a tu cuenta personal de Atlas' : 'Crea tu espacio personal e independiente'}
-            </p>
-          </div>
-
-          {/* Selector de pestañas con alto contraste */}
-          <div className="flex bg-stone-950 p-1.5 rounded-xl mb-6 border border-stone-800">
-            <button
-              type="button"
-              onClick={() => { setIsLogin(true); setMessage(''); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                isLogin
-                  ? 'bg-stone-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white'
-              }`}
-            >
-              Iniciar Sesión
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsLogin(false); setMessage(''); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                !isLogin
-                  ? 'bg-stone-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white'
-              }`}
-            >
-              Crear Cuenta
-            </button>
-          </div>
-
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">
-                Correo Electrónico
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-stone-500">
-                  <Mail className="w-4 h-4" />
-                </span>
-                <input
-                  type="email"
-                  required
-                  placeholder="ejemplo@atlas.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-600 focus:border-stone-600 transition"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">
-                Contraseña
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-stone-500">
-                  <Lock className="w-4 h-4" />
-                </span>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-600 focus:border-stone-600 transition"
-                />
-              </div>
-            </div>
-
-            {message && (
-              <div className={`p-3 rounded-xl text-xs font-medium border ${
-                message.includes('creada') || message.includes('enviado')
-                  ? 'bg-emerald-950/50 text-emerald-300 border-emerald-800'
-                  : 'bg-red-950/50 text-red-300 border-red-800'
-              }`}>
-                {message}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white hover:bg-stone-200 text-stone-900 font-bold rounded-xl py-3 text-sm shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-stone-900" />
-              ) : (
-                <>
-                  <span>{isLogin ? 'Iniciar Sesión' : 'Registrar Cuenta'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-stone-800" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-stone-900 px-3 text-stone-500 font-medium tracking-wider">
-                O continuar con
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={signInGoogle}
-            className="w-full bg-stone-950 border border-stone-800 hover:bg-stone-800/80 font-semibold rounded-xl py-3 text-sm transition flex items-center justify-center gap-2.5 text-stone-200 shadow-sm"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            <span>Google</span>
-          </button>
-        </div>
-
-        <p className="mt-8 text-center text-xs text-stone-500 px-4 leading-relaxed max-w-xs">
-          Al continuar, aceptas que Atlas guarde únicamente tus recuerdos para ti mismo. Sin feed de noticias, sin presión.
-        </p>
-      </div>
-    </main>
-  );
+  const router = useRouter(); const [isLogin,setIsLogin]=useState(true); const [email,setEmail]=useState(''); const [password,setPassword]=useState(''); const [showPassword,setShowPassword]=useState(false); const [message,setMessage]=useState(''); const [success,setSuccess]=useState(false); const [loading,setLoading]=useState(false);
+  function switchMode(login:boolean){setIsLogin(login);setMessage('');setSuccess(false)}
+  async function handleAuth(event:FormEvent){event.preventDefault();if(!email||!password){setMessage('Completa el correo y la contraseña.');return}setLoading(true);setMessage('');setSuccess(false);try{if(isLogin){const{error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;router.push('/home')}else{const{error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:`${window.location.origin}/home`}});if(error)throw error;setSuccess(true);setMessage('Cuenta creada. Revisa tu correo para confirmarla.')}}catch(cause){setMessage(cause instanceof Error?cause.message:'No se pudo completar el acceso.')}finally{setLoading(false)}}
+  async function signInGoogle(){setMessage('');setSuccess(false);const{error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:`${window.location.origin}/home`}});if(error)setMessage(error.message)}
+  return <main className="relative min-h-screen overflow-hidden bg-[#050506] text-zinc-100 selection:bg-rose-300/30"><div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(190,24,93,.16),transparent_30%),radial-gradient(circle_at_82%_80%,rgba(14,116,144,.12),transparent_30%)]"/>
+    <nav className="relative z-10 mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8"><div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sm font-bold text-black">A</span><span className="text-sm font-semibold tracking-[.18em] text-white">ATLAS</span></div><p className="hidden text-xs text-zinc-600 sm:block">Tu vida, sin ruido social.</p></nav>
+    <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-5 pb-16 pt-8 sm:px-8 lg:min-h-[calc(100vh-5rem)] lg:grid-cols-[1.15fr_.85fr] lg:py-14">
+      <section><div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-xs text-zinc-400"><Sparkles className="h-3.5 w-3.5 text-rose-300"/>Un archivo personal para toda una vida</div><h1 className="mt-7 max-w-3xl text-5xl font-semibold leading-[.98] tracking-[-.065em] text-white sm:text-7xl lg:text-[5.5rem]">Recuerda el mundo <span className="bg-gradient-to-r from-rose-200 via-orange-100 to-sky-200 bg-clip-text text-transparent">a tu manera.</span></h1><p className="mt-7 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg">Memorias, vinos y rutas reales reunidos en un mapa privado. Sin seguidores, métricas ni una vida diseñada para los demás.</p>
+        <div className="mt-10 grid max-w-2xl gap-3 sm:grid-cols-3"><Feature icon={<Map/>} title="Tu mapa" text="Momentos y rutas en contexto."/><Feature icon={<Wine/>} title="Tu bodega" text="Botellas ligadas a historias."/><Feature icon={<ShieldCheck/>} title="Tu privacidad" text="Tú decides quién puede verlo."/></div>
+        <div className="mt-10 flex items-center gap-3 text-xs text-zinc-600"><Globe2 className="h-4 w-4"/><span>Diseñado para explorar. Construido para conservar.</span></div>
+      </section>
+      <section aria-labelledby="access-title" className="mx-auto w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[.055] p-5 shadow-[0_40px_120px_rgba(0,0,0,.55)] backdrop-blur-2xl sm:p-7"><div><p className="text-xs font-medium uppercase tracking-[.2em] text-zinc-500">Atlas personal</p><h2 id="access-title" className="mt-2 text-2xl font-semibold tracking-tight text-white">{isLogin?'Bienvenido de nuevo':'Crea tu espacio'}</h2><p className="mt-1 text-sm text-zinc-500">{isLogin?'Continúa donde lo dejaste.':'Empieza tu archivo privado.'}</p></div>
+        <div className="mt-6 grid grid-cols-2 rounded-xl bg-black/30 p-1" role="tablist" aria-label="Acceso"><Tab active={isLogin} onClick={()=>switchMode(true)}>Entrar</Tab><Tab active={!isLogin} onClick={()=>switchMode(false)}>Crear cuenta</Tab></div>
+        <form onSubmit={handleAuth} className="mt-6 space-y-4"><AuthField label="Correo" icon={<Mail/>}><input type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="tu@correo.com" className="h-12 w-full bg-transparent pl-10 pr-4 text-sm text-white outline-none placeholder:text-zinc-600"/></AuthField><AuthField label="Contraseña" icon={<Lock/>}><input type={showPassword?'text':'password'} autoComplete={isLogin?'current-password':'new-password'} minLength={6} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="Mínimo 6 caracteres" className="h-12 w-full bg-transparent pl-10 pr-12 text-sm text-white outline-none placeholder:text-zinc-600"/><button type="button" onClick={()=>setShowPassword((value)=>!value)} aria-label={showPassword?'Ocultar contraseña':'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-zinc-600 hover:text-white">{showPassword?<EyeOff className="h-4 w-4"/>:<Eye className="h-4 w-4"/>}</button></AuthField>{message&&<p role="status" className={`rounded-xl border px-3 py-2.5 text-xs ${success?'border-emerald-500/20 bg-emerald-500/10 text-emerald-200':'border-red-500/20 bg-red-500/10 text-red-200'}`}>{message}</p>}<button disabled={loading} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-black transition hover:bg-zinc-200 disabled:opacity-60">{loading?<Loader2 className="h-4 w-4 animate-spin"/>:<>{isLogin?'Entrar en Atlas':'Crear mi Atlas'}<ArrowRight className="h-4 w-4"/></>}</button></form>
+        <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-wider text-zinc-700"><span className="h-px flex-1 bg-white/10"/>o continúa con<span className="h-px flex-1 bg-white/10"/></div><button type="button" onClick={()=>void signInGoogle()} className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-black/20 text-sm font-medium text-zinc-300 transition hover:bg-white/[.06] hover:text-white"><GoogleIcon/>Google</button><p className="mt-5 text-center text-[11px] leading-5 text-zinc-600">Tus contenidos respetan la visibilidad que elijas: privada, círculo o pública.</p>
+      </section>
+    </div>
+  </main>;
 }
+function Feature({icon,title,text}:{icon:React.ReactElement;title:string;text:string}){return <div className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><span className="text-zinc-300 [&>svg]:h-4 [&>svg]:w-4">{icon}</span><h3 className="mt-4 text-sm font-medium text-white">{title}</h3><p className="mt-1 text-xs leading-5 text-zinc-600">{text}</p></div>}
+function Tab({active,onClick,children}:{active:boolean;onClick:()=>void;children:React.ReactNode}){return <button type="button" role="tab" aria-selected={active} onClick={onClick} className={`h-9 rounded-lg text-xs font-medium transition ${active?'bg-white/10 text-white shadow-sm':'text-zinc-600 hover:text-zinc-300'}`}>{children}</button>}
+function AuthField({label,icon,children}:{label:string;icon:React.ReactElement;children:React.ReactNode}){return <label className="block text-xs font-medium text-zinc-400">{label}<span className="relative mt-2 block rounded-xl border border-white/10 bg-black/25 focus-within:border-white/25 focus-within:ring-4 focus-within:ring-white/5"><span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 [&>svg]:h-4 [&>svg]:w-4">{icon}</span>{children}</span></label>}
+function GoogleIcon(){return <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.6h3.3c1.9-1.8 2.9-4.4 2.9-7.5Z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.3l-3.3-2.6c-.9.6-2.1 1-3.4 1a5.9 5.9 0 0 1-5.5-4.1H3v2.7A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.5 14a6 6 0 0 1 0-4V7.3H3a10 10 0 0 0 0 9.4L6.5 14Z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.9 1.5l2.9-2.9A9.8 9.8 0 0 0 3 7.3L6.5 10A5.9 5.9 0 0 1 12 5.9Z"/></svg>}

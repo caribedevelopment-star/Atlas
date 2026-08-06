@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { ProfileAccess, ProfileMemory } from '@/types/profile';
+import type { WineVisibility } from '@/types/wine';
 
 type Row = Record<string, unknown>;
 const text = (value: unknown) => typeof value === 'string' && value.trim() ? value : undefined;
@@ -35,4 +36,13 @@ export async function listMapMemories(): Promise<ProfileMemory[]> {
   const { data, error } = await supabase.from('memories').select('*');
   if (error) throw error;
   return (data ?? []).map((row) => normalizeMemory(row as Row));
+}
+
+export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility: WineVisibility }
+export async function createMemory(input: CreateMemoryInput): Promise<string> {
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) throw new Error('Debes iniciar sesión para guardar una memoria.');
+  const { data, error } = await supabase.from('memories').insert({ user_id: auth.user.id, title: input.title.trim(), location_name: input.location.trim() || null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.visibility, tagged_friends: [] }).select('id').single();
+  if (error) throw error;
+  return String(data.id);
 }

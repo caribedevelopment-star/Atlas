@@ -35,7 +35,7 @@ export function WineLibrary() {
 
     {filtersOpen && <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setFiltersOpen(false)}><aside role="dialog" aria-modal="true" aria-label="Filtros de vinos" className="absolute inset-y-0 right-0 w-[min(92vw,390px)] overflow-y-auto border-l border-white/10 bg-zinc-950 p-6 shadow-2xl"><WineFilters filters={library.filters} options={library.options} onChange={library.setFilters} onClose={() => setFiltersOpen(false)} /></aside></div>}
     <WineDetailDialog wine={library.selectedWine} onClose={() => library.setSelectedWine(null)} onFavorite={(wine) => void library.toggleFavorite(wine)} />
-    <WineCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={library.addWine} />
+    <WineCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={library.addWine} existingWines={library.wines} />
     <CaniaAssistant userWines={library.wines.map((wine) => ({ ...wine, winery: wine.winery || '', vintage: wine.vintage || 0, rating: wine.rating || 0, supermarket: wine.supermarket || '', price: wine.price || 0, tasting_notes: wine.tasting_notes || '', image_url: wine.image_url || '' }))} />
   </main>;
 }

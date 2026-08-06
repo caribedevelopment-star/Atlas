@@ -59,8 +59,8 @@ export function normalizeWine(row: DatabaseRecord): WineItem {
     price: number(row.price),
     tasting_notes: text(row.tasting_notes),
     notes: text(row.notes),
-    image_url: text(row.image_url),
-    photos: stringArray(row.photos),
+    image_url: text(row.image_url) ?? text(row.photo_url) ?? text(row.bottle_image) ?? text(row.image),
+    photos: stringArray(row.photos ?? row.photo_urls ?? row.images),
     country: text(row.country),
     region: text(row.region),
     denomination: text(row.denomination) ?? text(row.denomination_of_origin),
@@ -115,7 +115,7 @@ export async function uploadWinePhoto(file: File): Promise<string> {
 }
 
 async function hydrateWinePhotos(wine: WineItem, row: DatabaseRecord): Promise<WineItem> {
-  const cover = text(row.image_path) ?? wine.image_url;
+  const cover = text(row.image_path) ?? text(row.photo_path) ?? text(row.storage_path) ?? wine.image_url;
   const paths = stringArray(row.photo_paths).length ? stringArray(row.photo_paths) : wine.photos;
   const [imageUrl, ...photos] = await Promise.all([cover, ...paths].map(resolveWinePhoto));
   return { ...wine, image_url: imageUrl, photos: photos.filter((value): value is string => Boolean(value)) };
@@ -123,6 +123,7 @@ async function hydrateWinePhotos(wine: WineItem, row: DatabaseRecord): Promise<W
 
 async function resolveWinePhoto(value?: string): Promise<string | undefined> {
   if (!value) return undefined;
+  if (/^https?:\/\//.test(value)) { try { const url=new URL(value); if (/\/storage\/v1\/(?:object|render\/image)\/public\//.test(url.pathname)) return value; } catch { return undefined; } }
   const storageObject = parseStorageObject(value);
   if (!storageObject) return /^https?:\/\//.test(value) ? value : undefined;
   const { data, error } = await supabase.storage.from(storageObject.bucket).createSignedUrl(storageObject.path, 60 * 60);
@@ -132,7 +133,7 @@ async function resolveWinePhoto(value?: string): Promise<string | undefined> {
 function parseStorageObject(value: string): { bucket: string; path: string } | null {
   if (!/^https?:\/\//.test(value)) {
     const normalized = value.replace(/^\/+/, '');
-    const bucket = ['wine-photos', 'wine-images'].find((name) => normalized.startsWith(`${name}/`));
+    const bucket = ['wine-photos', 'wine-images', 'wine_photos', 'wines'].find((name) => normalized.startsWith(`${name}/`));
     return bucket ? { bucket, path: normalized.slice(bucket.length + 1) } : { bucket: 'wine-photos', path: normalized };
   }
   try {

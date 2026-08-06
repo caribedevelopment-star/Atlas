@@ -46,6 +46,12 @@ export interface CreateWineInput {
   price: number | null;
   tasting_notes: string;
   image_url: string;
+  country?: string;
+  region?: string;
+  denomination?: string;
+  grapes?: string[];
+  shop?: string;
+  visibility?: WineVisibility;
 }
 
 export type WineSort = 'recent' | 'rating' | 'price-asc' | 'price-desc' | 'vintage' | 'alphabetical';

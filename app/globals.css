@@ -31,6 +31,12 @@ body {
 .atlas-map-popup .leaflet-popup-close-button { color: #a1a1aa !important; z-index: 2; }
 .leaflet-control-attribution { background: rgba(9,9,11,.88) !important; color: #71717a !important; }
 .leaflet-control-attribution a { color: #a1a1aa !important; }
+@keyframes atlas-orbit-breathe { 0%,100% { opacity:.45; transform:scale(1); } 50% { opacity:.9; transform:scale(1.012); } }
+@keyframes atlas-person-pulse { 0%,100% { filter:drop-shadow(0 0 0 rgba(244,63,94,0)); } 50% { filter:drop-shadow(0 0 8px rgba(244,63,94,.38)); } }
+.atlas-orbit { animation: atlas-orbit-breathe 5s ease-in-out infinite; }
+.atlas-person { animation: atlas-person-pulse 2.8s ease-in-out infinite; transition: transform .2s ease; }
+.atlas-person:hover { animation-play-state: paused; transform: translate(-50%,-50%) scale(1.15); }
+@media (prefers-reduced-motion: reduce) { .atlas-orbit,.atlas-person { animation:none; } }
 
 @layer components {
   /* Reusable Card Style */

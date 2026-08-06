@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Sparkles, X, Send, Loader2, Wine } from "lucide-react";
 
 interface WineItem {
@@ -30,6 +30,8 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [loading, messages]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,26 +43,25 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/cania", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMsg,
-          context: {
-            systemPrompt: "Eres Cania, un Sommelier experto y cercano. Aconsejas sobre maridaje, vinos de supermercado y selección personal.",
-            wines: userWines,
-          },
+          wines: userWines.slice(0, 100),
+          history: messages.slice(-8),
         }),
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'No se pudo consultar a Cania.');
       const reply = data.reply || data.text || "No he podido procesar la recomendación en este momento.";
 
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
-    } catch (err) {
+    } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "Hubo un error al conectar con el asistente sommelier." },
+        { role: "assistant", text: error instanceof Error ? error.message : "Hubo un error al conectar con el asistente sommelier." },
       ]);
     } finally {
       setLoading(false);
@@ -70,7 +71,7 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {!isOpen ? (
-        <button
+        <button aria-label="Abrir Cania Sommelier"
           onClick={() => setIsOpen(true)}
           className="bg-red-950/80 hover:bg-red-900 border border-red-700/50 text-red-100 p-3.5 rounded-full shadow-xl flex items-center gap-2 transition-all hover:scale-105"
         >
@@ -85,7 +86,7 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
               <Wine className="w-4 h-4 text-red-400" />
               <span className="text-xs font-bold text-foreground">Cania Sommelier</span>
             </div>
-            <button
+            <button aria-label="Cerrar Cania"
               onClick={() => setIsOpen(false)}
               className="text-muted-foreground hover:text-foreground p-1 rounded-lg"
             >
@@ -119,6 +120,7 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
                 </div>
               </div>
             )}
+            <div ref={endRef} />
           </div>
 
           {/* Formulario Input */}
@@ -133,6 +135,7 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
             <button
               type="submit"
               disabled={loading}
+              aria-label="Enviar mensaje"
               className="atlas-button-primary px-3 py-2 text-xs"
             >
               <Send className="w-3.5 h-3.5" />

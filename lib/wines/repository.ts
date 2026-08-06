@@ -68,6 +68,8 @@ export function normalizeWine(row: DatabaseRecord): WineItem {
       if (!id) return [];
       return [{ id, title: text(memory.title) ?? 'Memoria', date: text(memory.date) }];
     }),
+    latitude: number(row.latitude),
+    longitude: number(row.longitude),
     is_popular: row.is_popular === true,
     created_at: text(row.created_at),
   };

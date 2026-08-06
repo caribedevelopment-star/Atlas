@@ -31,6 +31,8 @@ export interface WineItem {
   visibility: WineVisibility;
   participants: WineParticipant[];
   linked_memories: Array<{ id: string; title: string; date?: string }>;
+  latitude?: number;
+  longitude?: number;
   is_popular?: boolean;
   created_at?: string;
 }

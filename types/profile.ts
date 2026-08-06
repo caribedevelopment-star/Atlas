@@ -18,6 +18,8 @@ export interface AtlasProfile {
 export interface ProfileMemory {
   id: string;
   userId?: string;
+  ownerName?: string;
+  ownerAvatarUrl?: string;
   title: string;
   description?: string;
   city?: string;
@@ -29,6 +31,9 @@ export interface ProfileMemory {
   latitude?: number;
   longitude?: number;
   route: Array<{ latitude: number; longitude: number }>;
+  participantIds: string[];
+  participantNames: string[];
+  linkedWineId?: string;
   visibility: WineVisibility;
   isRestaurant: boolean;
   isFavoritePlace: boolean;

@@ -1,27 +1,30 @@
+import React from 'react';
+import { cn } from './utils';
 
-import React from "react";
-
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
-  className?: string;
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  padded?: boolean;
 }
 
-export function Card({ children, className = "", ...props }: CardProps) {
+export function Card({ children, className = '', padded = true, ...props }: CardProps) {
   return (
-    <div className={`atlas-card p-5 ${className}`} {...props}>
+    <div className={cn('atlas-card', padded && 'p-5', className)} {...props}>
       {children}
     </div>
   );
 }
 
-export function CardHeader({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`flex flex-col gap-1 mb-3 ${className}`}>{children}</div>;
+export function CardHeader({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('flex flex-col gap-1 mb-3', className)} {...props}>{children}</div>;
 }
 
-export function CardTitle({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <h3 className={`text-lg font-semibold text-foreground ${className}`}>{children}</h3>;
+export function CardTitle({ children, className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+  return <h3 className={cn('text-lg font-semibold text-foreground', className)} {...props}>{children}</h3>;
 }
 
-export function CardDescription({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <p className={`text-sm text-muted-foreground ${className}`}>{children}</p>;
+export function CardDescription({ children, className = '', ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
+  return <p className={cn('text-sm text-muted-foreground', className)} {...props}>{children}</p>;
+}
+
+export function CardContent({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('space-y-4', className)} {...props}>{children}</div>;
 }

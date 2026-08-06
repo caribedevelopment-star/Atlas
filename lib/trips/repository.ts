@@ -1,0 +1,29 @@
+import { supabase } from '@/lib/supabase';
+import { listMapMemories, normalizeMemory } from '@/lib/memories/repository';
+import { listWines, normalizeWine } from '@/lib/wines/repository';
+import type { AtlasTrip, TripInput, TripPhoto, TripStop } from '@/types/trip';
+import type { WineParticipant, WineVisibility } from '@/types/wine';
+
+type Row = Record<string, any>;
+const query = '*,trip_stops(*,memories(*)),trip_participants(*,profiles(*)),trip_wines(*,wines(*)),trip_photos(*)';
+function text(value: unknown) { return typeof value === 'string' && value.trim() ? value : undefined; }
+function visibility(value: unknown): WineVisibility { return value === 'public' || value === 'friends' ? value : 'private'; }
+function number(value: unknown) { const parsed=Number(value); return Number.isFinite(parsed) ? parsed : undefined; }
+function geometry(value: any): Array<{latitude:number;longitude:number}> { const raw=Array.isArray(value) ? value : value?.type==='LineString' ? value.coordinates : []; return raw.flatMap((point:any) => Array.isArray(point) && Number.isFinite(Number(point[0])) && Number.isFinite(Number(point[1])) ? [{longitude:Number(point[0]),latitude:Number(point[1])}] : point && Number.isFinite(Number(point.latitude)) && Number.isFinite(Number(point.longitude)) ? [{latitude:Number(point.latitude),longitude:Number(point.longitude)}] : []); }
+
+export function normalizeTrip(row: Row): AtlasTrip {
+  const stops: TripStop[]=(row.trip_stops??[]).map((item:Row) => { const memory=item.memories ? normalizeMemory(item.memories) : undefined; return { id:String(item.id), position:Number(item.position), memoryId:text(item.memory_id), title:text(item.title)??memory?.title??'Parada', latitude:number(item.latitude)??memory?.latitude, longitude:number(item.longitude)??memory?.longitude, city:text(item.city)??memory?.city, country:text(item.country)??memory?.country, memory }; }).sort((a:TripStop,b:TripStop)=>a.position-b.position);
+  const participants:WineParticipant[]=(row.trip_participants??[]).map((item:Row)=>({id:String(item.user_id),name:text(item.profiles?.full_name)??text(item.profiles?.username)??'Usuario Atlas',avatarUrl:text(item.profiles?.avatar_url)}));
+  const wines=(row.trip_wines??[]).flatMap((item:Row)=>item.wines?[normalizeWine(item.wines)]:[]);
+  const photos:TripPhoto[]=(row.trip_photos??[]).map((item:Row)=>({id:String(item.id),storagePath:String(item.storage_path),caption:text(item.caption),position:Number(item.position)})).sort((a:TripPhoto,b:TripPhoto)=>a.position-b.position);
+  const route=geometry(row.route_geometry); const stopPoints=stops.flatMap((stop)=>stop.latitude!==undefined&&stop.longitude!==undefined?[{latitude:stop.latitude,longitude:stop.longitude}]:[]); const points=route.length?route:stopPoints;
+  return { id:String(row.id),userId:String(row.user_id),title:String(row.title),description:text(row.description),coverImageUrl:text(row.cover_image_url),startDate:String(row.start_date),endDate:String(row.end_date),visibility:visibility(row.visibility),routeGeometry:points,participants,stops,wines,photos,countries:unique(stops.map((stop)=>stop.country)),cities:unique(stops.map((stop)=>stop.city)),distanceKm:distance(points),createdAt:text(row.created_at),updatedAt:text(row.updated_at) };
+}
+export async function listTrips():Promise<AtlasTrip[]> { const {data,error}=await supabase.from('trips').select(query).order('start_date',{ascending:false}); if(error) throw error; return (data??[]).map((row)=>normalizeTrip(row as Row)); }
+export async function getTrip(id:string):Promise<AtlasTrip> { const {data,error}=await supabase.from('trips').select(query).eq('id',id).single(); if(error) throw error; return normalizeTrip(data as Row); }
+export async function saveTrip(input:TripInput):Promise<string> { const routeGeometry=input.stops.flatMap((stop)=>stop.latitude!==undefined&&stop.longitude!==undefined?[[stop.longitude,stop.latitude]]:[]); const {data,error}=await supabase.rpc('atlas_save_trip',{trip_id:input.id??null,payload:{...input,routeGeometry:{type:'LineString',coordinates:routeGeometry}}}); if(error) throw error; return data as string; }
+export async function deleteTrip(id:string) { const {error}=await supabase.from('trips').delete().eq('id',id); if(error) throw error; }
+export async function reorderTripStops(id:string,stopIds:string[]) { const {error}=await supabase.rpc('atlas_reorder_trip_stops',{target_trip_id:id,ordered_stop_ids:stopIds}); if(error) throw error; }
+export async function getTripEditorOptions() { const [memories,wines,profilesResult]=await Promise.all([listMapMemories(),listWines(),supabase.from('profiles').select('id,full_name,username,avatar_url')]); if(profilesResult.error) throw profilesResult.error; return { memories, wines, participants:(profilesResult.data??[]).map((row)=>({id:row.id,name:row.full_name||row.username||'Usuario Atlas',avatarUrl:row.avatar_url||undefined})) }; }
+function unique(values:Array<string|undefined>) { return [...new Set(values.filter((value):value is string=>Boolean(value)))]; }
+function distance(points:Array<{latitude:number;longitude:number}>):number|null { if(points.length<2)return null; let total=0; for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],rad=(v:number)=>v*Math.PI/180,dLat=rad(b.latitude-a.latitude),dLng=rad(b.longitude-a.longitude),x=Math.sin(dLat/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitude))*Math.sin(dLng/2)**2;total+=6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));} return Math.round(total); }

@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, MapPin, Wine, Library, User } from 'lucide-react';
+import { Home, MapPin, Wine, Library, User, Plane } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'Home', href: '/home', icon: Home },
   { label: 'Memorias', href: '/memories', icon: MapPin },
   { label: 'Vinos', href: '/wines', icon: Wine },
+  { label: 'Viajes', href: '/trips', icon: Plane },
   { label: 'Librería', href: '/library', icon: Library },
   { label: 'Perfil', href: '/profile', icon: User },
 ];

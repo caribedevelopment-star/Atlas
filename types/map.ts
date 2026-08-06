@@ -1,10 +1,11 @@
 import type { ProfileMemory } from '@/types/profile';
 import type { WineItem } from '@/types/wine';
+import type { AtlasTrip } from '@/types/trip';
 
 export type MapSource = 'mine' | 'friends' | 'public';
 export type MapLayer = 'memories' | 'wines' | 'trips' | 'favorites' | 'restaurants';
 export interface MapCoordinate { latitude: number; longitude: number }
-export interface MapTrip { id: string; title: string; source: MapSource; visibility: WineItem['visibility']; points: MapCoordinate[]; memories: ProfileMemory[]; year?: string; participantIds: string[] }
+export type MapTrip = AtlasTrip & { source: MapSource; points: MapCoordinate[]; year?: string; participantIds: string[] };
 export interface AtlasMapPoint {
   id: string;
   layer: MapLayer;

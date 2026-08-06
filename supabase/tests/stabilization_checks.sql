@@ -1,0 +1,17 @@
+begin;
+select plan(14);
+select has_column('public','wines','image_path','canonical wine cover path exists');
+select has_column('public','wines','photo_paths','additional wine paths exist');
+select has_table('public','user_wines','personal wine interactions exist');
+select col_is_unique('public','user_wines',array['user_id','wine_id'],'one interaction per user and wine');
+select has_table('public','user_library_items','personal library interactions exist');
+select col_is_unique('public','user_library_items',array['user_id','library_item_id'],'one interaction per user and book');
+select policies_are('public','user_wines',array['atlas_user_wines_owner_all'],'user wines are private');
+select policies_are('public','user_library_items',array['atlas_user_library_owner_all'],'user library is private');
+select ok(exists(select 1 from pg_policies where schemaname='public' and tablename='wines' and policyname='atlas_wines_authenticated_read'),'wine catalogue read policy exists');
+select ok(exists(select 1 from pg_policies where schemaname='public' and tablename='library_items' and policyname='atlas_library_authenticated_read'),'library catalogue read policy exists');
+select ok(exists(select 1 from storage.buckets where id='wine-photos'),'wine photos bucket exists');
+select ok(exists(select 1 from pg_policies where schemaname='storage' and tablename='objects' and policyname='atlas_wine_photos_owner_insert'),'owner upload policy exists');
+select ok(exists(select 1 from pg_policies where schemaname='storage' and tablename='objects' and policyname='atlas_wine_photos_authenticated_read'),'authenticated photo read exists');
+select ok(not exists(select 1 from storage.buckets where id='wine-photos' and public),'new canonical bucket is private');
+select * from finish(); rollback;

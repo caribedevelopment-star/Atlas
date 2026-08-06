@@ -1,95 +1,25 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import BottomNav from '@/components/bottom-nav';
-import CreateMemoryModal from '@/components/CreateMemoryModal';
+import { ATLAS_NAVIGATION, isNavigationActive } from '@/lib/navigation';
 
-const NAV_ITEMS = [
-  { label: 'Home', href: '/home' },
-  { label: 'Memories', href: '/memories' },
-  { label: 'Wines', href: '/wines' },
-  { label: 'Library', href: '/library' },
-  { label: 'Profile', href: '/profile' },
-];
-
-export interface AppShellProps {
-  children: React.ReactNode;
-  showNav?: boolean;
-}
-
-export function AppShell({ children, showNav = true }: AppShellProps) {
+export function AppShell({ children, showNav = true }: { children: React.ReactNode; showNav?: boolean }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const hidden = pathname === '/' || pathname === '/login' || pathname === '/register';
+  const active = (href: string) => isNavigationActive(pathname, href);
+  if (hidden) return <>{children}</>;
 
-  const handleCreateSubmit = () => {
-    setIsCreateModalOpen(false);
-    router.refresh();
-  };
-
-  return (
-    <div className="min-h-screen w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans relative overflow-x-hidden">
-      {/* Cabecera Única Consolidada */}
-      <header className="h-16 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between shrink-0 z-50 sticky top-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-white text-zinc-950 font-mono font-bold flex items-center justify-center text-sm shadow-sm">
-            A
-          </div>
-          <span className="font-semibold tracking-tight text-sm text-white">Atlas</span>
-        </div>
-
-        {/* Navegación central (Solo visible en Escritorio) */}
-        {showNav && (
-          <nav className="hidden md:flex items-center gap-1 bg-zinc-900/60 p-1 rounded-2xl border border-zinc-800/80">
-            {NAV_ITEMS.map((item) => {
-              const isActive = pathname?.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`px-4 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
-                    isActive
-                      ? 'bg-zinc-800 text-white shadow-sm'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-          <span>Nuevo</span>
-        </button>
-      </header>
-
-      {/* Contenido Principal */}
-      <main className="flex-1 w-full relative pb-16 md:pb-0 flex flex-col">
-        {children}
-      </main>
-
-      {/* Navegación móvil global */}
-      <BottomNav />
-
-      {/* Modal global */}
-      <CreateMemoryModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        availableFriends={[]}
-        onSubmit={handleCreateSubmit}
-      />
-    </div>
-  );
+  return <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-zinc-950 font-sans text-zinc-100">
+    <header className="sticky top-0 z-[1200] grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-zinc-800/80 bg-zinc-950/95 px-4 backdrop-blur-xl sm:px-6">
+      <Link href="/home" aria-label="Ir al mapa de Atlas" className="flex items-center gap-3 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white font-mono text-sm font-bold text-zinc-950 shadow-sm">A</span><span className="text-sm font-semibold tracking-tight text-white">Atlas</span></Link>
+      {showNav && <nav aria-label="Navegación principal" className="hidden items-center gap-1 rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-1 md:flex">{ATLAS_NAVIGATION.map((item) => <Link key={item.href} href={item.href} aria-current={active(item.href) ? 'page' : undefined} className={`rounded-xl px-3 py-1.5 text-xs font-medium transition ${active(item.href) ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-white'}`}>{item.label}</Link>)}</nav>}
+      <span aria-hidden="true" />
+    </header>
+    <main className="relative flex w-full flex-1 flex-col pb-16 md:pb-0">{children}</main>
+    {showNav && <BottomNav />}
+  </div>;
 }
 
 export default AppShell;

@@ -1,70 +1,11 @@
 import { supabase } from '@/lib/supabase';
-import { NetworkUser } from '@/components/profile/NetworkCircles';
 
-interface ProfileRow {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
-}
+export type NetworkRelationship='friend'|'pending'|'public';
+export interface NetworkUser{id:string;username:string;fullName:string;avatarUrl?:string;relationship:NetworkRelationship;requestId?:string;requestDirection?:'incoming'|'outgoing'}
+type FriendshipRow={id:string;requester_id:string;addressee_id:string;status:string};
 
-export async function fetchUserNetwork(currentUserId: string): Promise<NetworkUser[]> {
-  try {
-    // 1. Obtener los perfiles registrados
-    const { data: profiles, error: profileErr } = await supabase
-      .from('profiles')
-      .select('id, username, full_name, avatar_url')
-      .neq('id', currentUserId);
+export async function fetchUserNetwork(currentUserId:string):Promise<NetworkUser[]>{const[profilesResult,friendshipsResult]=await Promise.all([supabase.from('profiles').select('id,username,full_name,avatar_url').neq('id',currentUserId),supabase.from('friendships').select('*').or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`)]);if(profilesResult.error)throw profilesResult.error;if(friendshipsResult.error)throw friendshipsResult.error;const states=new Map<string,Pick<NetworkUser,'relationship'|'requestId'|'requestDirection'>>();const blocked=new Set<string>();(friendshipsResult.data as FriendshipRow[]??[]).forEach((row)=>{const outgoing=row.requester_id===currentUserId,other=outgoing?row.addressee_id:row.requester_id;if(row.status==='blocked'){blocked.add(other);return;}if(row.status==='accepted')states.set(other,{relationship:'friend',requestId:row.id});else if(row.status==='pending')states.set(other,{relationship:'pending',requestId:row.id,requestDirection:outgoing?'outgoing':'incoming'});});return(profilesResult.data??[]).flatMap((profile)=>blocked.has(profile.id)?[]:[{id:profile.id,username:profile.username||'',fullName:profile.full_name||profile.username||'Usuario Atlas',avatarUrl:profile.avatar_url||undefined,relationship:states.get(profile.id)?.relationship??'public',requestId:states.get(profile.id)?.requestId,requestDirection:states.get(profile.id)?.requestDirection}]);}
 
-    if (profileErr || !profiles) {
-      console.error('Error al obtener perfiles:', profileErr);
-      return [];
-    }
-
-    // 2. Obtener las relaciones guardadas por el usuario actual
-    const { data: relationships } = await supabase
-      .from('user_relationships')
-      .select('target_user_id, relationship')
-      .eq('user_id', currentUserId);
-
-    const relMap = new Map<string, 'circle' | 'network' | 'public'>();
-    relationships?.forEach((r) => {
-      relMap.set(r.target_user_id, r.relationship as 'circle' | 'network' | 'public');
-    });
-
-    // 3. Mapear usuarios con su relación (por defecto 'public')
-    return (profiles as ProfileRow[]).map((p) => ({
-      id: p.id,
-      username: p.username || 'usuario',
-      full_name: p.full_name || 'Usuario Atlas',
-      avatar_url: p.avatar_url || undefined,
-      relationship: relMap.get(p.id) || 'public',
-    }));
-  } catch (err) {
-    console.error('Error en fetchUserNetwork:', err);
-    return [];
-  }
-}
-
-export async function updateUserRelationship(
-  currentUserId: string,
-  targetUserId: string,
-  newRelationship: 'circle' | 'network' | 'public'
-) {
-  const { error } = await supabase
-    .from('user_relationships')
-    .upsert(
-      {
-        user_id: currentUserId,
-        target_user_id: targetUserId,
-        relationship: newRelationship,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,target_user_id' }
-    );
-
-  if (error) {
-    console.error('Error al actualizar relación:', error.message);
-    throw error;
-  }
-}
+export async function updateUserRelationship(currentUserId:string,targetUserId:string,relationship:NetworkRelationship):Promise<void>{if(relationship==='friend'){const{error}=await supabase.from('friendships').insert({requester_id:currentUserId,addressee_id:targetUserId,status:'pending'});if(error)throw error;return;}const{error}=await supabase.from('friendships').delete().or(`and(requester_id.eq.${currentUserId},addressee_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},addressee_id.eq.${currentUserId})`);if(error)throw error;}
+export async function resolveFriendRequest(requestId:string,accept:boolean){const{data:auth}=await supabase.auth.getUser();if(!auth.user)throw new Error('Debes iniciar sesión.');if(accept){const{error}=await supabase.from('friendships').update({status:'accepted',updated_at:new Date().toISOString()}).eq('id',requestId).eq('addressee_id',auth.user.id);if(error)throw error;}else{const{error}=await supabase.from('friendships').delete().eq('id',requestId);if(error)throw error;}}
+export async function listShareableUsers():Promise<NetworkUser[]>{const{data,error}=await supabase.auth.getUser();if(error||!data.user)throw new Error('Debes iniciar sesión para seleccionar participantes.');return(await fetchUserNetwork(data.user.id)).filter((user)=>user.relationship==='friend');}

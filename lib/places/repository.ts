@@ -1,0 +1,2 @@
+export interface AtlasPlace { id: string; label: string; latitude: number; longitude: number; city?: string; country?: string }
+export async function searchPlaces(query: string, signal?: AbortSignal): Promise<AtlasPlace[]> { const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`, { signal }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'No se pudieron buscar lugares.'); return body.places ?? []; }

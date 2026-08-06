@@ -38,6 +38,8 @@ export async function listMapMemories(): Promise<ProfileMemory[]> {
   return (data ?? []).map((row) => normalizeMemory(row as Row));
 }
 
+export async function listMyMemories(): Promise<ProfileMemory[]> { const {data:auth,error:authError}=await supabase.auth.getUser(); if(authError||!auth.user)throw new Error('Debes iniciar sesión para ver tus memorias.'); const {data,error}=await supabase.from('memories').select('*').eq('user_id',auth.user.id).order('created_at',{ascending:false}); if(error)throw error; return (data??[]).map((row)=>normalizeMemory(row as Row)); }
+
 export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility: WineVisibility; participantIds: string[]; latitude?: number; longitude?: number; city?: string; country?: string }
 export async function createMemory(input: CreateMemoryInput): Promise<string> {
   const { data: auth, error: authError } = await supabase.auth.getUser();

@@ -5,7 +5,7 @@ import type { AtlasTrip, TripInput, TripPhoto, TripStop } from '@/types/trip';
 import type { WineParticipant, WineVisibility } from '@/types/wine';
 
 type Row = Record<string, any>;
-const query = '*,trip_stops(*,memories(*)),trip_participants(*,profiles(*)),trip_wines(*,wines(*)),trip_photos(*)';
+const query = '*,trip_stops(*),trip_participants(*),trip_photos(*)';
 function text(value: unknown) { return typeof value === 'string' && value.trim() ? value : undefined; }
 function visibility(value: unknown): WineVisibility { return value === 'public' || value === 'friends' ? value : 'private'; }
 function number(value: unknown) { if(value===null||value===undefined||value==='')return undefined; const parsed=Number(value); return Number.isFinite(parsed) ? parsed : undefined; }

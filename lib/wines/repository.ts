@@ -8,6 +8,7 @@ function text(value: unknown): string | undefined {
 }
 
 function number(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
   const parsed = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
@@ -83,7 +84,7 @@ export async function getCurrentWineUserId(): Promise<string | null> {
 export async function listWines(): Promise<WineItem[]> {
   const { data, error } = await supabase.from('wines').select('*').order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((row) => normalizeWine(row as DatabaseRecord));
+  return Promise.all((data ?? []).map(async (row) => hydrateWinePhotos(normalizeWine(row as DatabaseRecord), row as DatabaseRecord)));
 }
 
 export async function createWine(input: CreateWineInput): Promise<WineItem> {
@@ -98,9 +99,28 @@ export async function setWineFavorite(id: string, favorite: boolean): Promise<vo
 }
 
 export async function uploadWinePhoto(file: File): Promise<string> {
+  const userId = await getCurrentWineUserId();
+  if (!userId) throw new Error('Debes iniciar sesión para subir una fotografía.');
   const extension = file.name.split('.').pop() || 'jpg';
-  const path = `wines/${crypto.randomUUID()}.${extension}`;
+  const path = `${userId}/${crypto.randomUUID()}.${extension}`;
   const { error } = await supabase.storage.from('wine-photos').upload(path, file);
   if (error) throw error;
+  const { data: signed, error: signedError } = await supabase.storage.from('wine-photos').createSignedUrl(path, 60 * 60 * 24 * 7);
+  if (!signedError && signed?.signedUrl) return signed.signedUrl;
   return supabase.storage.from('wine-photos').getPublicUrl(path).data.publicUrl;
+}
+
+async function hydrateWinePhotos(wine: WineItem, row: DatabaseRecord): Promise<WineItem> {
+  const cover = text(row.image_path) ?? wine.image_url;
+  const paths = stringArray(row.photo_paths).length ? stringArray(row.photo_paths) : wine.photos;
+  const [imageUrl, ...photos] = await Promise.all([cover, ...paths].map(resolveWinePhoto));
+  return { ...wine, image_url: imageUrl, photos: photos.filter((value): value is string => Boolean(value)) };
+}
+
+async function resolveWinePhoto(value?: string): Promise<string | undefined> {
+  if (!value) return undefined;
+  if (/^https?:\/\//.test(value)) return value;
+  const path = value.replace(/^wine-photos\//, '');
+  const { data, error } = await supabase.storage.from('wine-photos').createSignedUrl(path, 60 * 60);
+  return error ? undefined : data.signedUrl;
 }

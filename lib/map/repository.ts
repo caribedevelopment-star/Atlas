@@ -9,7 +9,12 @@ function source(ownerId: string | undefined, visibility: ProfileMemory['visibili
 function year(value?: string) { if (!value) return undefined; const date = new Date(value); return Number.isNaN(date.getTime()) ? /^\d{4}/.exec(value)?.[0] : String(date.getFullYear()); }
 
 export async function getAtlasMapSnapshot(): Promise<AtlasMapSnapshot> {
-  const [memories, wines, authoritativeTrips, userId] = await Promise.all([listMapMemories(), listWines(), listTrips(), getCurrentWineUserId()]);
+  const [memoryResult, wineResult, tripResult, userResult] = await Promise.allSettled([listMapMemories(), listWines(), listTrips(), getCurrentWineUserId()]);
+  const memories = memoryResult.status === 'fulfilled' ? memoryResult.value : [];
+  const wines = wineResult.status === 'fulfilled' ? wineResult.value : [];
+  const authoritativeTrips = tripResult.status === 'fulfilled' ? tripResult.value : [];
+  const userId = userResult.status === 'fulfilled' ? userResult.value : null;
+  if (memoryResult.status === 'rejected' && wineResult.status === 'rejected' && tripResult.status === 'rejected') throw new Error('No se pudo cargar ningún contenido autorizado del mapa.');
   const points: AtlasMapPoint[] = [];
   const authorizedMemories = memories.filter((memory) => memory.visibility !== 'private' || Boolean(userId && memory.userId === userId));
   const authorizedWines = wines.filter((wine) => wine.visibility !== 'private' || Boolean(userId && wine.user_id === userId));

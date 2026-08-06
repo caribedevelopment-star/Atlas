@@ -3,7 +3,7 @@ import type { ProfileAccess, ProfileMemory } from '@/types/profile';
 
 type Row = Record<string, unknown>;
 const text = (value: unknown) => typeof value === 'string' && value.trim() ? value : undefined;
-const number = (value: unknown) => { const result = Number(value); return Number.isFinite(result) ? result : undefined; };
+const number = (value: unknown) => { if (value === null || value === undefined || value === '') return undefined; const result = Number(value); return Number.isFinite(result) ? result : undefined; };
 
 function visibility(row: Row): ProfileMemory['visibility'] {
   if (row.is_private === true || row.visibility === 'private') return 'private';

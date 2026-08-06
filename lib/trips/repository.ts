@@ -8,7 +8,7 @@ type Row = Record<string, any>;
 const query = '*,trip_stops(*,memories(*)),trip_participants(*,profiles(*)),trip_wines(*,wines(*)),trip_photos(*)';
 function text(value: unknown) { return typeof value === 'string' && value.trim() ? value : undefined; }
 function visibility(value: unknown): WineVisibility { return value === 'public' || value === 'friends' ? value : 'private'; }
-function number(value: unknown) { const parsed=Number(value); return Number.isFinite(parsed) ? parsed : undefined; }
+function number(value: unknown) { if(value===null||value===undefined||value==='')return undefined; const parsed=Number(value); return Number.isFinite(parsed) ? parsed : undefined; }
 function geometry(value: any): Array<{latitude:number;longitude:number}> { const raw=Array.isArray(value) ? value : value?.type==='LineString' ? value.coordinates : []; return raw.flatMap((point:any) => Array.isArray(point) && Number.isFinite(Number(point[0])) && Number.isFinite(Number(point[1])) ? [{longitude:Number(point[0]),latitude:Number(point[1])}] : point && Number.isFinite(Number(point.latitude)) && Number.isFinite(Number(point.longitude)) ? [{latitude:Number(point.latitude),longitude:Number(point.longitude)}] : []); }
 
 export function normalizeTrip(row: Row): AtlasTrip {

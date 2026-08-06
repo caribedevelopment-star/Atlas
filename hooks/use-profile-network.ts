@@ -1,0 +1,3 @@
+'use client';
+import { useCallback, useEffect, useState } from 'react'; import { fetchUserNetwork, type NetworkUser } from '@/lib/network';
+export function useProfileNetwork(userId?: string, enabled = true) { const [users,setUsers]=useState<NetworkUser[]>([]),[loading,setLoading]=useState(enabled),[error,setError]=useState<string|null>(null); const refresh=useCallback(async()=>{if(!userId||!enabled)return;setLoading(true);setError(null);try{setUsers(await fetchUserNetwork(userId))}catch(cause){setError(cause instanceof Error?cause.message:'No se pudo cargar la red.')}finally{setLoading(false)}},[enabled,userId]);useEffect(()=>{void refresh()},[refresh]);return{users,loading,error,refresh};}

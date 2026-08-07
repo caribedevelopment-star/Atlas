@@ -26,9 +26,15 @@ body {
   min-height: 100vh;
 }
 
-.atlas-map-marker span { display: block; border: 4px solid rgba(255,255,255,.94); border-radius: 999px; box-shadow: 0 5px 18px rgba(0,0,0,.28); transition: transform .2s ease, box-shadow .2s ease; }
+.atlas-map-marker { position: relative; }
+.atlas-map-marker span { position: relative; z-index: 2; display: block; border: 4px solid rgba(255,255,255,.94); border-radius: 999px; box-shadow: 0 5px 18px rgba(0,0,0,.28); transition: transform .2s ease, box-shadow .2s ease; }
+.atlas-map-marker i { position: absolute; inset: -5px; z-index: 1; display: block; border: 1px solid rgba(255,255,255,.7); border-radius: 999px; opacity: .25; animation: atlas-marker-breathe 3.6s ease-in-out infinite; }
 .atlas-map-marker:hover span { transform: scale(1.12); box-shadow: 0 8px 24px rgba(0,0,0,.34); }
-.atlas-map-marker-wines span { border-width: 3px; opacity: .78; }
+.atlas-map-marker:hover i { opacity: .65; }
+.atlas-map-marker-wines span { border-width: 3px; opacity: .86; }
+.atlas-map-source-shared i { border-color: rgba(100,210,255,.95); box-shadow: 0 0 14px rgba(100,210,255,.18); animation-duration: 2.8s; }
+.atlas-map-source-public i { border-color: rgba(244,114,182,.55); }
+
 .leaflet-bar { overflow: hidden; border: 1px solid rgba(255,255,255,.7) !important; border-radius: 14px !important; box-shadow: 0 8px 30px rgba(0,0,0,.18) !important; }
 .leaflet-bar a { border: 0 !important; background: rgba(255,255,255,.92) !important; color: #18181b !important; }
 .atlas-map-popup .leaflet-popup-content-wrapper, .atlas-map-popup .leaflet-popup-tip { background: #09090b; color: #f4f4f5; }
@@ -36,29 +42,36 @@ body {
 .atlas-map-popup .leaflet-popup-close-button { color: #a1a1aa !important; z-index: 2; }
 .leaflet-control-attribution { background: rgba(9,9,11,.88) !important; color: #71717a !important; }
 .leaflet-control-attribution a { color: #a1a1aa !important; }
+
 @keyframes atlas-orbit-breathe { 0%,100% { opacity:.45; transform:scale(1); } 50% { opacity:.9; transform:scale(1.012); } }
 @keyframes atlas-person-pulse { 0%,100% { filter:drop-shadow(0 0 0 rgba(244,63,94,0)); } 50% { filter:drop-shadow(0 0 8px rgba(244,63,94,.38)); } }
+@keyframes atlas-marker-breathe { 0%,100% { opacity:.16; transform:scale(.88); } 50% { opacity:.58; transform:scale(1.28); } }
+@keyframes atlas-friend-ring-spin { to { transform:rotate(360deg); } }
+@keyframes atlas-friend-float { 0%,100% { transform:translate(-50%,-50%) translateY(0) scale(1); filter:drop-shadow(0 4px 10px rgba(0,0,0,.28)); } 50% { transform:translate(-50%,-50%) translateY(-4px) scale(1.045); filter:drop-shadow(0 7px 16px rgba(244,63,94,.18)); } }
+@keyframes atlas-friend-breathe-keyframes { 0%,100% { opacity:.25; transform:scale(.94); } 50% { opacity:.7; transform:scale(1.08); } }
 .atlas-orbit { animation: atlas-orbit-breathe 5s ease-in-out infinite; }
 .atlas-person { animation: atlas-person-pulse 2.8s ease-in-out infinite; transition: transform .2s ease; }
 .atlas-person:hover { animation-play-state: paused; transform: translate(-50%,-50%) scale(1.15); }
-@media (prefers-reduced-motion: reduce) { .atlas-orbit,.atlas-person { animation:none; } }
+.atlas-friend-ring { animation: atlas-friend-ring-spin 42s linear infinite; box-shadow: inset 0 0 28px rgba(255,255,255,.015); }
+.atlas-friend-ring-reverse { animation-direction: reverse; animation-duration: 31s; }
+.atlas-friend-avatar { animation: atlas-friend-float 4.8s ease-in-out infinite; transition: filter .25s ease; }
+.atlas-friend-avatar:hover { animation-play-state: paused; z-index: 30; filter:brightness(1.08); }
+.atlas-friend-breathe { animation: atlas-friend-breathe-keyframes 5.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-orbit,.atlas-person,.atlas-map-marker i,.atlas-friend-ring,.atlas-friend-avatar,.atlas-friend-breathe { animation:none; }
+}
 
 @layer components {
-  /* Reusable Card Style */
   .atlas-card {
     @apply bg-surface border border-surface-border rounded-card transition-all duration-200 hover:border-zinc-700 hover:shadow-md;
   }
-
-  /* Reusable Input Style */
   .atlas-input {
     @apply w-full bg-surface border border-surface-border rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-zinc-400/20 focus:border-accent transition-all duration-150;
   }
-
-  /* Reusable Button Style */
   .atlas-button-primary {
     @apply bg-accent text-accent-foreground font-medium px-4 py-2.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2;
   }
-  
   .atlas-button-secondary {
     @apply bg-surface border border-surface-border text-foreground font-medium px-4 py-2.5 rounded-xl hover:bg-surface-hover active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2;
   }

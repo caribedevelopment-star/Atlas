@@ -1,18 +1,18 @@
 'use client';
 
-import { Compass, Heart, Map, Route, Search, SlidersHorizontal, Sparkles, Users, Wine, X } from 'lucide-react';
+import { Compass, Map, Route, Search, SlidersHorizontal, Sparkles, Users, Wine, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { AtlasMapFilters, AtlasMapSnapshot, MapLayer, MapSource } from '@/types/map';
 import type { AtlasExplorePreset } from '@/hooks/use-atlas-map';
 import { MapLayerSelector } from './MapLayerSelector';
 
 const presets: Array<{ id: AtlasExplorePreset; label: string; description: string; icon: typeof Compass }> = [
-  { id: 'all', label: 'Todo Atlas', description: 'Tu archivo completo', icon: Sparkles },
+  { id: 'all', label: 'Todo Atlas', description: 'Tu mundo autorizado', icon: Sparkles },
   { id: 'mine', label: 'Mi Atlas', description: 'Solo lo tuyo', icon: Map },
-  { id: 'wine', label: 'Vinos & DO', description: 'Bodega y territorio', icon: Wine },
-  { id: 'trips', label: 'Viajes', description: 'Rutas en el mapa', icon: Route },
-  { id: 'friends', label: 'Amigos', description: 'Contenido compartido', icon: Users },
-  { id: 'public', label: 'Descubrir', description: 'Atlas público', icon: Compass },
+  { id: 'shared', label: 'Compartido', description: 'Recuerdos elegidos para ti', icon: Users },
+  { id: 'wine', label: 'Vinos & DO', description: 'Catálogo y territorio', icon: Wine },
+  { id: 'trips', label: 'Viajes', description: 'Tus rutas y las compartidas', icon: Route },
+  { id: 'public', label: 'Catálogo', description: 'Contenido público de Atlas', icon: Compass },
 ];
 
 export function MapToolbar({ filters, snapshot, count, setQuery, setYear, setParticipant, toggleLayer, toggleSource, applyPreset, reset }: { filters: AtlasMapFilters; snapshot: AtlasMapSnapshot; count: number; setQuery: (value: string) => void; setYear: (value: string) => void; setParticipant: (value: string) => void; toggleLayer: (value: MapLayer) => void; toggleSource: (value: MapSource) => void; applyPreset: (preset: AtlasExplorePreset) => void; reset: () => void }) {
@@ -22,72 +22,36 @@ export function MapToolbar({ filters, snapshot, count, setQuery, setYear, setPar
   const suggestions = useMemo(() => {
     const query = filters.query.trim().toLocaleLowerCase('es');
     if (query.length < 2) return [];
-    const pointMatches = snapshot.points.filter((point) => [point.title, point.subtitle, point.memory?.city, point.memory?.country, point.wine?.region, point.wine?.denomination, point.wine?.winery].filter(Boolean).join(' ').toLocaleLowerCase('es').includes(query)).slice(0, 4).map((point) => ({ id: point.id, title: point.title, subtitle: point.subtitle || point.layer, kind: point.layer }));
+    const pointMatches = snapshot.points.filter((point) => [point.title, point.subtitle, point.memory?.city, point.memory?.country, point.wine?.region, point.wine?.denomination, point.wine?.winery, point.ownerName].filter(Boolean).join(' ').toLocaleLowerCase('es').includes(query)).slice(0, 4).map((point) => ({ id: point.id, title: point.title, subtitle: point.subtitle || point.layer, kind: point.source === 'shared' ? 'Compartido' : point.layer }));
     const regionMatches = snapshot.wineRegions.filter((region) => `${region.name} ${region.country}`.toLocaleLowerCase('es').includes(query)).slice(0, 3).map((region) => ({ id: `region-${region.id}`, title: region.name, subtitle: `${region.wineCount} vinos · ${region.country}`, kind: 'DO' }));
     return [...regionMatches, ...pointMatches].slice(0, 6);
   }, [filters.query, snapshot.points, snapshot.wineRegions]);
 
   const topRegions = useMemo(() => [...snapshot.wineRegions].sort((a, b) => b.wineCount - a.wineCount).slice(0, 6), [snapshot.wineRegions]);
   const activeFilterCount = Number(Boolean(filters.query)) + Number(Boolean(filters.year)) + Number(Boolean(filters.participant)) + Math.max(0, 3 - filters.sources.size) + Math.max(0, 3 - [...filters.layers].filter((layer) => ['memories', 'wines', 'trips'].includes(layer)).length);
-
   const usePreset = (preset: AtlasExplorePreset) => { applyPreset(preset); if (preset !== 'all') setOpen(false); };
 
   return <div className="absolute inset-x-3 top-3 z-[900] sm:inset-x-5 sm:top-5">
     <div className="mx-auto max-w-4xl">
       <div className="flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
-          <label className="relative block">
-            <span className="sr-only">Buscar en Atlas</span>
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-            <input type="search" value={filters.query} onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 140)} onChange={(event) => setQuery(event.target.value)} placeholder="Busca lugares, vinos, personas o DO" className="h-12 w-full rounded-[1.2rem] border border-white/55 bg-white/[.94] pl-11 pr-11 text-[13px] font-medium text-zinc-900 shadow-[0_14px_45px_rgba(0,0,0,.24)] backdrop-blur-2xl outline-none placeholder:font-normal placeholder:text-zinc-500 focus:bg-white focus:ring-4 focus:ring-white/30" />
-            {filters.query && <button type="button" onClick={() => setQuery('')} aria-label="Limpiar búsqueda" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-zinc-200 p-1.5 text-zinc-600 transition active:scale-95"><X className="h-3 w-3" /></button>}
-          </label>
-          {focused && suggestions.length > 0 && <div className="absolute inset-x-0 top-14 overflow-hidden rounded-[1.35rem] border border-black/5 bg-white/[.97] p-1.5 text-zinc-900 shadow-[0_24px_60px_rgba(0,0,0,.28)] backdrop-blur-3xl">
-            <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[.18em] text-zinc-400">Resultados rápidos</div>
-            {suggestions.map((item) => <button key={item.id} type="button" onMouseDown={() => setQuery(item.title)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-zinc-100 active:scale-[.99]">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600"><Compass className="h-3.5 w-3.5" /></span>
-              <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{item.title}</span><span className="block truncate text-[11px] text-zinc-500">{item.subtitle}</span></span>
-              <span className="rounded-full bg-zinc-100 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-zinc-500">{item.kind}</span>
-            </button>)}
-          </div>}
+          <label className="relative block"><span className="sr-only">Buscar en Atlas</span><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" /><input type="search" value={filters.query} onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 140)} onChange={(event) => setQuery(event.target.value)} placeholder="Busca lugares, vinos, personas o DO" className="h-12 w-full rounded-[1.2rem] border border-white/55 bg-white/[.94] pl-11 pr-11 text-[13px] font-medium text-zinc-900 shadow-[0_14px_45px_rgba(0,0,0,.24)] backdrop-blur-2xl outline-none placeholder:font-normal placeholder:text-zinc-500 focus:bg-white focus:ring-4 focus:ring-white/30" />{filters.query && <button type="button" onClick={() => setQuery('')} aria-label="Limpiar búsqueda" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-zinc-200 p-1.5 text-zinc-600 transition active:scale-95"><X className="h-3 w-3" /></button>}</label>
+          {focused && suggestions.length > 0 && <div className="absolute inset-x-0 top-14 overflow-hidden rounded-[1.35rem] border border-black/5 bg-white/[.97] p-1.5 text-zinc-900 shadow-[0_24px_60px_rgba(0,0,0,.28)] backdrop-blur-3xl"><div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[.18em] text-zinc-400">Resultados rápidos</div>{suggestions.map((item) => <button key={item.id} type="button" onMouseDown={() => setQuery(item.title)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-zinc-100 active:scale-[.99]"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600"><Compass className="h-3.5 w-3.5" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{item.title}</span><span className="block truncate text-[11px] text-zinc-500">{item.subtitle}</span></span><span className="rounded-full bg-zinc-100 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-zinc-500">{item.kind}</span></button>)}</div>}
         </div>
-
-        <button onClick={() => setOpen(true)} aria-expanded={open} aria-label="Explorar Atlas" className="relative flex h-12 items-center gap-2 rounded-[1.2rem] border border-white/55 bg-white/[.94] px-3.5 text-sm font-semibold text-zinc-900 shadow-[0_14px_45px_rgba(0,0,0,.24)] backdrop-blur-2xl transition active:scale-[.97] focus:outline-none focus-visible:ring-4 focus-visible:ring-white/30 sm:px-4">
-          <SlidersHorizontal className="h-4 w-4" /><span className="hidden sm:inline">Explorar</span>
-          <span className={`flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${activeFilterCount ? 'bg-rose-500 text-white' : 'bg-zinc-900 text-white'}`}>{activeFilterCount || count}</span>
-        </button>
+        <button onClick={() => setOpen(true)} aria-expanded={open} aria-label="Explorar Atlas" className="relative flex h-12 items-center gap-2 rounded-[1.2rem] border border-white/55 bg-white/[.94] px-3.5 text-sm font-semibold text-zinc-900 shadow-[0_14px_45px_rgba(0,0,0,.24)] backdrop-blur-2xl transition active:scale-[.97] focus:outline-none focus-visible:ring-4 focus-visible:ring-white/30 sm:px-4"><SlidersHorizontal className="h-4 w-4" /><span className="hidden sm:inline">Explorar</span><span className={`flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${activeFilterCount ? 'bg-rose-500 text-white' : 'bg-zinc-900 text-white'}`}>{activeFilterCount || count}</span></button>
       </div>
-
-      <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {presets.slice(1, 5).map((preset) => { const Icon = preset.icon; return <button key={preset.id} type="button" onClick={() => usePreset(preset.id)} className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-zinc-950/65 px-3 py-1.5 text-[11px] font-medium text-white shadow-lg backdrop-blur-xl transition hover:bg-zinc-900/80 active:scale-95"><Icon className="h-3 w-3 text-zinc-300" />{preset.label}</button>; })}
-      </div>
+      <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{presets.slice(1, 5).map((preset) => { const Icon = preset.icon; return <button key={preset.id} type="button" onClick={() => usePreset(preset.id)} className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-zinc-950/65 px-3 py-1.5 text-[11px] font-medium text-white shadow-lg backdrop-blur-xl transition hover:bg-zinc-900/80 active:scale-95"><Icon className="h-3 w-3 text-zinc-300" />{preset.label}</button>; })}</div>
     </div>
 
-    {open && <div className="fixed inset-0 z-[1000] bg-black/35 backdrop-blur-[7px]" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}>
-      <section role="dialog" aria-modal="true" aria-labelledby="map-filters-title" className="absolute inset-x-2 bottom-2 max-h-[88dvh] overflow-y-auto rounded-[2.2rem] border border-white/10 bg-zinc-950/[.97] p-5 pb-7 shadow-[0_30px_90px_rgba(0,0,0,.65)] backdrop-blur-3xl sm:inset-y-3 sm:left-auto sm:right-3 sm:w-[430px] sm:p-6">
-        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-white/15 sm:hidden" />
-        <div className="flex items-start justify-between gap-4">
-          <div><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.2em] text-rose-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />Atlas vivo</div><h2 id="map-filters-title" className="mt-2 text-3xl font-semibold tracking-[-.045em] text-white">Explorar</h2><p className="mt-1 text-sm leading-5 text-zinc-500">Mueve el mapa con intención. Sin menús complicados.</p></div>
-          <button onClick={() => setOpen(false)} aria-label="Cerrar Explorar" className="rounded-full bg-white/[.06] p-2.5 text-zinc-400 transition hover:bg-white/10 active:scale-95"><X className="h-5 w-5" /></button>
-        </div>
-
-        <div className="mt-5 grid grid-cols-3 gap-2 rounded-[1.4rem] border border-white/[.08] bg-white/[.035] p-2">
-          <Metric label="Visible" value={count} /><Metric label="En Atlas" value={snapshot.points.length} /><Metric label="Regiones DO" value={snapshot.wineRegions.length} accent />
-        </div>
-
+    {open && <div className="fixed inset-0 z-[1000] bg-black/35 backdrop-blur-[7px]" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}><section role="dialog" aria-modal="true" aria-labelledby="map-filters-title" className="absolute inset-x-2 bottom-2 max-h-[88dvh] overflow-y-auto rounded-[2.2rem] border border-white/10 bg-zinc-950/[.97] p-5 pb-7 shadow-[0_30px_90px_rgba(0,0,0,.65)] backdrop-blur-3xl sm:inset-y-3 sm:left-auto sm:right-3 sm:w-[430px] sm:p-6"><div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-white/15 sm:hidden" /><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.2em] text-rose-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />Atlas vivo</div><h2 id="map-filters-title" className="mt-2 text-3xl font-semibold tracking-[-.045em] text-white">Explorar</h2><p className="mt-1 text-sm leading-5 text-zinc-500">Lo tuyo, lo compartido contigo y el catálogo público. Sin seguidores.</p></div><button onClick={() => setOpen(false)} aria-label="Cerrar Explorar" className="rounded-full bg-white/[.06] p-2.5 text-zinc-400 transition hover:bg-white/10 active:scale-95"><X className="h-5 w-5" /></button></div>
+        <div className="mt-5 grid grid-cols-3 gap-2 rounded-[1.4rem] border border-white/[.08] bg-white/[.035] p-2"><Metric label="Visible" value={count} /><Metric label="En Atlas" value={snapshot.points.length} /><Metric label="Regiones DO" value={snapshot.wineRegions.length} accent /></div>
         <section className="mt-6"><SectionTitle>Atajos</SectionTitle><div className="grid grid-cols-2 gap-2">{presets.map((preset) => { const Icon = preset.icon; return <button key={preset.id} type="button" onClick={() => usePreset(preset.id)} className="group flex items-center gap-3 rounded-[1.25rem] border border-white/[.08] bg-white/[.035] p-3 text-left transition hover:bg-white/[.07] active:scale-[.98]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/[.07] text-zinc-300 group-hover:bg-white group-hover:text-zinc-950"><Icon className="h-4 w-4" /></span><span className="min-w-0"><span className="block text-sm font-medium text-white">{preset.label}</span><span className="mt-0.5 block truncate text-[10px] text-zinc-600">{preset.description}</span></span></button>; })}</div></section>
-
         <div className="mt-7"><MapLayerSelector filters={filters} snapshot={snapshot} toggleLayer={toggleLayer} toggleSource={toggleSource} /></div>
-
-        {topRegions.length > 0 && <section className="mt-7"><div className="flex items-center justify-between"><SectionTitle>Denominaciones vivas</SectionTitle><Wine className="h-4 w-4 text-rose-300" /></div><div className="mt-2 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{topRegions.map((region) => <button key={region.id} type="button" onClick={() => { setQuery(region.name); setOpen(false); }} className="min-w-[142px] shrink-0 rounded-[1.2rem] border border-rose-300/10 bg-gradient-to-br from-rose-950/45 to-white/[.025] p-3 text-left transition hover:border-rose-300/25 active:scale-[.98]"><span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[.13em] text-rose-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />DO</span><span className="mt-2 block text-sm font-semibold text-white">{region.name}</span><span className="mt-1 block text-[11px] text-zinc-500">{region.wineCount} vinos · {region.wineryCount} bodegas</span></button>)}</div></section>}
-
+        {topRegions.length > 0 && <section className="mt-7"><div className="flex items-center justify-between"><SectionTitle>Denominaciones vivas</SectionTitle><Wine className="h-4 w-4 text-rose-300" /></div><div className="mt-2 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{topRegions.map((region) => <button key={region.id} type="button" onClick={() => { applyPreset('wine'); setQuery(region.name); setOpen(false); }} className="min-w-[142px] shrink-0 rounded-[1.2rem] border border-rose-300/10 bg-gradient-to-br from-rose-950/45 to-white/[.025] p-3 text-left transition hover:border-rose-300/25 active:scale-[.98]"><span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[.13em] text-rose-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />DO</span><span className="mt-2 block text-sm font-semibold text-white">{region.name}</span><span className="mt-1 block text-[11px] text-zinc-500">{region.wineCount} vinos · {region.wineryCount} bodegas</span></button>)}</div></section>}
         <section className="mt-6"><SectionTitle>Tiempo</SectionTitle><div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><Chip active={!filters.year} onClick={() => setYear('')}>Todos</Chip>{snapshot.years.slice(0, 7).map((year) => <Chip key={year} active={filters.year === year} onClick={() => setYear(year)}>{year}</Chip>)}</div></section>
-
-        {snapshot.participants.length > 0 && <section className="mt-6"><SectionTitle>Persona</SectionTitle><select value={filters.participant} onChange={(event) => setParticipant(event.target.value)} className="mt-2 h-12 w-full appearance-none rounded-[1.15rem] border border-white/10 bg-white/[.045] px-4 text-sm text-white outline-none transition focus:border-white/25"><option value="">Todas las personas</option>{snapshot.participants.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></section>}
-
+        {snapshot.participants.length > 0 && <section className="mt-6"><SectionTitle>Persona</SectionTitle><p className="mt-1 text-[11px] text-zinc-600">Filtra recuerdos y rutas donde esa persona participa.</p><select value={filters.participant} onChange={(event) => setParticipant(event.target.value)} className="mt-2 h-12 w-full appearance-none rounded-[1.15rem] border border-white/10 bg-white/[.045] px-4 text-sm text-white outline-none transition focus:border-white/25"><option value="">Todas las personas</option>{snapshot.participants.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></section>}
         <div className="mt-7 flex gap-2"><button type="button" onClick={reset} className="flex h-12 flex-1 items-center justify-center rounded-[1.15rem] border border-white/10 bg-white/[.04] text-sm font-medium text-zinc-300 transition hover:bg-white/[.07] active:scale-[.99]">Restablecer</button><button type="button" onClick={() => setOpen(false)} className="flex h-12 flex-[1.25] items-center justify-center rounded-[1.15rem] bg-white text-sm font-semibold text-zinc-950 shadow-xl transition hover:bg-zinc-200 active:scale-[.99]">Ver {count} en el mapa</button></div>
-      </section>
-    </div>}
+      </section></div>}
   </div>;
 }
 

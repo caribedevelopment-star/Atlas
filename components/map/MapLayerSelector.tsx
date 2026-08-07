@@ -2,25 +2,25 @@ import { Check, Heart, MapPinned, Route, Store, Wine } from 'lucide-react';
 import type { AtlasMapFilters, AtlasMapSnapshot, MapLayer, MapSource } from '@/types/map';
 
 const layers: Array<[MapLayer, string, string, typeof Wine]> = [
-  ['memories', 'Memorias', 'Momentos y lugares guardados', MapPinned],
-  ['wines', 'Vinos', 'Botellas y regiones DO', Wine],
-  ['trips', 'Viajes', 'Rutas y paradas', Route],
+  ['memories', 'Memorias', 'Tus momentos y los compartidos contigo', MapPinned],
+  ['wines', 'Vinos', 'Catálogo público y regiones DO', Wine],
+  ['trips', 'Viajes', 'Tus rutas y las compartidas', Route],
   ['favorites', 'Favoritos', 'Tus sitios importantes', Heart],
   ['restaurants', 'Restaurantes', 'Lugares para volver', Store],
 ];
-const sources: Array<[MapSource, string]> = [['mine', 'Yo'], ['friends', 'Amigos'], ['public', 'Público']];
+const sources: Array<[MapSource, string, string]> = [['mine', 'Mío', 'Tu archivo'], ['shared', 'Compartido', 'Solo contigo'], ['public', 'Catálogo', 'Vinos públicos']];
 
 export function MapLayerSelector({ filters, snapshot, toggleLayer, toggleSource }: { filters: AtlasMapFilters; snapshot?: AtlasMapSnapshot; toggleLayer: (layer: MapLayer) => void; toggleSource: (source: MapSource) => void }) {
   const layerCount = (layer: MapLayer) => snapshot?.points.filter((point) => point.layer === layer).length ?? 0;
   const sourceCount = (source: MapSource) => snapshot?.points.filter((point) => point.source === source).length ?? 0;
   return <div className="space-y-6">
     <fieldset>
-      <legend className="mb-2.5 text-[11px] font-semibold uppercase tracking-[.18em] text-zinc-500">Quién aparece</legend>
+      <legend className="mb-2.5 text-[11px] font-semibold uppercase tracking-[.18em] text-zinc-500">Origen</legend>
       <div className="grid grid-cols-3 rounded-[1.2rem] border border-white/10 bg-white/[.04] p-1">
-        {sources.map(([value, label]) => {
+        {sources.map(([value, label, description]) => {
           const active = filters.sources.has(value);
           return <button key={value} type="button" onClick={() => toggleSource(value)} aria-pressed={active} className={`rounded-[.95rem] px-2 py-2.5 text-xs font-medium transition-all ${active ? 'bg-white text-zinc-950 shadow-[0_5px_18px_rgba(0,0,0,.25)]' : 'text-zinc-500 hover:text-zinc-200'}`}>
-            <span className="block">{label}</span><span className={`mt-0.5 block text-[10px] ${active ? 'text-zinc-500' : 'text-zinc-700'}`}>{sourceCount(value)}</span>
+            <span className="block">{label}</span><span className={`mt-0.5 block text-[9px] ${active ? 'text-zinc-500' : 'text-zinc-700'}`}>{sourceCount(value)} · {description}</span>
           </button>;
         })}
       </div>

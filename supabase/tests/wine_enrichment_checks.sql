@@ -1,0 +1,13 @@
+begin;
+select plan(9);
+select has_column('public','wines','canonical_image_url','canonical image URL exists');
+select has_column('public','wines','enrichment_status','enrichment status exists');
+select has_column('public','wines','enrichment_confidence','enrichment confidence exists');
+select has_table('public','wine_enrichment_reviews','review queue exists');
+select function_returns('public','atlas_get_wine_enrichment_cron_secret',array[]::text[],'text','cron secret RPC exists');
+select function_returns('public','atlas_review_wine_enrichment',array['uuid','text'],'void','admin review RPC exists');
+select ok(exists(select 1 from cron.job where jobname='atlas-enrich-wine-catalog'),'wine enrichment cron exists');
+select ok(not exists(select 1 from public.wines where coalesce(is_popular,false) and image_url ilike '%images.unsplash.com%'),'generic Unsplash seed images were removed');
+select ok(exists(select 1 from vault.decrypted_secrets where name='atlas_wine_enrichment_cron_secret'),'cron secret exists in Vault');
+select * from finish();
+rollback;

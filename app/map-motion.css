@@ -2,11 +2,17 @@
 @keyframes atlas-route-glow { 0%,100% { stroke-opacity:.12; filter:drop-shadow(0 0 2px currentColor); } 50% { stroke-opacity:.3; filter:drop-shadow(0 0 8px currentColor); } }
 @keyframes atlas-do-heartbeat { 0%,100% { stroke-opacity:.18; fill-opacity:.01; filter:drop-shadow(0 0 0 currentColor); } 12% { stroke-opacity:.64; fill-opacity:.045; filter:drop-shadow(0 0 8px currentColor); } 22% { stroke-opacity:.25; fill-opacity:.018; } 34% { stroke-opacity:.52; fill-opacity:.035; filter:drop-shadow(0 0 5px currentColor); } 58% { stroke-opacity:.2; fill-opacity:.012; } }
 @keyframes atlas-do-core { 0%,100% { stroke-width:2px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.18)); } 18% { stroke-width:3px; filter:drop-shadow(0 0 8px currentColor); } 34% { stroke-width:2px; } }
+@keyframes atlas-do-orbit { 0% { stroke-dashoffset:0; stroke-opacity:.08; } 50% { stroke-opacity:.3; } 100% { stroke-dashoffset:-90; stroke-opacity:.08; } }
 @keyframes atlas-route-stop { 0%,100% { filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)); } 50% { filter:drop-shadow(0 0 5px currentColor); } }
+@keyframes atlas-location-wave { 0%,100% { stroke-opacity:.18; fill-opacity:.025; stroke-width:1px; } 50% { stroke-opacity:.55; fill-opacity:.055; stroke-width:2px; filter:drop-shadow(0 0 6px #0A84FF); } }
+@keyframes atlas-location-core { 0%,100% { filter:drop-shadow(0 1px 3px rgba(0,0,0,.2)); } 50% { filter:drop-shadow(0 0 8px #0A84FF); } }
 .atlas-route-flow { stroke-dasharray: 1 14; animation: atlas-route-flow 6s linear infinite; }
 .atlas-route-glow { animation: atlas-route-glow 4.5s ease-in-out infinite; }
 .atlas-route-stop { animation: atlas-route-stop 3.4s ease-in-out infinite; }
 .atlas-do-region { transition: stroke-opacity .3s ease, fill-opacity .3s ease; }
 .atlas-do-pulse { animation: atlas-do-heartbeat 4.8s ease-in-out infinite; }
 .atlas-do-core { animation: atlas-do-core 4.8s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .atlas-route-flow,.atlas-route-glow,.atlas-route-stop,.atlas-do-pulse,.atlas-do-core { animation:none; } }
+.atlas-do-orbit { animation: atlas-do-orbit 11s linear infinite; }
+.atlas-location-pulse { animation: atlas-location-wave 3.2s ease-in-out infinite; }
+.atlas-location-core { animation: atlas-location-core 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .atlas-route-flow,.atlas-route-glow,.atlas-route-stop,.atlas-do-pulse,.atlas-do-core,.atlas-do-orbit,.atlas-location-pulse,.atlas-location-core { animation:none; } }

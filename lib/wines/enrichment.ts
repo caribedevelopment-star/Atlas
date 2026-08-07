@@ -38,7 +38,7 @@ export async function reviewWineEnrichment(reviewId: string, decision: 'approved
 
 export async function runWineEnrichment(wineId?: string): Promise<void> {
   const { error } = await supabase.functions.invoke('enrich-wine-catalog', {
-    body: { limit: wineId ? 1 : 5, wineId },
+    body: { wineId },
   });
   if (error) throw error;
 }

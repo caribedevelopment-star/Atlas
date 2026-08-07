@@ -42,7 +42,13 @@ async function enrich(wine:WineRow){
     if(best.score>=0.78){await finish(wine.id,{canonical_image_url:best.imageUrl,enrichment_status:'matched',enrichment_confidence:best.score,enrichment_source:source,enrichment_source_url:best.sourceUrl,enrichment_license:license,enrichment_error:null});return {wineId:wine.id,status:'matched',confidence:best.score}}
     if(best.score>=0.55){const {error}=await admin.from('wine_enrichment_reviews').upsert({wine_id:wine.id,provider_name:source,proposed_image_url:best.imageUrl,source_url:best.sourceUrl,source_license:license,confidence:best.score,proposed_payload:{code:best.product.code,product_name:best.product.product_name,brands:best.product.brands},status:'pending'},{onConflict:'wine_id,provider_name,proposed_image_url'});if(error)throw error;await finish(wine.id,{enrichment_status:'needs_review',enrichment_confidence:best.score,enrichment_source:source,enrichment_source_url:best.sourceUrl,enrichment_license:license,enrichment_error:null});return {wineId:wine.id,status:'needs_review',confidence:best.score}}
     await finish(wine.id,{enrichment_status:'no_match',enrichment_confidence:best.score,enrichment_source:source,enrichment_source_url:best.sourceUrl,enrichment_license:license,enrichment_error:null});return {wineId:wine.id,status:'no_match',confidence:best.score};
-  }catch(e){const message=err(e);await finish(wine.id,{enrichment_status:attempts>=3?'failed':'pending',enrichment_error:message.slice(0,500)});return {wineId:wine.id,status:attempts>=3?'failed':'pending',error:message}}
+  }catch(e){
+    const message=err(e);
+    const transient=/OPEN_FOOD_FACTS_(429|5\d\d)/.test(message);
+    const nextStatus=transient?'pending':(attempts>=3?'failed':'pending');
+    await finish(wine.id,{enrichment_status:nextStatus,enrichment_error:message.slice(0,500)});
+    return {wineId:wine.id,status:nextStatus,error:message};
+  }
 }
 
 async function finish(id:string,values:Record<string,unknown>){await admin.from('wines').update({...values,enriched_at:new Date().toISOString()}).eq('id',id)}

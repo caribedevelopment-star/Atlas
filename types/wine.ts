@@ -1,5 +1,6 @@
 export type WineVisibility = 'private' | 'friends' | 'public';
 export type WineSource = 'mine' | 'friends' | 'public';
+export type WineEnrichmentStatus = 'pending' | 'matched' | 'needs_review' | 'no_match' | 'failed';
 
 export interface WineParticipant {
   id: string;
@@ -38,6 +39,11 @@ export interface WineItem {
   date_tasted?: string;
   purchase_location?: string;
   description?: string;
+  enrichment_status?: WineEnrichmentStatus;
+  enrichment_confidence?: number;
+  enrichment_source?: string;
+  canonical_image_url?: string;
+  enriched_at?: string;
 }
 
 export interface CreateWineInput {

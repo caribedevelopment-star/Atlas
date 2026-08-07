@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { CreateWineInput, WineItem, WineParticipant, WineVisibility } from '@/types/wine';
+import type { CreateWineInput, WineEnrichmentStatus, WineItem, WineParticipant, WineVisibility } from '@/types/wine';
 
 type DatabaseRecord = Record<string, unknown>;
 
@@ -82,6 +82,11 @@ export function normalizeWine(row: DatabaseRecord): WineItem {
     date_tasted: text(row.date_tasted),
     purchase_location: text(row.purchase_location),
     description: text(row.description),
+    enrichment_status: enrichmentStatus(row.enrichment_status),
+    enrichment_confidence: number(row.enrichment_confidence),
+    enrichment_source: text(row.enrichment_source),
+    canonical_image_url: text(row.canonical_image_url),
+    enriched_at: text(row.enriched_at),
   };
 }
 
@@ -102,20 +107,26 @@ export async function listWines(): Promise<WineItem[]> {
   return Promise.all((data ?? []).map(async (row) => {
     const interaction = interactions.get(row.id) as DatabaseRecord | undefined;
     const wine = normalizeWine({ ...row, favorite: interaction?.favorite ?? false, rating: interaction?.rating, tasting_notes: interaction?.tasting_notes, price: interaction?.purchase_price, shop: interaction?.shop, interaction_id: interaction?.id, date_tasted: interaction?.date_tasted, purchase_location: interaction?.purchase_location });
-    return hydrateWinePhotos(wine, row as DatabaseRecord);
+    return hydrateWinePhotos(wine, { ...row, personal_image_path:interaction?.image_path, personal_photo_paths:interaction?.photo_paths } as DatabaseRecord);
   }));
 }
 
 export async function createWine(input: CreateWineInput): Promise<WineItem> {
   const userId = await getCurrentWineUserId();
   if (!userId) throw new Error('Debes iniciar sesión para añadir un vino.');
-  const catalogue = { user_id:userId, name:input.name, winery:input.winery||null, vintage:input.vintage||null, country:input.country||null, region:input.region||null, denomination:input.denomination||null, grapes:input.grapes??[], image_path:input.image_path||null, photo_paths:input.photo_paths??[], description:input.description||null, supermarket:input.supermarket||null };
-  const { data, error } = await supabase.from('wines').insert(catalogue).select().single();
-  if (error) throw new Error(wineError(error));
-  const interaction = { user_id:userId, wine_id:data.id, favorite:input.favorite??false, rating:input.rating??null, tasting_notes:input.tasting_notes||null, date_tasted:input.date_tasted||null, purchase_price:input.price??null, purchase_location:input.purchase_location||null, shop:input.shop||null };
+  let existing = await findCatalogWine(input);
+  const identity=catalogIdentity(input);
+  const uploadedReference = input.image_path ? `wine-photos/${input.image_path}` : null;
+  const catalogue = { user_id:userId, name:input.name.trim(), winery:input.winery||null, vintage:input.vintage||null, country:input.country||null, region:input.region||null, denomination:input.denomination||null, grapes:input.grapes??[], image_path:input.image_path||null, photo_paths:input.photo_paths??[], description:input.description||null, supermarket:input.supermarket||null,catalog_identity:identity, enrichment_status:input.image_path?'matched':'pending',enrichment_confidence:input.image_path?1:null,enrichment_source:input.image_path?'atlas:user-upload':null,canonical_image_url:uploadedReference,enriched_at:input.image_path?new Date().toISOString():null };
+  let result = existing ? { data:existing,error:null } : await supabase.from('wines').insert(catalogue).select().single();
+  if(result.error?.code==='23505'){existing=await findCatalogWine(input);result=existing?{data:existing,error:null}:result;}
+  const { data, error } = result;
+  if (error || !data) throw new Error(wineError(error??{message:'No se pudo crear el registro público del vino.'}));
+  const interaction = { user_id:userId, wine_id:data.id, favorite:input.favorite??false, rating:input.rating??null, tasting_notes:input.tasting_notes||null, date_tasted:input.date_tasted||null, purchase_price:input.price??null, purchase_location:input.purchase_location||null, shop:input.shop||null,image_path:input.image_path||null,photo_paths:input.photo_paths??[] };
   const { data: personal, error: personalError } = await supabase.from('user_wines').upsert(interaction,{onConflict:'user_id,wine_id'}).select().single();
-  if (personalError) { await supabase.from('wines').delete().eq('id',data.id).eq('user_id',userId); throw new Error(wineError(personalError)); }
-  return hydrateWinePhotos(normalizeWine({ ...data, ...interaction, id:data.id, interaction_id:personal?.id }), data as DatabaseRecord);
+  if (personalError) { if(!existing)await supabase.from('wines').delete().eq('id',data.id).eq('user_id',userId);throw new Error(wineError(personalError)); }
+  if(!input.image_path&&(data.enrichment_status??'pending')==='pending')void supabase.functions.invoke('enrich-wine-catalog',{body:{wineId:data.id}}).catch((cause)=>console.warn('Enrichment queue unavailable',cause));
+  return hydrateWinePhotos(normalizeWine({ ...data, ...interaction, id:data.id, interaction_id:personal?.id }), { ...data,personal_image_path:interaction.image_path,personal_photo_paths:interaction.photo_paths } as DatabaseRecord);
 }
 
 export async function setWineFavorite(id: string, favorite: boolean): Promise<void> {
@@ -142,13 +153,18 @@ export async function uploadWinePhoto(file: File): Promise<string> {
 export async function deleteWinePhoto(path:string){const normalized=parseStorageObject(path);if(!normalized)return;await supabase.storage.from(normalized.bucket).remove([normalized.path]);}
 
 async function hydrateWinePhotos(wine: WineItem, row: DatabaseRecord): Promise<WineItem> {
-  const cover = text(row.image_path) ?? text(row.photo_path) ?? text(row.storage_path) ?? wine.image_url;
-  const paths = stringArray(row.photo_paths).length ? stringArray(row.photo_paths) : wine.photos;
+  const cover = text(row.personal_image_path) ?? text(row.image_path) ?? text(row.canonical_image_url) ?? text(row.photo_path) ?? text(row.storage_path) ?? wine.image_url;
+  const personalPaths=stringArray(row.personal_photo_paths);
+  const paths = personalPaths.length?personalPaths:stringArray(row.photo_paths).length ? stringArray(row.photo_paths) : wine.photos;
   const [imageUrl, ...photos] = await Promise.all([cover, ...paths].map(resolveWinePhoto));
   return { ...wine, image_url: imageUrl, photos: photos.filter((value): value is string => Boolean(value)) };
 }
 
 function extensionFor(file:File){const byType:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','image/heif':'heif'};return byType[file.type]??'jpg';}
+function enrichmentStatus(value:unknown):WineEnrichmentStatus|undefined{return ['pending','matched','needs_review','no_match','failed'].includes(String(value))?value as WineEnrichmentStatus:undefined;}
+async function findCatalogWine(input:CreateWineInput):Promise<DatabaseRecord|null>{const identity=catalogIdentity(input);const identityResult=await supabase.from('wines').select('*').eq('catalog_identity',identity).maybeSingle();if(!identityResult.error&&identityResult.data)return identityResult.data;const name=input.name.trim();const{data,error}=await supabase.from('wines').select('*').ilike('name',name).limit(20);if(error&&error.code!=='42703')throw new Error(wineError(error));return(data??[]).find((row)=>normalizeIdentity(row.name)===normalizeIdentity(name)&&normalizeIdentity(row.winery)===normalizeIdentity(input.winery)&&number(row.vintage)===input.vintage)??null;}
+function normalizeIdentity(value:unknown){return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').replace(/[^a-z0-9]+/g,' ').trim();}
+function catalogIdentity(input:CreateWineInput){return [input.name,input.winery,input.vintage].map((value)=>String(value??'').trim().replace(/\s+/g,' ').toLocaleLowerCase('es')).join('|');}
 function wineError(error:{code?:string;message?:string}){if(error.code==='42501')return 'Supabase bloqueó la operación por permisos. Revisa las políticas RLS de vinos.';if(error.code==='PGRST204'||error.code==='PGRST205')return `La base de datos no tiene instalado el modelo estabilizado de vinos (${error.message??error.code}).`;return error.message||'No se pudo guardar el vino.';}
 
 async function resolveWinePhoto(value?: string): Promise<string | undefined> {

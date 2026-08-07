@@ -1,0 +1,17 @@
+begin;
+select plan(13);
+select has_column('public','wines','enrichment_status','enrichment status exists');
+select has_column('public','wines','enrichment_confidence','enrichment confidence exists');
+select has_column('public','wines','enrichment_source','enrichment source exists');
+select has_column('public','wines','canonical_image_url','canonical image exists');
+select has_column('public','wines','enriched_at','enrichment timestamp exists');
+select has_column('public','wines','catalog_identity','catalog identity exists');
+select has_column('public','user_wines','image_path','personal cover path exists');
+select has_table('public','wine_enrichment_candidates','review queue exists');
+select policies_are('public','wine_enrichment_candidates',array['atlas_enrichment_candidates_admin_read'],'review queue is admin-only');
+select function_returns('public','atlas_is_admin',array[]::text[],'boolean','admin guard exists');
+select function_returns('public','atlas_review_wine_enrichment',array['uuid','boolean'],'void','review RPC exists');
+select trigger_is('public','wines','atlas_queue_wine_enrichment','atlas_queue_new_wine_enrichment','new wines queue enrichment');
+select ok(exists(select 1 from cron.job where jobname='atlas-enrich-wine-catalog'),'enrichment cron exists');
+select * from finish();
+rollback;

@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAtlasMapSnapshot } from '@/lib/map/repository';
 import type { AtlasMapFilters, AtlasMapSnapshot, MapLayer, MapSource } from '@/types/map';
 
-export type AtlasExplorePreset = 'all' | 'mine' | 'wine' | 'trips' | 'friends' | 'public';
+export type AtlasExplorePreset = 'all' | 'mine' | 'wine' | 'trips' | 'shared' | 'public';
 
 const defaultLayers: MapLayer[] = ['memories', 'wines', 'trips'];
 const allLayers: MapLayer[] = ['memories', 'wines', 'trips', 'favorites', 'restaurants'];
-const initialFilters: AtlasMapFilters = { query: '', sources: new Set(['mine', 'friends', 'public']), layers: new Set(defaultLayers), year: '', participant: '' };
+const initialFilters: AtlasMapFilters = { query: '', sources: new Set(['mine', 'shared', 'public']), layers: new Set(defaultLayers), year: '', participant: '' };
 
 export function useAtlasMap() {
   const [snapshot, setSnapshot] = useState<AtlasMapSnapshot | null>(null);
@@ -31,21 +31,21 @@ export function useAtlasMap() {
   }, [filters, snapshot]);
 
   const wineRegions = useMemo(() => {
-    if (!filters.layers.has('wines')) return [];
+    if (!filters.layers.has('wines') || !filters.sources.has('public')) return [];
     const query = filters.query.trim().toLocaleLowerCase('es');
     return (snapshot?.wineRegions ?? []).filter((region) => !query || `${region.name} ${region.country}`.toLocaleLowerCase('es').includes(query));
-  }, [filters.layers, filters.query, snapshot]);
+  }, [filters.layers, filters.query, filters.sources, snapshot]);
 
   const toggleSource = (value: MapSource) => setFilters((current) => ({ ...current, sources: toggle(current.sources, value) }));
   const toggleLayer = (value: MapLayer) => setFilters((current) => ({ ...current, layers: toggle(current.layers, value) }));
   const applyPreset = (preset: AtlasExplorePreset) => setFilters((current) => {
     const base = { ...current, query: '', year: '', participant: '' };
     if (preset === 'mine') return { ...base, sources: new Set<MapSource>(['mine']), layers: new Set<MapLayer>(allLayers) };
-    if (preset === 'wine') return { ...base, sources: new Set<MapSource>(['mine', 'friends', 'public']), layers: new Set<MapLayer>(['wines']) };
-    if (preset === 'trips') return { ...base, sources: new Set<MapSource>(['mine', 'friends', 'public']), layers: new Set<MapLayer>(['trips']) };
-    if (preset === 'friends') return { ...base, sources: new Set<MapSource>(['friends']), layers: new Set<MapLayer>(defaultLayers) };
-    if (preset === 'public') return { ...base, sources: new Set<MapSource>(['public']), layers: new Set<MapLayer>(defaultLayers) };
-    return { ...base, sources: new Set<MapSource>(['mine', 'friends', 'public']), layers: new Set<MapLayer>(defaultLayers) };
+    if (preset === 'wine') return { ...base, sources: new Set<MapSource>(['public']), layers: new Set<MapLayer>(['wines']) };
+    if (preset === 'trips') return { ...base, sources: new Set<MapSource>(['mine', 'shared']), layers: new Set<MapLayer>(['trips']) };
+    if (preset === 'shared') return { ...base, sources: new Set<MapSource>(['shared']), layers: new Set<MapLayer>(['memories', 'trips']) };
+    if (preset === 'public') return { ...base, sources: new Set<MapSource>(['public']), layers: new Set<MapLayer>(['wines']) };
+    return { ...base, sources: new Set<MapSource>(['mine', 'shared', 'public']), layers: new Set<MapLayer>(defaultLayers) };
   });
 
   return {

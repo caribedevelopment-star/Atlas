@@ -6,6 +6,18 @@ export type MapSource = 'mine' | 'friends' | 'public';
 export type MapLayer = 'memories' | 'wines' | 'trips' | 'favorites' | 'restaurants';
 export interface MapCoordinate { latitude: number; longitude: number }
 export type MapTrip = AtlasTrip & { source: MapSource; points: MapCoordinate[]; year?: string; participantIds: string[] };
+export interface AtlasWineRegion {
+  id: string;
+  name: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+  wineCount: number;
+  wineryCount: number;
+  favoriteCount: number;
+  averageRating?: number;
+}
 export interface AtlasMapPoint {
   id: string;
   layer: MapLayer;
@@ -24,5 +36,10 @@ export interface AtlasMapPoint {
   wine?: WineItem;
   trip?: MapTrip;
 }
-export interface AtlasMapSnapshot { points: AtlasMapPoint[]; participants: Array<{ id: string; name: string }>; years: string[] }
+export interface AtlasMapSnapshot {
+  points: AtlasMapPoint[];
+  wineRegions: AtlasWineRegion[];
+  participants: Array<{ id: string; name: string }>;
+  years: string[];
+}
 export interface AtlasMapFilters { query: string; sources: Set<MapSource>; layers: Set<MapLayer>; year: string; participant: string }

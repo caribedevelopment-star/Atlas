@@ -15,7 +15,7 @@ type WineContext = {
 };
 type HistoryItem = { role?: string; text?: string };
 
-const DEFAULT_MODEL = 'gemini-3.5-flash';
+const DEFAULT_MODEL = 'gemini-3.6-flash';
 const FALLBACK_MODEL = 'gemini-flash-latest';
 
 export async function POST(request: Request) {
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     const ai = new GoogleGenAI({ apiKey });
     const configured = process.env.GEMINI_MODEL?.trim();
-    const models = Array.from(new Set([configured, DEFAULT_MODEL, FALLBACK_MODEL].filter((value): value is string => Boolean(value))));
+    const models = Array.from(new Set([DEFAULT_MODEL, configured, FALLBACK_MODEL].filter((value): value is string => Boolean(value))));
 
     for (const model of models) {
       try {

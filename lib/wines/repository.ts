@@ -59,7 +59,7 @@ export function normalizeWine(row: DatabaseRecord): WineItem {
     price: number(row.price),
     tasting_notes: text(row.tasting_notes),
     notes: text(row.notes),
-    image_url: text(row.image_url) ?? text(row.photo_url) ?? text(row.bottle_image) ?? text(row.image),
+    image_url: text(row.canonical_image_url) ?? text(row.image_url) ?? text(row.photo_url) ?? text(row.bottle_image) ?? text(row.image),
     photos: stringArray(row.photos ?? row.photo_urls ?? row.images),
     country: text(row.country),
     region: text(row.region),
@@ -115,7 +115,7 @@ export async function uploadWinePhoto(file: File): Promise<string> {
 }
 
 async function hydrateWinePhotos(wine: WineItem, row: DatabaseRecord): Promise<WineItem> {
-  const cover = text(row.image_path) ?? text(row.photo_path) ?? text(row.storage_path) ?? wine.image_url;
+  const cover = text(row.canonical_image_path) ?? text(row.image_path) ?? text(row.photo_path) ?? text(row.storage_path) ?? wine.image_url;
   const paths = stringArray(row.photo_paths).length ? stringArray(row.photo_paths) : wine.photos;
   const [imageUrl, ...photos] = await Promise.all([cover, ...paths].map(resolveWinePhoto));
   return { ...wine, image_url: imageUrl, photos: photos.filter((value): value is string => Boolean(value)) };

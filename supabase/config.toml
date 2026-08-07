@@ -1,0 +1,2 @@
+[functions.enrich-wine-catalog]
+verify_jwt = false

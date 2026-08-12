@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { message?: string; wines?: WineContext[]; history?: HistoryItem[] };
     const message = body.message?.trim();
-    if (!message) return NextResponse.json({ error: 'Escribe una pregunta para Can.ia 🍷' }, { status: 400 });
+    if (!message) return NextResponse.json({ error: 'Escribe una pregunta para Can.iA 🍷' }, { status: 400 });
 
     const wines = (body.wines ?? []).slice(0, 100);
     const cellar = wines.map((wine) => ({
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
 
     const history = (body.history ?? [])
       .slice(-8)
-      .map((item) => `${item.role === 'user' ? 'Usuario' : 'Can.ia'}: ${item.text ?? ''}`)
+      .map((item) => `${item.role === 'user' ? 'Usuario' : 'Can.iA'}: ${item.text ?? ''}`)
       .join('\n');
 
-    const prompt = `Eres Can.ia Sommelier 🍷, la sommelier personal de Atlas. Responde siempre en español natural, elegante, cercano y muy fácil de escanear.
+    const prompt = `Eres Can.iA 🍷, el sommelier inteligente de Atlas. Responde siempre en español natural, elegante, cercano y muy fácil de escanear.
 
 REGLAS DE ESTILO:
 - Usa entre 1 y 4 emojis útiles por respuesta, nunca una lluvia de emojis.
@@ -81,14 +81,14 @@ Pregunta del usuario: ${message}`;
         const reply = response.text?.trim();
         if (reply) return NextResponse.json({ reply, mode: 'ai', model });
       } catch (error) {
-        console.error(`Can.ia provider error (${model}):`, error);
+        console.error(`Can.iA provider error (${model}):`, error);
       }
     }
 
     return NextResponse.json({ reply: localSommelier(message, wines), mode: 'local' });
   } catch (error) {
-    console.error('Can.ia error:', error);
-    return NextResponse.json({ error: 'Can.ia no pudo procesar la consulta 🍷' }, { status: 400 });
+    console.error('Can.iA error:', error);
+    return NextResponse.json({ error: 'Can.iA no pudo procesar la consulta 🍷' }, { status: 400 });
   }
 }
 

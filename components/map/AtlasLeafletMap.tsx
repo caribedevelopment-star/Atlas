@@ -11,19 +11,21 @@ import { MapOwner } from './MapOwner';
 import { MemoryPopup } from './MemoryPopup';
 import { TripPopup } from './TripPopup';
 
+const WORLD_BOUNDS: L.LatLngBoundsExpression = [[-84, -180], [84, 180]];
+
 export function AtlasLeafletMap({ points, wineRegions = [] }: { points: AtlasMapPoint[]; wineRegions?: AtlasWineRegion[] }) {
   const trips = points.filter((point) => point.trip && point.trip.points.length > 1);
   const markers = points.filter((point) => !point.trip);
 
-  return <MapContainer center={[20, 0]} zoom={3} minZoom={2} scrollWheelZoom className="h-full w-full bg-[#d9d8d3]" zoomControl={false} preferCanvas={false}>
+  return <MapContainer center={[20, 0]} zoom={3} minZoom={2} maxZoom={18} maxBounds={WORLD_BOUNDS} maxBoundsViscosity={1} worldCopyJump={false} scrollWheelZoom className="h-full w-full bg-[#d9d8d3]" zoomControl={false} preferCanvas={false}>
     <ZoomControl position="bottomright" />
-    <TileLayer attribution='&copy; OpenStreetMap &copy; CARTO' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+    <TileLayer noWrap bounds={WORLD_BOUNDS} attribution='&copy; OpenStreetMap &copy; CARTO' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
     <FitBounds points={points} />
     <CurrentLocation focus={points.length === 0} />
 
     {wineRegions.map((region) => <LivingWineRegion key={region.id} region={region} />)}
 
-    <MarkerClusterGroup chunkedLoading chunkInterval={100} chunkDelay={20} removeOutsideVisibleBounds spiderfyOnMaxZoom>
+    <MarkerClusterGroup chunkedLoading chunkInterval={100} chunkDelay={20} removeOutsideVisibleBounds spiderfyOnMaxZoom showCoverageOnHover={false} maxClusterRadius={52} iconCreateFunction={(cluster: { getChildCount: () => number }) => clusterIcon(cluster.getChildCount())}>
       {markers.map((point) => <Marker key={point.id} position={[point.latitude, point.longitude]} icon={icon(point.layer, point.source)} title={point.title} keyboard>
         <Popup className="atlas-map-popup" maxWidth={340} minWidth={260}>
           {point.wine ? <div className="w-[300px] bg-zinc-950 p-2"><WineCard name={point.wine.name} winery={point.wine.winery} imageUrl={point.wine.image_url} vintage={point.wine.vintage} country={point.wine.country} region={point.wine.denomination ?? point.wine.region} grapes={point.wine.grapes} rating={point.wine.rating} price={point.wine.price} favorite={point.wine.favorite} visibility={point.wine.visibility} /><div className="px-2 pb-2"><MapOwner id={point.ownerId} name={point.ownerName} avatarUrl={point.ownerAvatarUrl} /></div></div> : point.memory ? <MemoryPopup memory={point.memory} /> : null}
@@ -78,7 +80,10 @@ function FitBounds({ points }: { points: AtlasMapPoint[] }) {
   useEffect(() => {
     const resize = new ResizeObserver(() => map.invalidateSize({ animate: false }));
     resize.observe(map.getContainer()); map.invalidateSize({ animate: false });
-    if (points.length) { const coordinates = points.flatMap((point) => point.trip?.points.map((item) => [item.latitude, item.longitude] as [number, number]) ?? [[point.latitude, point.longitude] as [number, number]]); map.fitBounds(L.latLngBounds(coordinates), { padding: [54, 54], maxZoom: 13, animate: points.length < 300 }); }
+    if (points.length) {
+      const coordinates = points.flatMap((point) => point.trip?.points.map((item) => [item.latitude, item.longitude] as [number, number]) ?? [[point.latitude, point.longitude] as [number, number]]);
+      map.fitBounds(L.latLngBounds(coordinates), { padding: [54, 54], maxZoom: 13, animate: points.length < 300 });
+    }
     return () => resize.disconnect();
   }, [map, points]);
   return null;
@@ -88,7 +93,12 @@ function CurrentLocation({ focus }: { focus: boolean }) {
   const map = useMap(), [position, setPosition] = useState<[number, number] | null>(null), [label, setLabel] = useState('Tu ubicación actual');
   useEffect(() => {
     if (!navigator.geolocation) return;
-    const watch = navigator.geolocation.watchPosition(({ coords }) => { const next: [number, number] = [coords.latitude, coords.longitude]; setPosition(next); if (focus) map.setView(next, 13, { animate: true }); fetch(`/api/geocode?lat=${coords.latitude}&lon=${coords.longitude}`).then((response) => response.ok ? response.json() : null).then((data) => data?.label && setLabel(data.label)).catch(() => undefined); }, () => undefined, { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 });
+    const watch = navigator.geolocation.watchPosition(({ coords }) => {
+      const next: [number, number] = [coords.latitude, coords.longitude];
+      setPosition(next);
+      if (focus) map.setView(next, 13, { animate: true });
+      fetch(`/api/geocode?lat=${coords.latitude}&lon=${coords.longitude}`).then((response) => response.ok ? response.json() : null).then((data) => data?.label && setLabel(data.label)).catch(() => undefined);
+    }, () => undefined, { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 });
     return () => navigator.geolocation.clearWatch(watch);
   }, [focus, map]);
   return position ? <><Circle center={position} radius={170} pathOptions={{ color: '#0A84FF', fillColor: '#0A84FF', fillOpacity: .035, weight: 1, className: 'atlas-location-pulse' }} /><Circle center={position} radius={75} pathOptions={{ color: '#0A84FF', fillColor: '#0A84FF', fillOpacity: .06, weight: 1 }} /><CircleMarker center={position} radius={8} pathOptions={{ color: '#fff', fillColor: '#0A84FF', fillOpacity: 1, weight: 3, className: 'atlas-location-core' }}><Tooltip direction="top" offset={[0, -8]}>{label}</Tooltip></CircleMarker></> : null;
@@ -112,4 +122,9 @@ function icon(layer: MapLayer, source: MapSource) {
   const size = layer === 'wines' ? 18 : 28;
   const value = L.divIcon({ className: `atlas-map-marker atlas-map-marker-${layer} atlas-map-source-${source}`, html: `<span style="background:${colors[layer]};width:${size}px;height:${size}px"></span><i style="width:${size + 10}px;height:${size + 10}px"></i>`, iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2] });
   cache.set(key, value); return value;
+}
+
+function clusterIcon(count: number) {
+  const size = count > 30 ? 52 : count > 10 ? 46 : 40;
+  return L.divIcon({ className: 'atlas-map-cluster', html: `<span style="width:${size}px;height:${size}px"><b>${count}</b><i></i></span>`, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
 }

@@ -6,6 +6,17 @@
 @keyframes atlas-route-stop { 0%,100% { filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)); } 50% { filter:drop-shadow(0 0 5px currentColor); } }
 @keyframes atlas-location-wave { 0%,100% { stroke-opacity:.18; fill-opacity:.025; stroke-width:1px; } 50% { stroke-opacity:.55; fill-opacity:.055; stroke-width:2px; filter:drop-shadow(0 0 6px #0A84FF); } }
 @keyframes atlas-location-core { 0%,100% { filter:drop-shadow(0 1px 3px rgba(0,0,0,.2)); } 50% { filter:drop-shadow(0 0 8px #0A84FF); } }
+@keyframes atlas-cluster-breathe { 0%,100% { transform:scale(.92); opacity:.35; } 50% { transform:scale(1.24); opacity:.08; } }
+@keyframes atlas-glass-live { 0%,100% { box-shadow:0 14px 45px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.7); } 50% { box-shadow:0 16px 50px rgba(0,0,0,.27), inset 0 1px 0 rgba(255,255,255,.92); } }
+@keyframes atlas-space-button { 0%,100% { box-shadow:0 18px 45px rgba(0,0,0,.32),0 0 0 rgba(103,232,249,0); } 50% { box-shadow:0 18px 48px rgba(0,0,0,.36),0 0 24px rgba(103,232,249,.08); } }
+@keyframes atlas-universe-enter { from { opacity:0; transform:scale(.82); filter:blur(14px); } to { opacity:1; transform:scale(1); filter:blur(0); } }
+@keyframes atlas-universe-nebula { 0%,100% { transform:scale(1) rotate(0deg); opacity:.72; } 50% { transform:scale(1.08) rotate(4deg); opacity:1; } }
+@keyframes atlas-universe-stars { from { transform:translate3d(0,0,0); } to { transform:translate3d(-22px,14px,0); } }
+@keyframes atlas-universe-orbit-spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
+@keyframes atlas-universe-core { 0%,100% { transform:translate(-50%,-50%) scale(1); filter:drop-shadow(0 0 18px rgba(103,232,249,.08)); } 50% { transform:translate(-50%,-50%) scale(1.025); filter:drop-shadow(0 0 36px rgba(103,232,249,.16)); } }
+@keyframes atlas-universe-glow { 0%,100% { opacity:.36; transform:scale(.86); } 50% { opacity:.8; transform:scale(1.12); } }
+@keyframes atlas-universe-stat { 0%,100% { transform:translate(-50%,-50%) translateY(0) scale(var(--atlas-stat-scale,1)); } 50% { transform:translate(-50%,-50%) translateY(-8px) scale(calc(var(--atlas-stat-scale,1) + .025)); } }
+
 .atlas-route-flow { stroke-dasharray: 1 14; animation: atlas-route-flow 6s linear infinite; }
 .atlas-route-glow { animation: atlas-route-glow 4.5s ease-in-out infinite; }
 .atlas-route-stop { animation: atlas-route-stop 3.4s ease-in-out infinite; }
@@ -15,4 +26,34 @@
 .atlas-do-orbit { animation: atlas-do-orbit 11s linear infinite; }
 .atlas-location-pulse { animation: atlas-location-wave 3.2s ease-in-out infinite; }
 .atlas-location-core { animation: atlas-location-core 2.4s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .atlas-route-flow,.atlas-route-glow,.atlas-route-stop,.atlas-do-pulse,.atlas-do-core,.atlas-do-orbit,.atlas-location-pulse,.atlas-location-core { animation:none; } }
+.atlas-map-glass { animation:atlas-glass-live 6s ease-in-out infinite; }
+.atlas-space-button { animation:atlas-space-button 4.8s ease-in-out infinite; }
+
+.atlas-map-cluster { background:transparent !important; }
+.atlas-map-cluster > span { position:relative; display:flex; align-items:center; justify-content:center; border:3px solid rgba(255,255,255,.94); border-radius:999px; background:rgba(9,9,11,.86); color:white; box-shadow:0 9px 30px rgba(0,0,0,.3); backdrop-filter:blur(12px); }
+.atlas-map-cluster b { position:relative; z-index:2; font:600 11px/1 system-ui,-apple-system,sans-serif; }
+.atlas-map-cluster i { position:absolute; inset:-7px; border:1px solid rgba(255,255,255,.5); border-radius:999px; animation:atlas-cluster-breathe 3.2s ease-in-out infinite; }
+
+.atlas-universe-enter { animation:atlas-universe-enter .72s cubic-bezier(.2,.82,.2,1) both; }
+.atlas-universe-nebula { background:radial-gradient(circle at 18% 20%,rgba(59,130,246,.14),transparent 30%),radial-gradient(circle at 78% 72%,rgba(244,63,94,.10),transparent 27%),radial-gradient(circle at 52% 48%,rgba(103,232,249,.08),transparent 33%); filter:blur(18px); animation:atlas-universe-nebula 14s ease-in-out infinite; }
+.atlas-universe-stars { opacity:.8; background-image:radial-gradient(circle,rgba(255,255,255,.82) 0 1px,transparent 1.3px),radial-gradient(circle,rgba(125,211,252,.7) 0 1px,transparent 1.4px); background-size:83px 83px,137px 137px; background-position:7px 18px,41px 62px; animation:atlas-universe-stars 18s linear infinite alternate; }
+.atlas-universe-stars-far { opacity:.28; background-size:53px 53px,101px 101px; filter:blur(.2px); animation-duration:28s; animation-direction:alternate-reverse; }
+.atlas-universe-system { perspective:1100px; transform-style:preserve-3d; }
+.atlas-universe-orbit { transform-origin:center; box-shadow:inset 0 0 36px rgba(255,255,255,.008); }
+.atlas-universe-orbit-a { animation:atlas-universe-orbit-spin 48s linear infinite; transform:translate(-50%,-50%) rotateX(68deg) rotateZ(10deg); }
+.atlas-universe-orbit-b { animation:atlas-universe-orbit-spin 31s linear infinite reverse; transform:translate(-50%,-50%) rotateX(64deg) rotateZ(-24deg); }
+.atlas-universe-orbit-c { animation:atlas-universe-orbit-spin 23s linear infinite; transform:translate(-50%,-50%) rotateX(72deg) rotateZ(38deg); }
+.atlas-universe-core { background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.16),rgba(10,18,31,.94) 38%,rgba(2,2,6,.99) 72%); border:1px solid rgba(255,255,255,.12); box-shadow:inset -18px -22px 42px rgba(0,0,0,.58),inset 8px 8px 24px rgba(125,211,252,.08),0 30px 90px rgba(0,0,0,.5); animation:atlas-universe-core 6.5s ease-in-out infinite; }
+.atlas-universe-core::after { content:""; position:absolute; inset:9%; border-radius:999px; border:1px solid rgba(255,255,255,.05); transform:rotate(-18deg) scaleY(.36); }
+.atlas-universe-core-glow { background:radial-gradient(circle,rgba(103,232,249,.13),transparent 68%); filter:blur(20px); animation:atlas-universe-glow 6s ease-in-out infinite; }
+.atlas-universe-stat { animation:atlas-universe-stat 5.6s ease-in-out infinite; will-change:transform; }
+
+@media (max-width:640px) {
+  .atlas-universe-stat > div { min-width:94px; padding:10px; border-radius:1.1rem; }
+  .atlas-universe-stat strong { font-size:1.35rem; }
+  .atlas-universe-system { min-height:430px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-route-flow,.atlas-route-glow,.atlas-route-stop,.atlas-do-pulse,.atlas-do-core,.atlas-do-orbit,.atlas-location-pulse,.atlas-location-core,.atlas-map-glass,.atlas-space-button,.atlas-map-cluster i,.atlas-universe-enter,.atlas-universe-nebula,.atlas-universe-stars,.atlas-universe-orbit,.atlas-universe-core,.atlas-universe-core-glow,.atlas-universe-stat { animation:none; }
+}

@@ -23,7 +23,7 @@ export function AtlasLeafletMap({ points, wineRegions = [] }: { points: AtlasMap
     <FitBounds points={points} />
     <CurrentLocation focus={points.length === 0} />
 
-    {wineRegions.map((region) => <LivingWineRegion key={region.id} region={region} />)}
+    {wineRegions.map((region, index) => <LivingWineRegion key={region.id} region={region} index={index} />)}
 
     <MarkerClusterGroup chunkedLoading chunkInterval={100} chunkDelay={20} removeOutsideVisibleBounds spiderfyOnMaxZoom showCoverageOnHover={false} maxClusterRadius={52} iconCreateFunction={(cluster: { getChildCount: () => number }) => clusterIcon(cluster.getChildCount())}>
       {markers.map((point) => <Marker key={point.id} position={[point.latitude, point.longitude]} icon={icon(point.layer, point.source)} title={point.title} keyboard>
@@ -54,24 +54,47 @@ function RoadTripRoute({ point }: { point: AtlasMapPoint }) {
   const positions = route.map((item) => [item.latitude, item.longitude] as [number, number]);
 
   return <>
-    <Polyline positions={positions} interactive={false} pathOptions={{ color: '#0b0b0f', weight: 10, opacity: .14, lineCap: 'round', lineJoin: 'round' }} />
-    <Polyline positions={positions} interactive={false} pathOptions={{ color, weight: 7, opacity: .18, lineCap: 'round', lineJoin: 'round', className: 'atlas-route-glow' }} />
-    <Polyline positions={positions} pathOptions={{ color, weight: 4.2, opacity: .78, lineCap: 'round', lineJoin: 'round' }}><Popup className="atlas-map-popup"><TripPopup trip={trip} /></Popup></Polyline>
-    <Polyline positions={positions} interactive={false} pathOptions={{ color: '#ffffff', weight: 1.8, opacity: .88, dashArray: '1 14', lineCap: 'round', lineJoin: 'round', className: 'atlas-route-flow' }} />
-    {stops.map((item, index) => <CircleMarker key={`${trip.id}-stop-${index}`} center={[item.latitude, item.longitude]} radius={6.5} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: 1, weight: 2.5, className: 'atlas-route-stop' }}><Tooltip direction="top">{trip.stops[index]?.title ?? `Parada ${index + 1}`}</Tooltip></CircleMarker>)}
+    <Polyline positions={positions} interactive={false} pathOptions={{ color: '#0b0b0f', weight: 11, opacity: .12, lineCap: 'round', lineJoin: 'round' }} />
+    <Polyline positions={positions} interactive={false} pathOptions={{ color, weight: 8, opacity: .18, lineCap: 'round', lineJoin: 'round', className: 'atlas-route-glow' }} />
+    <Polyline positions={positions} pathOptions={{ color, weight: 4, opacity: .76, lineCap: 'round', lineJoin: 'round', className: 'atlas-route-main' }}><Popup className="atlas-map-popup"><TripPopup trip={trip} /></Popup></Polyline>
+    <Polyline positions={positions} interactive={false} pathOptions={{ color: '#ffffff', weight: 1.8, opacity: .9, dashArray: '1 16', lineCap: 'round', lineJoin: 'round', className: 'atlas-route-flow' }} />
+    <AnimatedRouteBeacon route={route} color={color} />
+    {stops.map((item, index) => <RouteStop key={`${trip.id}-stop-${index}`} item={item} color={color} label={trip.stops[index]?.title ?? `Parada ${index + 1}`} index={index} />)}
   </>;
 }
 
-function LivingWineRegion({ region }: { region: AtlasWineRegion }) {
+function AnimatedRouteBeacon({ route, color }: { route: MapCoordinate[]; color: string }) {
+  const [cursor, setCursor] = useState(0);
+  useEffect(() => {
+    if (route.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const step = Math.max(1, Math.floor(route.length / 140));
+    const timer = window.setInterval(() => setCursor((value) => (value + step) % route.length), 120);
+    return () => window.clearInterval(timer);
+  }, [route]);
+  const point = route[Math.min(cursor, route.length - 1)];
+  if (!point) return null;
+  return <><CircleMarker center={[point.latitude, point.longitude]} radius={9} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .08, weight: 1, opacity: .18, className: 'atlas-route-beacon-halo' }} /><CircleMarker center={[point.latitude, point.longitude]} radius={3.6} interactive={false} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: 1, weight: 1.4, className: 'atlas-route-beacon' }} /></>;
+}
+
+function RouteStop({ item, color, label, index }: { item: MapCoordinate; color: string; label: string; index: number }) {
+  return <><CircleMarker center={[item.latitude, item.longitude]} radius={11} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .035, opacity: .14, weight: 1, className: 'atlas-route-stop-wave' }} /><CircleMarker center={[item.latitude, item.longitude]} radius={6.5} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: 1, weight: 2.5, className: 'atlas-route-stop' }}><Tooltip direction="top">{index + 1}. {label}</Tooltip></CircleMarker></>;
+}
+
+function LivingWineRegion({ region, index }: { region: AtlasWineRegion; index: number }) {
   const color = wineRegionColor(region.name);
-  const intensity = Math.min(.13, .045 + region.wineCount * .012);
+  const intensity = Math.min(.12, .035 + region.wineCount * .011);
+  const delay = `${-(index % 7) * .62}s`;
   return <>
-    <Circle center={[region.latitude, region.longitude]} radius={region.radius} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: intensity, opacity: .22, weight: 1, className: 'atlas-do-region' }} />
-    <Circle center={[region.latitude, region.longitude]} radius={Math.round(region.radius * 1.08)} pathOptions={{ color, fillColor: color, fillOpacity: .015, opacity: .42, weight: 1.6, dashArray: '2 11', className: 'atlas-do-pulse' }}>
-      <Tooltip direction="top" sticky opacity={.96}><div className="min-w-[150px] py-1"><strong>{region.name}</strong><br /><span>{region.country}</span><br /><span>{region.wineCount} {region.wineCount === 1 ? 'vino' : 'vinos'} · {region.wineryCount} {region.wineryCount === 1 ? 'bodega' : 'bodegas'}</span>{region.averageRating ? <><br /><span>★ {region.averageRating}/5</span></> : null}</div></Tooltip>
+    <Circle center={[region.latitude, region.longitude]} radius={Math.round(region.radius * 1.25)} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .002, opacity: .08, weight: .7, dashArray: '1 26', className: 'atlas-do-orbit atlas-do-orbit-wide' }} />
+    <Circle center={[region.latitude, region.longitude]} radius={region.radius} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: intensity, opacity: .2, weight: 1.1, className: 'atlas-do-region atlas-do-breathe' }} />
+    <Circle center={[region.latitude, region.longitude]} radius={Math.round(region.radius * 1.08)} pathOptions={{ color, fillColor: color, fillOpacity: .012, opacity: .4, weight: 1.5, dashArray: '2 12', className: 'atlas-do-pulse' }} eventHandlers={{ mouseover: (event) => event.target.bringToFront() }}>
+      <Tooltip direction="top" sticky opacity={.97}><div className="min-w-[160px] py-1"><strong>{region.name}</strong><br /><span>{region.country}</span><br /><span>{region.wineCount} {region.wineCount === 1 ? 'vino' : 'vinos'} · {region.wineryCount} {region.wineryCount === 1 ? 'bodega' : 'bodegas'}</span>{region.averageRating ? <><br /><span>★ {region.averageRating}/5</span></> : null}</div></Tooltip>
     </Circle>
-    <Circle center={[region.latitude, region.longitude]} radius={Math.round(region.radius * .72)} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .006, opacity: .18, weight: .8, dashArray: '1 18', className: 'atlas-do-orbit' }} />
-    <CircleMarker center={[region.latitude, region.longitude]} radius={4 + Math.min(4, region.wineCount * .65)} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: .94, weight: 2, className: 'atlas-do-core' }}><Tooltip direction="top">{region.name}</Tooltip></CircleMarker>
+    <Circle center={[region.latitude, region.longitude]} radius={Math.round(region.radius * .74)} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .004, opacity: .2, weight: .9, dashArray: '1 17', className: 'atlas-do-orbit atlas-do-orbit-inner' }} />
+    <Circle center={[region.latitude, region.longitude]} radius={Math.round(region.radius * .42)} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .014, opacity: .16, weight: .8, className: 'atlas-do-heart' }} />
+    <CircleMarker center={[region.latitude, region.longitude]} radius={4 + Math.min(4.5, region.wineCount * .62)} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: .96, weight: 2, className: 'atlas-do-core' }}><Tooltip direction="top">{region.name}</Tooltip></CircleMarker>
+    <CircleMarker center={[region.latitude, region.longitude]} radius={13 + Math.min(6, region.wineCount)} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: 0, opacity: .08, weight: 1, className: 'atlas-do-core-halo' }} />
+    <span style={{ animationDelay: delay }} />
   </>;
 }
 

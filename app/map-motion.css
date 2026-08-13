@@ -1,14 +1,22 @@
 @keyframes atlas-route-flow { to { stroke-dashoffset: -120; } }
-@keyframes atlas-route-glow { 0%,100% { stroke-opacity:.12; filter:drop-shadow(0 0 2px currentColor); } 50% { stroke-opacity:.3; filter:drop-shadow(0 0 8px currentColor); } }
-@keyframes atlas-do-heartbeat { 0%,100% { stroke-opacity:.18; fill-opacity:.01; filter:drop-shadow(0 0 0 currentColor); } 12% { stroke-opacity:.64; fill-opacity:.045; filter:drop-shadow(0 0 8px currentColor); } 22% { stroke-opacity:.25; fill-opacity:.018; } 34% { stroke-opacity:.52; fill-opacity:.035; filter:drop-shadow(0 0 5px currentColor); } 58% { stroke-opacity:.2; fill-opacity:.012; } }
-@keyframes atlas-do-core { 0%,100% { stroke-width:2px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.18)); } 18% { stroke-width:3px; filter:drop-shadow(0 0 8px currentColor); } 34% { stroke-width:2px; } }
+@keyframes atlas-route-glow { 0%,100% { stroke-opacity:.12; filter:drop-shadow(0 0 2px currentColor); } 50% { stroke-opacity:.34; filter:drop-shadow(0 0 9px currentColor); } }
+@keyframes atlas-route-main { 0%,100% { stroke-opacity:.68; } 50% { stroke-opacity:.9; } }
+@keyframes atlas-route-beacon { 0%,100% { filter:drop-shadow(0 0 2px currentColor); } 50% { filter:drop-shadow(0 0 9px currentColor); } }
+@keyframes atlas-route-beacon-halo { 0%,100% { stroke-opacity:.08; fill-opacity:.03; transform:scale(.82); transform-origin:center; } 50% { stroke-opacity:.28; fill-opacity:.08; transform:scale(1.25); } }
+@keyframes atlas-route-stop-wave { 0%,100% { stroke-opacity:.08; transform:scale(.82); transform-origin:center; } 50% { stroke-opacity:.32; transform:scale(1.18); } }
+@keyframes atlas-do-heartbeat { 0%,100% { stroke-opacity:.18; fill-opacity:.01; filter:drop-shadow(0 0 0 currentColor); } 12% { stroke-opacity:.68; fill-opacity:.05; filter:drop-shadow(0 0 9px currentColor); } 22% { stroke-opacity:.26; fill-opacity:.018; } 34% { stroke-opacity:.54; fill-opacity:.038; filter:drop-shadow(0 0 6px currentColor); } 58% { stroke-opacity:.2; fill-opacity:.012; } }
+@keyframes atlas-do-core { 0%,100% { stroke-width:2px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.18)); } 18% { stroke-width:3.2px; filter:drop-shadow(0 0 9px currentColor); } 34% { stroke-width:2px; } }
 @keyframes atlas-do-orbit { 0% { stroke-dashoffset:0; stroke-opacity:.08; } 50% { stroke-opacity:.3; } 100% { stroke-dashoffset:-90; stroke-opacity:.08; } }
-@keyframes atlas-route-stop { 0%,100% { filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)); } 50% { filter:drop-shadow(0 0 5px currentColor); } }
+@keyframes atlas-do-orbit-wide { to { stroke-dashoffset:140; } }
+@keyframes atlas-do-breathe { 0%,100% { fill-opacity:.025; stroke-opacity:.14; } 50% { fill-opacity:.075; stroke-opacity:.34; filter:drop-shadow(0 0 7px currentColor); } }
+@keyframes atlas-do-heart { 0%,100% { fill-opacity:.012; transform:scale(.92); transform-origin:center; } 50% { fill-opacity:.05; transform:scale(1.16); } }
+@keyframes atlas-do-core-halo { 0%,100% { stroke-opacity:.05; transform:scale(.78); transform-origin:center; } 50% { stroke-opacity:.26; transform:scale(1.22); } }
+@keyframes atlas-route-stop { 0%,100% { filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)); } 50% { filter:drop-shadow(0 0 6px currentColor); } }
 @keyframes atlas-location-wave { 0%,100% { stroke-opacity:.18; fill-opacity:.025; stroke-width:1px; } 50% { stroke-opacity:.55; fill-opacity:.055; stroke-width:2px; filter:drop-shadow(0 0 6px #0A84FF); } }
 @keyframes atlas-location-core { 0%,100% { filter:drop-shadow(0 1px 3px rgba(0,0,0,.2)); } 50% { filter:drop-shadow(0 0 8px #0A84FF); } }
 @keyframes atlas-cluster-breathe { 0%,100% { transform:scale(.92); opacity:.35; } 50% { transform:scale(1.24); opacity:.08; } }
 @keyframes atlas-glass-live { 0%,100% { box-shadow:0 14px 45px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.7); } 50% { box-shadow:0 16px 50px rgba(0,0,0,.27), inset 0 1px 0 rgba(255,255,255,.92); } }
-@keyframes atlas-space-button { 0%,100% { box-shadow:0 18px 45px rgba(0,0,0,.32),0 0 0 rgba(103,232,249,0); } 50% { box-shadow:0 18px 48px rgba(0,0,0,.36),0 0 24px rgba(103,232,249,.08); } }
+@keyframes atlas-action-dock { 0%,100% { box-shadow:0 20px 60px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.05); } 50% { box-shadow:0 24px 70px rgba(0,0,0,.39),0 0 26px rgba(103,232,249,.035),inset 0 1px 0 rgba(255,255,255,.075); } }
 @keyframes atlas-universe-enter { from { opacity:0; transform:scale(.82); filter:blur(14px); } to { opacity:1; transform:scale(1); filter:blur(0); } }
 @keyframes atlas-universe-nebula { 0%,100% { transform:scale(1) rotate(0deg); opacity:.72; } 50% { transform:scale(1.08) rotate(4deg); opacity:1; } }
 @keyframes atlas-universe-stars { from { transform:translate3d(0,0,0); } to { transform:translate3d(-22px,14px,0); } }
@@ -17,17 +25,27 @@
 @keyframes atlas-universe-glow { 0%,100% { opacity:.36; transform:scale(.86); } 50% { opacity:.8; transform:scale(1.12); } }
 @keyframes atlas-universe-stat { 0%,100% { transform:translate(-50%,-50%) translateY(0) scale(var(--atlas-stat-scale,1)); } 50% { transform:translate(-50%,-50%) translateY(-8px) scale(calc(var(--atlas-stat-scale,1) + .025)); } }
 
-.atlas-route-flow { stroke-dasharray: 1 14; animation: atlas-route-flow 6s linear infinite; }
-.atlas-route-glow { animation: atlas-route-glow 4.5s ease-in-out infinite; }
-.atlas-route-stop { animation: atlas-route-stop 3.4s ease-in-out infinite; }
-.atlas-do-region { transition: stroke-opacity .3s ease, fill-opacity .3s ease; }
-.atlas-do-pulse { animation: atlas-do-heartbeat 4.8s ease-in-out infinite; }
-.atlas-do-core { animation: atlas-do-core 4.8s ease-in-out infinite; }
-.atlas-do-orbit { animation: atlas-do-orbit 11s linear infinite; }
-.atlas-location-pulse { animation: atlas-location-wave 3.2s ease-in-out infinite; }
-.atlas-location-core { animation: atlas-location-core 2.4s ease-in-out infinite; }
+.atlas-route-flow { stroke-dasharray:1 14; animation:atlas-route-flow 6s linear infinite; }
+.atlas-route-glow { animation:atlas-route-glow 4.5s ease-in-out infinite; }
+.atlas-route-main { animation:atlas-route-main 4.2s ease-in-out infinite; }
+.atlas-route-stop { animation:atlas-route-stop 3.4s ease-in-out infinite; }
+.atlas-route-stop-wave { animation:atlas-route-stop-wave 3.4s ease-in-out infinite; }
+.atlas-route-beacon { animation:atlas-route-beacon 1.8s ease-in-out infinite; }
+.atlas-route-beacon-halo { animation:atlas-route-beacon-halo 1.8s ease-in-out infinite; }
+.atlas-do-region { transition:stroke-opacity .3s ease,fill-opacity .3s ease; }
+.atlas-do-breathe { animation:atlas-do-breathe 6.4s ease-in-out infinite; }
+.atlas-do-pulse { animation:atlas-do-heartbeat 4.8s ease-in-out infinite; }
+.atlas-do-core { animation:atlas-do-core 4.8s ease-in-out infinite; }
+.atlas-do-orbit { animation:atlas-do-orbit 11s linear infinite; }
+.atlas-do-orbit-wide { animation:atlas-do-orbit-wide 18s linear infinite; }
+.atlas-do-orbit-inner { animation-duration:8s; animation-direction:reverse; }
+.atlas-do-heart { animation:atlas-do-heart 4.8s ease-in-out infinite; }
+.atlas-do-core-halo { animation:atlas-do-core-halo 4.8s ease-in-out infinite; }
+.atlas-location-pulse { animation:atlas-location-wave 3.2s ease-in-out infinite; }
+.atlas-location-core { animation:atlas-location-core 2.4s ease-in-out infinite; }
 .atlas-map-glass { animation:atlas-glass-live 6s ease-in-out infinite; }
-.atlas-space-button { animation:atlas-space-button 4.8s ease-in-out infinite; }
+.atlas-map-action-dock { animation:atlas-action-dock 6s ease-in-out infinite; }
+.atlas-space-button-glow { background:radial-gradient(circle at 35% 50%,rgba(103,232,249,.11),transparent 65%); }
 
 .atlas-map-cluster { background:transparent !important; }
 .atlas-map-cluster > span { position:relative; display:flex; align-items:center; justify-content:center; border:3px solid rgba(255,255,255,.94); border-radius:999px; background:rgba(9,9,11,.86); color:white; box-shadow:0 9px 30px rgba(0,0,0,.3); backdrop-filter:blur(12px); }
@@ -55,5 +73,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .atlas-route-flow,.atlas-route-glow,.atlas-route-stop,.atlas-do-pulse,.atlas-do-core,.atlas-do-orbit,.atlas-location-pulse,.atlas-location-core,.atlas-map-glass,.atlas-space-button,.atlas-map-cluster i,.atlas-universe-enter,.atlas-universe-nebula,.atlas-universe-stars,.atlas-universe-orbit,.atlas-universe-core,.atlas-universe-core-glow,.atlas-universe-stat { animation:none; }
+  .atlas-route-flow,.atlas-route-glow,.atlas-route-main,.atlas-route-stop,.atlas-route-stop-wave,.atlas-route-beacon,.atlas-route-beacon-halo,.atlas-do-pulse,.atlas-do-core,.atlas-do-orbit,.atlas-do-breathe,.atlas-do-heart,.atlas-do-core-halo,.atlas-location-pulse,.atlas-location-core,.atlas-map-glass,.atlas-map-action-dock,.atlas-map-cluster i,.atlas-universe-enter,.atlas-universe-nebula,.atlas-universe-stars,.atlas-universe-orbit,.atlas-universe-core,.atlas-universe-core-glow,.atlas-universe-stat { animation:none; }
 }

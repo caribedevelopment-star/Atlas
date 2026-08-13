@@ -54,6 +54,14 @@ body {
 @keyframes atlas-core-pulse { 0%,100% { filter:drop-shadow(0 0 10px rgba(125,211,252,.12)); transform:translate(-50%,-50%) scale(1); } 50% { filter:drop-shadow(0 0 26px rgba(125,211,252,.3)); transform:translate(-50%,-50%) scale(1.035); } }
 @keyframes atlas-glass-shimmer { 0% { background-position:-180% 0; } 100% { background-position:180% 0; } }
 @keyframes atlas-app-breathe { 0%,100% { opacity:.28; transform:translate3d(-5%,-3%,0) scale(1); } 50% { opacity:.42; transform:translate3d(2%,2%,0) scale(1.06); } }
+@keyframes atlas-gateway-stars-drift { from { transform:translate3d(0,0,0); } to { transform:translate3d(-26px,18px,0); } }
+@keyframes atlas-gateway-orbit-spin { to { transform:rotateX(68deg) rotateZ(360deg); } }
+@keyframes atlas-gateway-orbit-spin-reverse { to { transform:rotateX(64deg) rotateZ(-360deg); } }
+@keyframes atlas-gateway-globe-spin { from { background-position:0 0,0 0; } to { background-position:120px 0,-90px 0; } }
+@keyframes atlas-gateway-point-float { 0%,100% { translate:0 0; filter:drop-shadow(0 0 0 rgba(125,211,252,0)); } 50% { translate:0 -7px; filter:drop-shadow(0 0 12px rgba(125,211,252,.16)); } }
+@keyframes atlas-gateway-card-live { 0%,100% { transform:translateY(0); box-shadow:0 35px 100px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.06); } 50% { transform:translateY(-3px); box-shadow:0 42px 115px rgba(0,0,0,.56),0 0 40px rgba(56,189,248,.025),inset 0 1px 0 rgba(255,255,255,.075); } }
+@keyframes atlas-profile-orbit-spin { to { transform:rotate(360deg); } }
+@keyframes atlas-friends-space-drift { from { background-position:0 0,35px 50px; } to { background-position:70px -40px,-40px 95px; } }
 
 .atlas-orbit { animation: atlas-orbit-breathe 5s ease-in-out infinite; }
 .atlas-person { animation: atlas-person-pulse 2.8s ease-in-out infinite; transition: transform .2s ease; }
@@ -79,9 +87,24 @@ body {
 .atlas-alive-button { box-shadow:0 16px 50px rgba(0,0,0,.42),0 0 0 1px rgba(244,63,94,.08),0 0 34px rgba(244,63,94,.06); }
 .atlas-app-ambient { pointer-events:none; position:fixed; inset:-20%; z-index:0; background:radial-gradient(circle at 18% 18%,rgba(56,189,248,.05),transparent 30%),radial-gradient(circle at 80% 70%,rgba(244,63,94,.05),transparent 34%); animation:atlas-app-breathe 15s ease-in-out infinite; }
 
+.atlas-gateway-stars { opacity:.64; background-image:radial-gradient(circle,rgba(255,255,255,.72) 0 1px,transparent 1.3px),radial-gradient(circle,rgba(125,211,252,.48) 0 1px,transparent 1.4px); background-size:78px 78px,131px 131px; background-position:12px 28px,54px 70px; animation:atlas-gateway-stars-drift 24s linear infinite alternate; }
+.atlas-gateway-system { perspective:1100px; transform-style:preserve-3d; }
+.atlas-gateway-orbit { transform-origin:center; box-shadow:inset 0 0 42px rgba(255,255,255,.008); }
+.atlas-gateway-orbit-a { transform:rotateX(68deg) rotateZ(12deg); animation:atlas-gateway-orbit-spin 42s linear infinite; }
+.atlas-gateway-orbit-b { transform:rotateX(64deg) rotateZ(-28deg); animation:atlas-gateway-orbit-spin-reverse 31s linear infinite; }
+.atlas-gateway-orbit-c { transform:rotateX(72deg) rotateZ(38deg); animation:atlas-gateway-orbit-spin 24s linear infinite reverse; }
+.atlas-gateway-globe { animation:atlas-core-pulse 6.2s ease-in-out infinite; }
+.atlas-gateway-globe-grid { background-image:linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px); background-size:28px 28px,28px 28px; mask-image:radial-gradient(circle,#000 63%,transparent 74%); animation:atlas-gateway-globe-spin 18s linear infinite; }
+.atlas-gateway-point { animation:atlas-gateway-point-float 5.4s ease-in-out infinite; }
+.atlas-mobile-orbit { animation:atlas-friend-ring-spin 18s linear infinite; }
+.atlas-login-card { animation:atlas-gateway-card-live 7s ease-in-out infinite; }
+.atlas-profile-orbit { animation:atlas-profile-orbit-spin 38s linear infinite; transform-origin:center; }
+.atlas-profile-orbit-reverse { animation-direction:reverse; animation-duration:27s; }
+.atlas-friends-space { background-image:radial-gradient(circle,rgba(255,255,255,.46) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(125,211,252,.38) 0 1px,transparent 1.5px); background-size:90px 90px,145px 145px; background-position:0 0,35px 50px; animation:atlas-friends-space-drift 28s linear infinite alternate; }
+
 @media (max-width:640px) { .atlas-world-action { opacity:1; } }
 @media (prefers-reduced-motion: reduce) {
-  .atlas-orbit,.atlas-person,.atlas-map-marker i,.atlas-friend-ring,.atlas-friend-avatar,.atlas-friend-breathe,.atlas-world-grid,.atlas-world-person,.atlas-world-core,.atlas-glass-panel::before,.atlas-app-ambient { animation:none; }
+  .atlas-orbit,.atlas-person,.atlas-map-marker i,.atlas-friend-ring,.atlas-friend-avatar,.atlas-friend-breathe,.atlas-world-grid,.atlas-world-person,.atlas-world-core,.atlas-glass-panel::before,.atlas-app-ambient,.atlas-gateway-stars,.atlas-gateway-orbit,.atlas-gateway-globe,.atlas-gateway-globe-grid,.atlas-gateway-point,.atlas-mobile-orbit,.atlas-login-card,.atlas-profile-orbit,.atlas-friends-space { animation:none; }
 }
 
 @layer components {

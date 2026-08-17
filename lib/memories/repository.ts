@@ -27,14 +27,12 @@ export function normalizeMemory(row: Row): ProfileMemory {
 export async function listProfileMemories(profileId: string, _access: ProfileAccess): Promise<ProfileMemory[]> {
   const { data, error } = await supabase.from('memories').select('*').eq('user_id', profileId).order('created_at', { ascending: false });
   if (error) throw error;
-  // RLS is authoritative: owners see their memories; other users only receive memories explicitly shared with them.
   return (data ?? []).map((row) => normalizeMemory(row as Row));
 }
 
 export async function listMapMemories(): Promise<ProfileMemory[]> {
   const { data, error } = await supabase.from('memories').select('*');
   if (error) throw error;
-  // RLS returns only own memories + memories where the current user is in shared_with.
   return (data ?? []).map((row) => normalizeMemory(row as Row));
 }
 
@@ -46,12 +44,12 @@ export async function getMemory(id: string): Promise<ProfileMemory> {
   return normalizeMemory(data as Row);
 }
 
-export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility?: WineVisibility; participantIds: string[]; latitude?: number; longitude?: number; city?: string; country?: string }
+export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility?: WineVisibility; participantIds: string[]; latitude?: number; longitude?: number; city?: string; country?: string; isRestaurant?: boolean; category?: string }
 export async function createMemory(input: CreateMemoryInput): Promise<string> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error('Debes iniciar sesión para guardar una memoria.');
   if (!input.title.trim()) throw new Error('Escribe un título para la memoria.');
-  const payload = { user_id: auth.user.id, title: input.title.trim(), location_name: input.location.trim() || null, city: input.city || null, country: input.country || null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.participantIds.length ? 'friends' : 'private', shared_with: input.participantIds };
+  const payload = { user_id: auth.user.id, title: input.title.trim(), location_name: input.location.trim() || null, city: input.city || null, country: input.country || null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.participantIds.length ? 'friends' : 'private', shared_with: input.participantIds, is_restaurant: Boolean(input.isRestaurant), category: input.category?.trim() || (input.isRestaurant ? 'restaurant' : null) };
   const { data, error } = await supabase.from('memories').insert(payload).select('id').single();
   if (error) throw new Error(memorySaveMessage(error));
   return String(data.id);
@@ -60,7 +58,7 @@ export async function createMemory(input: CreateMemoryInput): Promise<string> {
 export async function updateMemory(id: string, input: CreateMemoryInput): Promise<void> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error('Debes iniciar sesión para editar esta memoria.');
-  const payload = { title: input.title.trim(), location_name: input.location.trim() || null, city: input.city || null, country: input.country || null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.participantIds.length ? 'friends' : 'private', shared_with: input.participantIds };
+  const payload = { title: input.title.trim(), location_name: input.location.trim() || null, city: input.city || null, country: input.country || null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, memory_date: input.date || null, description: input.description.trim() || null, visibility: input.participantIds.length ? 'friends' : 'private', shared_with: input.participantIds, ...(input.isRestaurant !== undefined ? { is_restaurant: input.isRestaurant } : {}), ...(input.category !== undefined ? { category: input.category.trim() || null } : {}) };
   const { error } = await supabase.from('memories').update(payload).eq('id', id).eq('user_id', auth.user.id);
   if (error) throw new Error(memorySaveMessage(error));
 }

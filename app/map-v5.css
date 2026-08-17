@@ -1,0 +1,81 @@
+@keyframes atlas-v5-organic-morph {
+  0%,100% { border-radius: 45% 55% 58% 42% / 52% 45% 55% 48%; transform: translate3d(0,0,0) rotate(0deg) scale(.9); opacity:.24; }
+  35% { border-radius: 58% 42% 43% 57% / 40% 61% 39% 60%; transform: translate3d(8px,-3px,0) rotate(22deg) scale(1.15); opacity:.58; }
+  68% { border-radius: 38% 62% 56% 44% / 61% 40% 60% 39%; transform: translate3d(-5px,4px,0) rotate(-13deg) scale(1); opacity:.34; }
+}
+@keyframes atlas-v5-organic-ring {
+  0%,100% { transform:scale(.78) rotate(0deg); opacity:.2; border-radius:48% 52% 43% 57% / 57% 42% 58% 43%; }
+  45% { transform:scale(1.2) rotate(135deg); opacity:.7; border-radius:62% 38% 58% 42% / 43% 64% 36% 57%; }
+}
+@keyframes atlas-v5-organic-core {
+  0%,100% { transform:scale(.72); opacity:.55; box-shadow:0 0 7px rgba(165,243,252,.25); }
+  18% { transform:scale(1.28); opacity:1; box-shadow:0 0 17px rgba(165,243,252,.72); }
+  34% { transform:scale(.85); opacity:.65; }
+  50% { transform:scale(1.12); opacity:.9; box-shadow:0 0 13px rgba(165,243,252,.5); }
+  72% { transform:scale(.78); opacity:.6; }
+}
+@keyframes atlas-v5-flight-route { to { stroke-dashoffset:-126; } }
+@keyframes atlas-v5-flight-glow {
+  0%,100% { stroke-opacity:.12; filter:drop-shadow(0 0 4px currentColor); }
+  50% { stroke-opacity:.42; filter:drop-shadow(0 0 18px currentColor); }
+}
+@keyframes atlas-v5-flight-dust { to { stroke-dashoffset:-210; } }
+@keyframes atlas-v5-flight-plane {
+  0%,100% { filter:drop-shadow(0 0 4px currentColor); transform:scale(.94); }
+  50% { filter:drop-shadow(0 0 12px currentColor) drop-shadow(0 0 18px rgba(255,255,255,.35)); transform:scale(1.08); }
+}
+@keyframes atlas-v5-flight-halo {
+  0%,100% { transform:translate(-50%,-50%) scale(.55); opacity:.5; }
+  60% { transform:translate(-50%,-50%) scale(1.5); opacity:.03; }
+}
+@keyframes atlas-v5-trip-anchor {
+  0%,100% { transform:scale(.9); opacity:.32; }
+  50% { transform:scale(1.38); opacity:.06; }
+}
+@keyframes atlas-v5-organism-drift-a {
+  0%,100% { transform:translate3d(-8%,-4%,0) rotate(-8deg) scale(.9); border-radius:45% 55% 42% 58% / 60% 38% 62% 40%; }
+  50% { transform:translate3d(11%,8%,0) rotate(19deg) scale(1.18); border-radius:62% 38% 58% 42% / 41% 63% 37% 59%; }
+}
+@keyframes atlas-v5-organism-drift-b {
+  0%,100% { transform:translate3d(4%,8%,0) rotate(15deg) scale(1.08); border-radius:55% 45% 61% 39% / 43% 58% 42% 57%; }
+  50% { transform:translate3d(-13%,-7%,0) rotate(-22deg) scale(.84); border-radius:39% 61% 46% 54% / 62% 37% 63% 38%; }
+}
+@keyframes atlas-v5-cell-pulse {
+  0%,100% { opacity:.3; transform:scale(.85); filter:blur(18px); }
+  50% { opacity:.75; transform:scale(1.18); filter:blur(28px); }
+}
+
+.atlas-organic-gateway { isolation:isolate; }
+.atlas-organic-membrane { pointer-events:none; position:absolute; width:76px; height:54px; border:1px solid rgba(165,243,252,.16); background:radial-gradient(circle at 35% 30%,rgba(165,243,252,.12),rgba(56,189,248,.025) 48%,transparent 70%); filter:blur(.15px); mix-blend-mode:screen; animation:atlas-v5-organic-morph 6.4s ease-in-out infinite; }
+.atlas-organic-membrane-a { left:2px; top:-6px; }
+.atlas-organic-membrane-b { left:31px; bottom:-14px; animation-delay:-3.1s; animation-direction:reverse; opacity:.3; }
+.atlas-organic-ring { animation:atlas-v5-organic-ring 4.8s ease-in-out infinite; }
+.atlas-organic-core { animation:atlas-v5-organic-core 2.7s ease-in-out infinite; }
+
+.atlas-flight-route { animation:atlas-v5-flight-route 3.4s linear infinite; }
+.atlas-flight-glow { animation:atlas-v5-flight-glow 3.1s ease-in-out infinite; }
+.atlas-flight-stardust { animation:atlas-v5-flight-dust 5.5s linear infinite; }
+.atlas-flight-stop { filter:drop-shadow(0 0 5px currentColor); }
+.atlas-flight-stop-wave { animation:atlas-v5-flight-halo 2.9s ease-out infinite; transform-box:fill-box; transform-origin:center; }
+.atlas-flight-beacon-icon { background:transparent !important; border:0 !important; }
+.atlas-flight-beacon-icon span { position:absolute; left:4px; top:4px; display:flex; width:24px; height:24px; align-items:center; justify-content:center; font-size:17px; line-height:1; transform-origin:center; animation:atlas-v5-flight-plane 1.6s ease-in-out infinite; text-shadow:0 0 7px rgba(255,255,255,.8); }
+.atlas-flight-beacon-icon i { position:absolute; left:50%; top:50%; width:31px; height:31px; border-radius:999px; opacity:.1; transform:translate(-50%,-50%); filter:blur(7px); animation:atlas-v5-flight-halo 1.7s ease-out infinite; }
+
+.atlas-trip-anchor { background:transparent !important; border:0 !important; }
+.atlas-trip-anchor span { position:absolute; inset:3px; z-index:2; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,.94); border-radius:999px; background:color-mix(in srgb,var(--atlas-trip-color) 88%,#0a0a0f); color:white; font:700 14px/1 system-ui,-apple-system,sans-serif; box-shadow:0 7px 22px rgba(0,0,0,.3),0 0 12px color-mix(in srgb,var(--atlas-trip-color) 35%,transparent); }
+.atlas-trip-anchor i { position:absolute; inset:-4px; z-index:1; border:1px solid var(--atlas-trip-color); border-radius:999px; opacity:.22; animation:atlas-v5-trip-anchor 2.5s ease-in-out infinite; }
+.atlas-trip-anchor-flight span { border-radius:47% 53% 56% 44% / 57% 45% 55% 43%; }
+
+.atlas-universe-organism { position:absolute; pointer-events:none; mix-blend-mode:screen; }
+.atlas-universe-organism::before,.atlas-universe-organism::after { content:""; position:absolute; inset:0; border-radius:inherit; }
+.atlas-universe-organism::before { border:1px solid rgba(125,211,252,.1); background:radial-gradient(circle at 32% 28%,rgba(125,211,252,.15),rgba(99,102,241,.04) 45%,transparent 72%); box-shadow:inset 0 0 45px rgba(125,211,252,.04),0 0 80px rgba(56,189,248,.04); }
+.atlas-universe-organism::after { inset:18%; background:radial-gradient(circle,rgba(255,255,255,.13),rgba(103,232,249,.03) 45%,transparent 68%); filter:blur(15px); animation:atlas-v5-cell-pulse 5.2s ease-in-out infinite; }
+.atlas-universe-organism-a { left:-8vw; top:8vh; width:min(44vw,580px); height:min(36vw,460px); animation:atlas-v5-organism-drift-a 18s ease-in-out infinite; }
+.atlas-universe-organism-b { right:-10vw; bottom:4vh; width:min(48vw,620px); height:min(42vw,520px); animation:atlas-v5-organism-drift-b 21s ease-in-out infinite; }
+.atlas-universe-organism-c { left:44%; top:3%; width:min(24vw,310px); height:min(18vw,230px); opacity:.42; animation:atlas-v5-organism-drift-a 15s ease-in-out infinite reverse; }
+.atlas-universe-cell-membrane { position:absolute; inset:-16px; border:1px solid rgba(165,243,252,.1); border-radius:46% 54% 43% 57% / 55% 42% 58% 45%; animation:atlas-v5-organic-ring 6.4s ease-in-out infinite; }
+.atlas-universe-cell-membrane:nth-child(2) { inset:-30px; opacity:.36; animation-delay:-2.3s; animation-direction:reverse; }
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-organic-membrane,.atlas-organic-ring,.atlas-organic-core,.atlas-flight-route,.atlas-flight-glow,.atlas-flight-stardust,.atlas-flight-stop-wave,.atlas-flight-beacon-icon span,.atlas-flight-beacon-icon i,.atlas-trip-anchor i,.atlas-universe-organism,.atlas-universe-organism::after,.atlas-universe-cell-membrane { animation:none !important; }
+}

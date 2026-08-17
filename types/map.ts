@@ -17,6 +17,10 @@ export interface AtlasWineRegion {
   wineryCount: number;
   favoriteCount: number;
   averageRating?: number;
+  description: string;
+  grapes: string[];
+  signature: string;
+  featured: boolean;
 }
 export interface AtlasMapPoint {
   id: string;

@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { listMapMemories, normalizeMemory } from '@/lib/memories/repository';
 import { listWines, normalizeWine } from '@/lib/wines/repository';
-import type { AtlasTrip, TripInput, TripPhoto, TripStop } from '@/types/trip';
+import type { AtlasTrip, TripInput, TripPhoto, TripStop, TripTransportMode } from '@/types/trip';
 import type { WineParticipant, WineVisibility } from '@/types/wine';
 
 type Row = Record<string, any>;
@@ -10,6 +10,12 @@ function text(value: unknown) { return typeof value === 'string' && value.trim()
 function visibility(value: unknown): WineVisibility { return value === 'public' || value === 'friends' ? value : 'private'; }
 function number(value: unknown) { if(value===null||value===undefined||value==='')return undefined; const parsed=Number(value); return Number.isFinite(parsed) ? parsed : undefined; }
 function geometry(value: any): Array<{latitude:number;longitude:number}> { const raw=Array.isArray(value) ? value : value?.type==='LineString' ? value.coordinates : []; return raw.flatMap((point:any) => Array.isArray(point) && Number.isFinite(Number(point[0])) && Number.isFinite(Number(point[1])) ? [{longitude:Number(point[0]),latitude:Number(point[1])}] : point && Number.isFinite(Number(point.latitude)) && Number.isFinite(Number(point.longitude)) ? [{latitude:Number(point.latitude),longitude:Number(point.longitude)}] : []); }
+function transportMode(value: unknown, stops: TripStop[], distanceKm: number | null): TripTransportMode {
+  if (value === 'flight' || value === 'roadtrip') return value;
+  const countries = unique(stops.map((stop) => stop.country));
+  if (stops.length <= 2 && ((distanceKm ?? 0) > 650 || countries.length > 1)) return 'flight';
+  return 'roadtrip';
+}
 
 export function normalizeTrip(row: Row): AtlasTrip {
   const stops: TripStop[]=(row.trip_stops??[]).map((item:Row) => { const memory=item.memories ? normalizeMemory(item.memories) : undefined; return { id:String(item.id), position:Number(item.position), memoryId:text(item.memory_id), title:text(item.title)??memory?.title??'Parada', latitude:number(item.latitude)??memory?.latitude, longitude:number(item.longitude)??memory?.longitude, city:text(item.city)??memory?.city, country:text(item.country)??memory?.country, memory }; }).sort((a:TripStop,b:TripStop)=>a.position-b.position);
@@ -17,7 +23,8 @@ export function normalizeTrip(row: Row): AtlasTrip {
   const wines=(row.trip_wines??[]).flatMap((item:Row)=>item.wines?[normalizeWine(item.wines)]:[]);
   const photos:TripPhoto[]=(row.trip_photos??[]).map((item:Row)=>({id:String(item.id),storagePath:String(item.storage_path),caption:text(item.caption),position:Number(item.position)})).sort((a:TripPhoto,b:TripPhoto)=>a.position-b.position);
   const route=geometry(row.route_geometry); const stopPoints=stops.flatMap((stop)=>stop.latitude!==undefined&&stop.longitude!==undefined?[{latitude:stop.latitude,longitude:stop.longitude}]:[]); const points=route.length?route:stopPoints;
-  return { id:String(row.id),userId:String(row.user_id),title:String(row.title),description:text(row.description),coverImageUrl:text(row.cover_image_url),galleryUrl:text(row.gallery_url),startDate:String(row.start_date),endDate:String(row.end_date),visibility:visibility(row.visibility),routeGeometry:points,participants,stops,wines,photos,countries:unique(stops.map((stop)=>stop.country)),cities:unique(stops.map((stop)=>stop.city)),distanceKm:distance(points),createdAt:text(row.created_at),updatedAt:text(row.updated_at) };
+  const distanceKm=distance(points);
+  return { id:String(row.id),userId:String(row.user_id),title:String(row.title),description:text(row.description),coverImageUrl:text(row.cover_image_url),galleryUrl:text(row.gallery_url),startDate:String(row.start_date),endDate:String(row.end_date),visibility:visibility(row.visibility),transportMode:transportMode(row.transport_mode,stops,distanceKm),routeGeometry:points,participants,stops,wines,photos,countries:unique(stops.map((stop)=>stop.country)),cities:unique(stops.map((stop)=>stop.city)),distanceKm,createdAt:text(row.created_at),updatedAt:text(row.updated_at) };
 }
 export async function listTrips():Promise<AtlasTrip[]> { const {data,error}=await supabase.from('trips').select(query).order('start_date',{ascending:false}); if(error) throw error; return (data??[]).map((row)=>normalizeTrip(row as Row)); }
 export async function getTrip(id:string):Promise<AtlasTrip> { const {data,error}=await supabase.from('trips').select(query).eq('id',id).single(); if(error) throw error; return normalizeTrip(data as Row); }

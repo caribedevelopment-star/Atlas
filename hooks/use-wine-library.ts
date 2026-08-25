@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getCurrentWineUserId, listWines, setWineFavorite } from '@/lib/wines/repository';
 import type { WineFilters, WineItem, WineSort, WineSource } from '@/types/wine';
+import { getAtlasDemoWines } from '@/lib/map/demo';
 
 export const initialWineFilters: WineFilters = {
   source: 'all', favorite: false, minimumRating: null, minimumPrice: null, maximumPrice: null,
@@ -36,7 +37,8 @@ export function useWineLibrary() {
   const refresh = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const [nextWines, nextUserId] = await Promise.all([listWines(), getCurrentWineUserId()]);
+      const demo = process.env.NEXT_PUBLIC_ATLAS_DEMO === 'true';
+      const [nextWines, nextUserId] = demo ? [getAtlasDemoWines(), 'demo-alicia'] : await Promise.all([listWines(), getCurrentWineUserId()]);
       setWines(nextWines); setUserId(nextUserId);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo cargar tu bodega.');
@@ -49,7 +51,7 @@ export function useWineLibrary() {
     const query = search.trim().toLocaleLowerCase('es');
     const result = wines.filter((wine) => {
       if (!isVisible(wine, userId)) return false;
-      const searchable = [wine.name, wine.winery, ...wine.grapes, wine.region, wine.country].filter(Boolean).join(' ').toLocaleLowerCase('es');
+      const searchable = [wine.name, wine.winery, ...wine.grapes, wine.region, wine.denomination, wine.country, wine.supermarket, wine.shop].filter(Boolean).join(' ').toLocaleLowerCase('es');
       if (query && !searchable.includes(query)) return false;
       if (filters.source !== 'all' && sourceFor(wine, userId) !== filters.source) return false;
       if (filters.favorite && !wine.favorite) return false;
@@ -85,7 +87,7 @@ export function useWineLibrary() {
     const next = !wine.favorite;
     setWines((current) => current.map((item) => item.id === wine.id ? { ...item, favorite: next } : item));
     setSelectedWine((current) => current?.id === wine.id ? { ...current, favorite: next } : current);
-    try { await setWineFavorite(wine.id, next); }
+    try { if (process.env.NEXT_PUBLIC_ATLAS_DEMO !== 'true') await setWineFavorite(wine.id, next); }
     catch (cause) {
       setWines((current) => current.map((item) => item.id === wine.id ? { ...item, favorite: wine.favorite } : item));
       setError(cause instanceof Error ? cause.message : 'No se pudo actualizar el favorito.');

@@ -64,7 +64,7 @@ function WorldPerson({ user, index, total, saving, onSend }: { user: NetworkUser
   const pending = user.friendship === 'pending_outgoing';
 
   return <div className="atlas-world-person absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: `${left}%`, top: `${top}%`, transform: `translate(-50%,-50%) scale(${scale})`, opacity, animationDelay: `${index * -170}ms`, zIndex: Math.round(10 + (z + 1) * 10) }}>
-    <Link href={`/profile/${user.id}`} className="group relative block rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" title={user.fullName || user.username}>
+    <Link href={`/profile/${user.id}`} className="group relative block rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" title={`${user.fullName || user.username}${user.sharedMemoryCount ? ` · ${user.sharedMemoryCount} memorias compartidas` : ''}`}>
       <span className={`absolute -inset-2 rounded-full blur-md transition ${isFriend ? 'bg-emerald-300/15 group-hover:bg-emerald-300/25' : 'bg-sky-300/0 group-hover:bg-sky-300/15'}`}/>
       <Avatar name={user.fullName || user.username} avatarUrl={user.avatarUrl} className={`relative h-10 w-10 shadow-xl transition group-hover:scale-110 ${isFriend ? 'ring-2 ring-emerald-300/70' : 'ring-1 ring-white/35'}`} />
       {isFriend && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-zinc-950 bg-emerald-400"/>}
@@ -74,7 +74,7 @@ function WorldPerson({ user, index, total, saving, onSend }: { user: NetworkUser
 }
 
 function PersonRow({ user, saving, actions }: { user: NetworkUser; saving: boolean; actions: React.ReactNode }) {
-  return <div className="flex items-center gap-3 rounded-[1.2rem] border border-white/[.07] bg-black/10 p-2.5"><Avatar name={user.fullName || user.username} avatarUrl={user.avatarUrl} className="h-10 w-10 ring-1 ring-white/10" /><div className="min-w-0 flex-1"><Link href={`/profile/${user.id}`} className="block truncate text-sm font-medium text-white hover:underline">{user.fullName || user.username}</Link><span className="block truncate text-[11px] text-zinc-600">@{user.username || 'atlas'}</span></div><div className="flex items-center gap-1.5">{saving ? <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5"><Loader2 className="h-4 w-4 animate-spin text-zinc-400" /></span> : actions}</div></div>;
+  return <div className="flex items-center gap-3 rounded-[1.2rem] border border-white/[.07] bg-black/10 p-2.5"><Avatar name={user.fullName || user.username} avatarUrl={user.avatarUrl} className="h-10 w-10 ring-1 ring-white/10" /><div className="min-w-0 flex-1"><Link href={`/profile/${user.id}`} className="block truncate text-sm font-medium text-white hover:underline">{user.fullName || user.username}</Link><span className="block truncate text-[11px] text-zinc-600">{user.sharedMemoryCount ? `${user.sharedMemoryCount} ${user.sharedMemoryCount === 1 ? 'memoria compartida' : 'memorias compartidas'}` : `@${user.username || 'atlas'}`}</span></div><div className="flex items-center gap-1.5">{saving ? <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5"><Loader2 className="h-4 w-4 animate-spin text-zinc-400" /></span> : actions}</div></div>;
 }
 
 function ActionButton({ label, onClick, primary = false, subtle = false, icon }: { label: string; onClick: () => void; primary?: boolean; subtle?: boolean; icon?: React.ReactNode }) {

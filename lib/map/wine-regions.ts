@@ -1,70 +1,88 @@
+import { supabase } from '@/lib/supabase';
 import type { WineItem } from '@/types/wine';
-import type { AtlasWineRegion } from '@/types/map';
+import type { AtlasWineDenomination, AtlasWineRegion } from '@/types/map';
 
-type RegionDefinition = { name: string; aliases: string[]; latitude: number; longitude: number; radius: number; country: string };
+type RegionDefinition = AtlasWineDenomination;
+type Row = Record<string, unknown>;
 
-const REGION_DEFINITIONS: RegionDefinition[] = [
-  { name: 'DOCa Rioja', aliases: ['doca rioja','do rioja','rioja'], latitude: 42.466, longitude: -2.445, radius: 72000, country: 'España' },
-  { name: 'DO Ribera del Duero', aliases: ['do ribera del duero','ribera del duero'], latitude: 41.671, longitude: -3.689, radius: 76000, country: 'España' },
-  { name: 'DO Rueda', aliases: ['do rueda','rueda'], latitude: 41.414, longitude: -4.958, radius: 56000, country: 'España' },
-  { name: 'DO Rías Baixas', aliases: ['do rias baixas','do rías baixas','rias baixas','rías baixas'], latitude: 42.438, longitude: -8.716, radius: 56000, country: 'España' },
-  { name: 'DO Jumilla', aliases: ['do jumilla','jumilla'], latitude: 38.479, longitude: -1.325, radius: 52000, country: 'España' },
-  { name: 'DO Monterrei', aliases: ['do monterrei','monterrei'], latitude: 41.948, longitude: -7.449, radius: 34000, country: 'España' },
-  { name: 'DO Navarra', aliases: ['do navarra','navarra'], latitude: 42.612, longitude: -1.674, radius: 76000, country: 'España' },
-  { name: 'DO Uclés', aliases: ['do ucles','do uclés','ucles','uclés'], latitude: 39.981, longitude: -2.861, radius: 43000, country: 'España' },
-  { name: 'DO Cava', aliases: ['do cava','cava'], latitude: 41.423, longitude: 1.785, radius: 52000, country: 'España' },
-  { name: 'IGP Extremadura', aliases: ['igp extremadura','extremadura'], latitude: 39.179, longitude: -6.142, radius: 98000, country: 'España' },
-  { name: 'Douro DOC', aliases: ['douro doc','doc douro','douro'], latitude: 41.167, longitude: -7.55, radius: 82000, country: 'Portugal' },
-  { name: 'Prosecco DOC', aliases: ['prosecco doc','doc prosecco','prosecco'], latitude: 45.876, longitude: 12.214, radius: 76000, country: 'Italia' },
-  { name: 'Champagne AOC', aliases: ['champagne aoc','aoc champagne','champagne'], latitude: 49.054, longitude: 4.027, radius: 72000, country: 'Francia' },
+const FALLBACK_REGIONS: RegionDefinition[] = [
+  denomination('es-rioja', 'Rioja', 'España', 'DOCa', 42.466, -2.445, 72000),
+  denomination('es-ribera', 'Ribera del Duero', 'España', 'DO', 41.671, -3.689, 76000),
+  denomination('es-priorat', 'Priorat', 'España', 'DOCa', 41.145, .821, 36000),
+  denomination('es-cava', 'Cava', 'España', 'DO', 41.423, 1.785, 52000),
+  denomination('es-rias-baixas', 'Rías Baixas', 'España', 'DO', 42.438, -8.716, 56000),
+  denomination('es-rueda', 'Rueda', 'España', 'DO', 41.414, -4.958, 56000),
+  denomination('it-barolo', 'Barolo', 'Italia', 'DOCG', 44.61, 7.94, 26000),
+  denomination('it-chianti', 'Chianti Classico', 'Italia', 'DOCG', 43.515, 11.31, 44000),
+  denomination('it-prosecco', 'Prosecco', 'Italia', 'DOC', 45.876, 12.214, 76000),
+  denomination('fr-champagne', 'Champagne', 'Francia', 'AOP', 49.054, 4.027, 72000),
+  denomination('fr-bordeaux', 'Bordeaux', 'Francia', 'AOP', 44.84, -.58, 105000),
+  denomination('fr-sancerre', 'Sancerre', 'Francia', 'AOP', 47.33, 2.84, 35000),
 ];
 
-export function buildWineRegions(wines: WineItem[]): AtlasWineRegion[] {
+export async function listWineDenominations(): Promise<AtlasWineDenomination[]> {
+  const { data, error } = await supabase.from('wine_denominations').select('id,name,country,classification,official_id,source_url,latitude,longitude,radius_m').eq('active', true).order('country').order('name');
+  if (error) throw error;
+  return (data ?? []).flatMap((raw) => {
+    const row = raw as Row;
+    const latitude = numeric(row.latitude), longitude = numeric(row.longitude), radius = numeric(row.radius_m);
+    if (!row.id || !row.name || !row.country || latitude === undefined || longitude === undefined) return [];
+    return [{ id: String(row.id), name: String(row.name), country: String(row.country), classification: text(row.classification), officialId: text(row.official_id), sourceUrl: text(row.source_url), latitude, longitude, radius: radius ?? 42000 }];
+  });
+}
+
+export function buildWineRegions(wines: WineItem[], catalog: AtlasWineDenomination[] = []): AtlasWineRegion[] {
+  const definitions = catalog.length ? catalog : FALLBACK_REGIONS;
   const grouped = new Map<string, WineItem[]>();
   for (const wine of wines) {
     const key = wine.denomination?.trim() || wine.region?.trim();
     if (!key) continue;
-    const definition = findDefinition(key);
-    if (!definition) continue;
-    grouped.set(definition.name, [...(grouped.get(definition.name) ?? []), wine]);
+    const definition = findDefinition(key, definitions);
+    if (definition) grouped.set(definition.id, [...(grouped.get(definition.id) ?? []), wine]);
   }
 
-  return [...grouped.entries()].map(([name, items]) => {
-    const definition = REGION_DEFINITIONS.find((item) => item.name === name)!;
+  return definitions.map((definition) => {
+    const items = grouped.get(definition.id) ?? [];
     const wineries = new Set(items.map((wine) => wine.winery).filter(Boolean));
-    const favorites = items.filter((wine) => wine.favorite).length;
-    const averageRating = average(items.map((wine) => wine.rating));
-    const multiplier = 1 + Math.min(items.length, 8) * 0.035;
+    const favoriteCount = items.filter((wine) => wine.favorite).length;
+    const multiplier = 1 + Math.min(items.length, 8) * .035;
     return {
-      id: slug(name),
-      name,
+      id: definition.id,
+      name: displayName(definition),
       country: definition.country,
+      classification: definition.classification,
+      officialId: definition.officialId,
+      sourceUrl: definition.sourceUrl,
       latitude: definition.latitude,
       longitude: definition.longitude,
       radius: Math.round(definition.radius * multiplier),
       wineCount: items.length,
       wineryCount: wineries.size,
-      favoriteCount: favorites,
-      averageRating,
+      favoriteCount,
+      averageRating: average(items.map((wine) => wine.rating)),
     };
-  }).sort((a, b) => b.wineCount - a.wineCount || a.name.localeCompare(b.name, 'es'));
+  }).sort((a, b) => b.wineCount - a.wineCount || a.country.localeCompare(b.country, 'es') || a.name.localeCompare(b.name, 'es'));
 }
 
-function findDefinition(value: string) {
+function findDefinition(value: string, definitions: RegionDefinition[]) {
   const normalized = normalize(value);
-  return REGION_DEFINITIONS.find((definition) => definition.aliases.some((alias) => normalized === normalize(alias) || normalized.includes(normalize(alias))));
+  return definitions.find((definition) => {
+    const name = normalize(definition.name);
+    const full = normalize(displayName(definition));
+    return normalized === name || normalized === full || normalized.includes(name) || full.includes(normalized);
+  });
 }
 
-function normalize(value: string) {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+function displayName(definition: RegionDefinition) {
+  if (!definition.classification) return definition.name;
+  return definition.country === 'España' ? `${definition.classification} ${definition.name}` : `${definition.name} ${definition.classification}`;
 }
 
-function average(values: Array<number | undefined>) {
-  const valid = values.filter((value): value is number => Number.isFinite(value));
-  if (!valid.length) return undefined;
-  return Math.round((valid.reduce((sum, value) => sum + value, 0) / valid.length) * 10) / 10;
+function denomination(id: string, name: string, country: string, classification: string, latitude: number, longitude: number, radius: number): RegionDefinition {
+  return { id, name, country, classification, latitude, longitude, radius };
 }
 
-function slug(value: string) {
-  return normalize(value).replace(/\s+/g, '-');
-}
+function text(value: unknown) { return typeof value === 'string' && value.trim() ? value : undefined; }
+function numeric(value: unknown) { const result = Number(value); return value === null || value === undefined || !Number.isFinite(result) ? undefined : result; }
+function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+function average(values: Array<number | undefined>) { const valid = values.filter((value): value is number => Number.isFinite(value)); return valid.length ? Math.round((valid.reduce((sum, value) => sum + value, 0) / valid.length) * 10) / 10 : undefined; }

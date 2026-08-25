@@ -1,5 +1,6 @@
 export type WineVisibility = 'private' | 'friends' | 'public';
 export type WineSource = 'mine' | 'friends' | 'public';
+export interface WineDenominationOption { name: string; country: string; classification?: string }
 
 export interface WineParticipant {
   id: string;
@@ -46,6 +47,7 @@ export interface CreateWineInput {
   price: number | null;
   tasting_notes: string;
   image_url: string;
+  photo_paths?: string[];
   country?: string;
   region?: string;
   denomination?: string;

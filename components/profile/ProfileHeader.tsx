@@ -1,8 +1,10 @@
 import Image from 'next/image';
-import { CalendarDays, Edit3, Lock, LogOut, MapPin, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import Link from 'next/link';
+import { CalendarDays, Check, Clock3, Edit3, Lock, LogOut, Map, MapPin, ShieldCheck, Sparkles, UserPlus, Users } from 'lucide-react';
 import type { AtlasProfile, ProfileAccess } from '@/types/profile';
+import type { NetworkUser } from '@/lib/network';
 
-export function ProfileHeader({ profile, access, onEdit, onSignOut }: { profile: AtlasProfile; access: ProfileAccess; onEdit?: () => void; onSignOut?: () => void }) {
+export function ProfileHeader({ profile, access, relationship, relationshipSaving = false, onEdit, onSignOut, onSendRequest, onAcceptRequest }: { profile: AtlasProfile; access: ProfileAccess; relationship?: NetworkUser; relationshipSaving?: boolean; onEdit?: () => void; onSignOut?: () => void; onSendRequest?: () => void; onAcceptRequest?: () => void }) {
   const privacy = profile.privacy === 'private' ? ['Privado', Lock] : profile.privacy === 'friends' ? ['Amigos', Users] : ['Visible en Atlas', ShieldCheck];
   const PrivacyIcon = privacy[1] as typeof Lock;
   const displayName = profile.fullName || profile.username;
@@ -20,7 +22,7 @@ export function ProfileHeader({ profile, access, onEdit, onSignOut }: { profile:
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div><div className="flex items-center gap-2"><span className="text-sm font-medium text-sky-300">@{profile.username}</span>{access === 'owner' && <span className="rounded-full border border-white/[.07] bg-white/[.04] px-2 py-1 text-[9px] font-semibold uppercase tracking-[.14em] text-zinc-500">Tu perfil</span>}</div><h1 className="mt-1.5 text-3xl font-semibold tracking-[-.045em] text-white sm:text-4xl">{displayName}</h1></div>
-          {access === 'owner' && <div className="flex gap-2"><button onClick={onEdit} className="group inline-flex h-10 items-center gap-2 rounded-full border border-white/[.08] bg-white/[.045] px-3 text-xs font-medium text-zinc-300 transition hover:bg-white/[.09] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" aria-label="Editar perfil"><Edit3 className="h-4 w-4" /><span className="hidden sm:inline">Editar</span></button><button onClick={onSignOut} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/[.08] bg-white/[.035] text-zinc-500 transition hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Cerrar sesión"><LogOut className="h-4 w-4" /></button></div>}
+          <div className="flex flex-wrap justify-end gap-2"><Link href={`/home?person=${profile.id}`} className="inline-flex h-10 items-center gap-2 rounded-full border border-sky-300/15 bg-sky-300/[.07] px-3 text-xs font-medium text-sky-100 transition hover:bg-sky-300/[.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"><Map className="h-4 w-4" /><span className="hidden sm:inline">Ver en mapa</span></Link>{access === 'owner' ? <><button onClick={onEdit} className="group inline-flex h-10 items-center gap-2 rounded-full border border-white/[.08] bg-white/[.045] px-3 text-xs font-medium text-zinc-300 transition hover:bg-white/[.09] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" aria-label="Editar perfil"><Edit3 className="h-4 w-4" /><span className="hidden sm:inline">Editar</span></button><button onClick={onSignOut} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/[.08] bg-white/[.035] text-zinc-500 transition hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Cerrar sesión"><LogOut className="h-4 w-4" /></button></> : <FriendshipButton relationship={relationship} saving={relationshipSaving} onSend={onSendRequest} onAccept={onAcceptRequest} />}</div>
         </div>
 
         {profile.biography ? <p className="mt-4 max-w-2xl text-[15px] leading-7 text-zinc-300">{profile.biography}</p> : access === 'owner' ? <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-600">Añade una pequeña biografía para darle más contexto a tu Atlas.</p> : null}
@@ -33,6 +35,14 @@ export function ProfileHeader({ profile, access, onEdit, onSignOut }: { profile:
       </div>
     </div>
   </header>;
+}
+
+function FriendshipButton({ relationship, saving, onSend, onAccept }: { relationship?: NetworkUser; saving: boolean; onSend?: () => void; onAccept?: () => void }) {
+  if (!relationship) return null;
+  if (relationship.friendship === 'friends') return <span className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[.07] px-3 text-xs font-medium text-emerald-200"><Check className="h-4 w-4" />Amigos</span>;
+  if (relationship.friendship === 'pending_outgoing') return <span className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.08] bg-white/[.035] px-3 text-xs text-zinc-500"><Clock3 className="h-4 w-4" />Solicitud enviada</span>;
+  const incoming = relationship.friendship === 'pending_incoming';
+  return <button type="button" disabled={saving} onClick={incoming ? onAccept : onSend} className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-3 text-xs font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:opacity-50"><UserPlus className="h-4 w-4" />{saving ? 'Guardando…' : incoming ? 'Aceptar solicitud' : 'Añadir amigo'}</button>;
 }
 
 function formatDate(value: string) { const date = new Date(value); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('es', { month: 'long', year: 'numeric' }).format(date); }

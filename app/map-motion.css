@@ -1,4 +1,9 @@
 @keyframes atlas-route-flow { to { stroke-dashoffset:-180; } }
+@keyframes atlas-route-flow-reverse { to { stroke-dashoffset:180; } }
+@keyframes atlas-route-boat-wake { 0%,100% { stroke-opacity:.42; filter:drop-shadow(0 0 4px currentColor); } 50% { stroke-opacity:1; filter:drop-shadow(0 0 13px currentColor); } }
+@keyframes atlas-route-plane-comet { from { stroke-dashoffset:0; stroke-opacity:.45; } 45% { stroke-opacity:1; } to { stroke-dashoffset:-260; stroke-opacity:.45; } }
+@keyframes atlas-do-favorites { from { stroke-dashoffset:0; stroke-opacity:.22; } 50% { stroke-opacity:.9; filter:drop-shadow(0 0 10px #fb7185); } to { stroke-dashoffset:120; stroke-opacity:.22; } }
+@keyframes atlas-do-card-pulse { 0%,100% { transform:scale(.82); opacity:.55; box-shadow:0 0 0 0 rgba(251,113,133,.2); } 50% { transform:scale(1.25); opacity:1; box-shadow:0 0 0 5px rgba(251,113,133,0); } }
 @keyframes atlas-route-glow { 0%,100% { stroke-opacity:.2; filter:drop-shadow(0 0 3px currentColor); } 50% { stroke-opacity:.55; filter:drop-shadow(0 0 13px currentColor); } }
 @keyframes atlas-route-main { 0%,100% { stroke-opacity:.74; } 50% { stroke-opacity:1; } }
 @keyframes atlas-route-beacon { 0%,100% { filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 5px currentColor); } 50% { filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 14px currentColor); } }
@@ -24,6 +29,14 @@
 @keyframes atlas-universe-core { 0%,100% { transform:translate(-50%,-50%) scale(1); filter:drop-shadow(0 0 22px rgba(103,232,249,.12)); } 50% { transform:translate(-50%,-50%) scale(1.045); filter:drop-shadow(0 0 48px rgba(103,232,249,.24)); } }
 @keyframes atlas-universe-glow { 0%,100% { opacity:.38; transform:scale(.84); } 50% { opacity:.95; transform:scale(1.18); } }
 @keyframes atlas-universe-stat { 0%,100% { transform:translate(-50%,-50%) translateY(0) scale(var(--atlas-stat-scale,1)); } 50% { transform:translate(-50%,-50%) translateY(-10px) scale(calc(var(--atlas-stat-scale,1) + .035)); } }
+@keyframes atlas-map-liftoff { 0% { transform:scale(1); filter:blur(0) saturate(1); opacity:1; } 46% { transform:scale(.76); filter:blur(.8px) saturate(.8); opacity:.82; } 100% { transform:scale(.08); filter:blur(10px) saturate(.18); opacity:.04; } }
+@keyframes atlas-liftoff-overlay { from { background:rgba(9,9,11,0); } to { background:rgba(2,2,5,.96); } }
+@keyframes atlas-liftoff-message { 0% { opacity:0; transform:scale(1.4); filter:blur(8px); } 50% { opacity:1; transform:scale(1); filter:blur(0); } 100% { opacity:.45; transform:scale(.74); filter:blur(1px); } }
+@keyframes atlas-universe-friend { 0%,100% { transform:translate(-50%,-50%) translateY(0); filter:drop-shadow(0 0 0 rgba(103,232,249,0)); } 50% { transform:translate(-50%,-50%) translateY(-7px); filter:drop-shadow(0 0 12px rgba(103,232,249,.2)); } }
+@keyframes atlas-liftoff-space { 0% { opacity:0; transform:scale(1.42); filter:blur(8px); } 38% { opacity:.42; } 100% { opacity:1; transform:scale(1.02); filter:blur(0); } }
+@keyframes atlas-universe-background { 0% { transform:scale(1.035); filter:brightness(.74) saturate(.82); } 100% { transform:scale(1.085); filter:brightness(.9) saturate(.94); } }
+@keyframes atlas-universe-person { 0%,100% { transform:translate(-50%,-50%) translateY(0) scale(var(--atlas-person-scale,1)); } 50% { transform:translate(-50%,-50%) translateY(-5px) scale(var(--atlas-person-scale,1)); } }
+@keyframes atlas-profile-enter { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 @keyframes atlas-gateway-orbit-a { from { transform:rotateX(68deg) rotateZ(10deg); } to { transform:rotateX(68deg) rotateZ(370deg); } }
 @keyframes atlas-gateway-orbit-b { from { transform:rotateX(63deg) rotateZ(-24deg); } to { transform:rotateX(63deg) rotateZ(-384deg); } }
 @keyframes atlas-gateway-orbit-c { from { transform:rotateX(74deg) rotateZ(38deg); } to { transform:rotateX(74deg) rotateZ(398deg); } }
@@ -36,23 +49,40 @@
 @keyframes atlas-gateway-comet { 0%,100% { opacity:.15; translate:-8px -3px; } 50% { opacity:.95; translate:14px 5px; } }
 @keyframes atlas-gateway-aurora { 0%,100% { opacity:.42; transform:scale(.92) rotate(-4deg); } 50% { opacity:.9; transform:scale(1.08) rotate(3deg); } }
 
-.atlas-route-flow { stroke-dasharray:2 12; animation:atlas-route-flow 3.8s linear infinite; }
-.atlas-route-glow { animation:atlas-route-glow 3.2s ease-in-out infinite; }
-.atlas-route-main { animation:atlas-route-main 3.2s ease-in-out infinite; }
-.atlas-route-stop,.atlas-route-stop-wave { animation-duration:2.8s; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+.atlas-route-flow { stroke-dasharray:2 12; animation:atlas-route-flow 9.5s linear infinite; }
+.atlas-route-glow { animation:atlas-route-glow 7.2s ease-in-out infinite; }
+.atlas-route-main { animation:atlas-route-main 7.2s ease-in-out infinite; }
+.atlas-route-stop,.atlas-route-stop-wave { animation-duration:5.2s; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
 .atlas-route-stop { animation-name:atlas-route-stop; }
 .atlas-route-stop-wave { animation-name:atlas-route-stop-wave; }
-.atlas-route-beacon { animation:atlas-route-beacon 1.2s ease-in-out infinite; }
-.atlas-route-beacon-halo { animation:atlas-route-beacon-halo 1.2s ease-in-out infinite; }
+.atlas-route-beacon { animation:atlas-route-beacon 2.4s ease-in-out infinite; }
+.atlas-route-beacon-halo { animation:atlas-route-beacon-halo 2.4s ease-in-out infinite; }
+.atlas-route-car-flow { animation-duration:9.5s; }
+.atlas-route-car-casing { filter:drop-shadow(0 2px 3px rgba(15,23,42,.28)); }
+.atlas-route-train { filter:drop-shadow(0 0 4px rgba(48,209,88,.42)); }
+.atlas-route-train-flow { animation:atlas-route-flow-reverse 11.5s linear infinite; }
+.atlas-route-train-sleepers { animation:atlas-route-flow-reverse 15s linear infinite; }
+.atlas-route-boat { animation:atlas-route-boat-wake 11.8s ease-in-out infinite; }
+.atlas-route-boat-wake { animation:atlas-route-boat-wake 13.5s ease-in-out infinite; }
+.atlas-route-boat-flow { animation:atlas-route-flow 14.5s linear infinite; }
+.atlas-route-boat-beacon { animation-duration:3.2s; }
+.atlas-route-plane { filter:drop-shadow(0 0 8px rgba(191,90,242,.5)); }
+.atlas-route-plane-flow { animation:atlas-route-plane-comet 7.2s linear infinite; }
+.atlas-route-plane-glow { animation-duration:6.4s; }
+.atlas-route-plane-beacon { animation-duration:1.8s; }
 .atlas-do-region { transition:stroke-opacity .25s ease,fill-opacity .25s ease; }
-.atlas-do-breathe { animation:atlas-do-breathe 4.8s ease-in-out infinite; }
-.atlas-do-pulse { animation:atlas-do-heartbeat 3.6s ease-in-out infinite; }
-.atlas-do-core { animation:atlas-do-core 3.6s ease-in-out infinite; }
-.atlas-do-orbit { animation:atlas-do-orbit 7.5s linear infinite; }
-.atlas-do-orbit-wide { animation-duration:13s; }
-.atlas-do-orbit-inner { animation-duration:5.6s; animation-direction:reverse; }
-.atlas-do-heart { animation:atlas-do-heart 3.6s ease-in-out infinite; }
-.atlas-do-core-halo { animation:atlas-do-core-halo 3.6s ease-in-out infinite; }
+.atlas-do-breathe { animation:atlas-do-breathe 10.5s ease-in-out infinite; }
+.atlas-do-pulse { animation:atlas-do-heartbeat 8.4s ease-in-out infinite; }
+.atlas-do-core { animation:atlas-do-core 8.4s ease-in-out infinite; }
+.atlas-do-orbit { animation:atlas-do-orbit 22s linear infinite; }
+.atlas-do-orbit-wide { animation-duration:34s; }
+.atlas-do-orbit-inner { animation-duration:18s; animation-direction:reverse; }
+.atlas-do-heart { animation:atlas-do-heart 9.2s ease-in-out infinite; }
+.atlas-do-core-halo { animation:atlas-do-core-halo 8.4s ease-in-out infinite; }
+.atlas-do-pulse-loved { animation-duration:7.2s; }
+.atlas-do-favorites { animation:atlas-do-favorites 16s linear infinite; }
+.atlas-do-core-rated { filter:drop-shadow(0 0 10px #fde68a); }
+.atlas-do-card-pulse { animation:atlas-do-card-pulse 2.4s ease-in-out infinite; }
 .atlas-location-pulse { animation:atlas-location-wave 2.6s ease-in-out infinite; }
 .atlas-location-core { animation:atlas-location-core 1.8s ease-in-out infinite; }
 .atlas-map-glass { animation:atlas-glass-live 5s ease-in-out infinite; }
@@ -65,18 +95,32 @@
 .atlas-map-cluster > span { position:relative; display:flex; align-items:center; justify-content:center; border:3px solid rgba(255,255,255,.98); border-radius:999px; background:rgba(9,9,11,.9); color:white; box-shadow:0 10px 34px rgba(0,0,0,.34),0 0 18px rgba(255,255,255,.08); backdrop-filter:blur(14px); }
 .atlas-map-cluster b { position:relative; z-index:2; font:650 11px/1 system-ui,-apple-system,sans-serif; }
 .atlas-map-cluster i { position:absolute; inset:-9px; border:1.5px solid rgba(255,255,255,.68); border-radius:999px; box-shadow:0 0 20px rgba(255,255,255,.14); animation:atlas-cluster-breathe 2.7s ease-in-out infinite; }
+.atlas-map-marker-focused span { box-shadow:0 0 0 5px rgba(255,255,255,.95),0 0 0 12px rgba(14,165,233,.3),0 0 35px rgba(14,165,233,.75) !important; transform:scale(1.15); }
 
-.atlas-universe-enter { animation:atlas-universe-enter .66s cubic-bezier(.2,.82,.2,1) both; }
+.atlas-universe-enter { animation:atlas-universe-enter .92s cubic-bezier(.2,.82,.2,1) both; }
+.atlas-universe-background { animation:atlas-universe-background 28s ease-in-out infinite alternate; will-change:transform,filter; }
+.atlas-universe-depth { background:linear-gradient(180deg,rgba(2,2,5,.12),rgba(2,2,5,.02) 38%,rgba(2,2,5,.35)),radial-gradient(circle at 50% 48%,transparent 0 22%,rgba(2,2,5,.1) 52%,rgba(2,2,5,.72) 100%); }
 .atlas-universe-nebula { background:radial-gradient(circle at 18% 20%,rgba(59,130,246,.18),transparent 30%),radial-gradient(circle at 78% 72%,rgba(244,63,94,.13),transparent 27%),radial-gradient(circle at 52% 48%,rgba(103,232,249,.11),transparent 33%); filter:blur(18px); animation:atlas-universe-nebula 12s ease-in-out infinite; }
 .atlas-universe-stars { opacity:.9; background-image:radial-gradient(circle,rgba(255,255,255,.9) 0 1px,transparent 1.3px),radial-gradient(circle,rgba(125,211,252,.8) 0 1px,transparent 1.4px); background-size:76px 76px,126px 126px; background-position:7px 18px,41px 62px; animation:atlas-universe-stars 15s linear infinite alternate; }
 .atlas-universe-stars-far { opacity:.34; background-size:49px 49px,95px 95px; animation-duration:24s; animation-direction:alternate-reverse; }
 .atlas-universe-system { perspective:1200px; transform-style:preserve-3d; }
+.atlas-universe-orbit-close { animation:atlas-universe-orbit-spin 58s linear infinite; }
+.atlas-universe-orbit-nearby { animation:atlas-universe-orbit-spin 76s linear infinite reverse; }
+.atlas-universe-orbit-public { animation:atlas-universe-orbit-spin 104s linear infinite; }
 .atlas-universe-orbit-a { animation:atlas-universe-orbit-spin 39s linear infinite; }
 .atlas-universe-orbit-b { animation:atlas-universe-orbit-spin 27s linear infinite reverse; }
 .atlas-universe-orbit-c { animation:atlas-universe-orbit-spin 19s linear infinite; }
 .atlas-universe-core { background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.2),rgba(10,18,31,.94) 38%,rgba(2,2,6,.99) 72%); border:1px solid rgba(255,255,255,.14); box-shadow:inset -18px -22px 42px rgba(0,0,0,.58),inset 8px 8px 24px rgba(125,211,252,.1),0 30px 100px rgba(0,0,0,.55); animation:atlas-universe-core 5.5s ease-in-out infinite; }
 .atlas-universe-core-glow { background:radial-gradient(circle,rgba(103,232,249,.18),transparent 68%); filter:blur(20px); animation:atlas-universe-glow 5s ease-in-out infinite; }
 .atlas-universe-stat { animation:atlas-universe-stat 4.8s ease-in-out infinite; will-change:transform; }
+.atlas-universe-friend { animation:atlas-universe-friend 4.4s ease-in-out infinite; will-change:transform; }
+.atlas-universe-person { animation:atlas-universe-person 7.5s ease-in-out infinite; will-change:transform; }
+.atlas-map-liftoff .leaflet-container { animation:atlas-map-liftoff 1.6s cubic-bezier(.2,.72,.12,1) both; transform-origin:center center; }
+.atlas-map-liftoff > :not(.atlas-liftoff-overlay) { animation:atlas-map-liftoff 1.6s cubic-bezier(.2,.72,.12,1) both; }
+.atlas-liftoff-overlay { animation:atlas-liftoff-overlay 1.6s ease-in both; }
+.atlas-liftoff-space { animation:atlas-liftoff-space 1.6s cubic-bezier(.18,.78,.2,1) both; }
+.atlas-liftoff-message { animation:atlas-liftoff-message 1.6s cubic-bezier(.2,.8,.2,1) both; }
+.atlas-profile-enter { animation:atlas-profile-enter .55s cubic-bezier(.2,.8,.2,1) both; }
 
 .atlas-gateway-system { perspective:1350px; transform-style:preserve-3d; }
 .atlas-gateway-aurora { z-index:-1; background:conic-gradient(from 80deg,transparent 0 20%,rgba(56,189,248,.18),transparent 43% 62%,rgba(168,85,247,.11),transparent 82%); filter:blur(22px); animation:atlas-gateway-aurora 8s ease-in-out infinite; }
@@ -115,5 +159,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .atlas-route-flow,.atlas-route-glow,.atlas-route-main,.atlas-route-stop,.atlas-route-stop-wave,.atlas-route-beacon,.atlas-route-beacon-halo,.atlas-do-pulse,.atlas-do-core,.atlas-do-orbit,.atlas-do-breathe,.atlas-do-heart,.atlas-do-core-halo,.atlas-location-pulse,.atlas-location-core,.atlas-map-glass,.atlas-map-action-dock,.atlas-universe-launch,.atlas-map-cluster i,.atlas-universe-enter,.atlas-universe-nebula,.atlas-universe-stars,.atlas-universe-orbit,.atlas-universe-core,.atlas-universe-core-glow,.atlas-universe-stat,.atlas-gateway-orbit,.atlas-gateway-globe,.atlas-gateway-grid,.atlas-gateway-land,.atlas-gateway-point,.atlas-gateway-satellite-halo,.atlas-gateway-comet,.atlas-gateway-aurora { animation:none; }
+  .atlas-route-flow,.atlas-route-glow,.atlas-route-main,.atlas-route-stop,.atlas-route-stop-wave,.atlas-route-beacon,.atlas-route-beacon-halo,.atlas-route-train-sleepers,.atlas-route-boat-wake,.atlas-do-pulse,.atlas-do-core,.atlas-do-orbit,.atlas-do-breathe,.atlas-do-heart,.atlas-do-core-halo,.atlas-do-favorites,.atlas-do-card-pulse,.atlas-location-pulse,.atlas-location-core,.atlas-map-glass,.atlas-map-action-dock,.atlas-universe-launch,.atlas-map-cluster i,.atlas-universe-enter,.atlas-universe-background,.atlas-universe-nebula,.atlas-universe-stars,.atlas-universe-orbit,.atlas-universe-core,.atlas-universe-core-glow,.atlas-universe-stat,.atlas-universe-friend,.atlas-universe-person,.atlas-map-liftoff .leaflet-container,.atlas-map-liftoff > *,.atlas-liftoff-overlay,.atlas-liftoff-space,.atlas-liftoff-message,.atlas-profile-enter,.atlas-gateway-orbit,.atlas-gateway-globe,.atlas-gateway-grid,.atlas-gateway-land,.atlas-gateway-point,.atlas-gateway-satellite-halo,.atlas-gateway-comet,.atlas-gateway-aurora { animation:none; }
 }

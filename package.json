@@ -1,6 +1,6 @@
 {
-  "name": "nextjs",
-  "version": "0.1.0",
+  "name": "atlas",
+  "version": "0.2.0-preview.1",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { CreateWineInput, WineItem, WineParticipant, WineVisibility } from '@/types/wine';
+import type { CreateWineInput, WineDenominationOption, WineItem, WineParticipant, WineVisibility } from '@/types/wine';
 
 type DatabaseRecord = Record<string, unknown>;
 
@@ -88,19 +88,36 @@ export async function getCurrentWineUserId(): Promise<string | null> {
 }
 
 export async function listWines(): Promise<WineItem[]> {
-  const { data, error } = await supabase.from('wines').select('*').order('created_at', { ascending: false });
+  const [{ data, error }, { data: auth }] = await Promise.all([
+    supabase.from('wines').select('*').order('created_at', { ascending: false }),
+    supabase.auth.getUser(),
+  ]);
   if (error) throw error;
-  return Promise.all((data ?? []).map(async (row) => hydrateWinePhotos(normalizeWine(row as DatabaseRecord), row as DatabaseRecord)));
+  const userId = auth.user?.id;
+  const favoriteIds = new Set<string>();
+  if (userId) {
+    const favoriteResult = await supabase.from('wine_user_favorites').select('wine_id').eq('user_id', userId);
+    if (!favoriteResult.error) favoriteResult.data?.forEach((row) => favoriteIds.add(String(row.wine_id)));
+  }
+  const hydrated = await Promise.all((data ?? []).map(async (row) => hydrateWinePhotos(normalizeWine(row as DatabaseRecord), row as DatabaseRecord)));
+  return hydrated.map((wine) => ({ ...wine, favorite: favoriteIds.has(wine.id) || Boolean(wine.user_id && wine.user_id === userId && wine.favorite) }));
 }
 
 export async function createWine(input: CreateWineInput): Promise<WineItem> {
-  const { data, error } = await supabase.from('wines').insert([input]).select().single();
+  const userId = await getCurrentWineUserId();
+  if (!userId) throw new Error('Debes iniciar sesión para guardar un vino.');
+  const { data, error } = await supabase.from('wines').insert([{ ...input, user_id: userId }]).select().single();
   if (error) throw error;
   return hydrateWinePhotos(normalizeWine(data as DatabaseRecord), data as DatabaseRecord);
 }
 
 export async function setWineFavorite(id: string, favorite: boolean): Promise<void> {
-  const { error } = await supabase.from('wines').update({ favorite }).eq('id', id);
+  const userId = await getCurrentWineUserId();
+  if (!userId) throw new Error('Debes iniciar sesión para guardar favoritos.');
+  const result = favorite
+    ? await supabase.from('wine_user_favorites').upsert({ user_id: userId, wine_id: id }, { onConflict: 'user_id,wine_id' })
+    : await supabase.from('wine_user_favorites').delete().eq('user_id', userId).eq('wine_id', id);
+  const { error } = result;
   if (error) throw error;
 }
 
@@ -117,8 +134,15 @@ export async function uploadWinePhoto(file: File): Promise<string> {
 async function hydrateWinePhotos(wine: WineItem, row: DatabaseRecord): Promise<WineItem> {
   const cover = text(row.canonical_image_path) ?? text(row.image_path) ?? text(row.photo_path) ?? text(row.storage_path) ?? wine.image_url;
   const paths = stringArray(row.photo_paths).length ? stringArray(row.photo_paths) : wine.photos;
-  const [imageUrl, ...photos] = await Promise.all([cover, ...paths].map(resolveWinePhoto));
-  return { ...wine, image_url: imageUrl, photos: photos.filter((value): value is string => Boolean(value)) };
+  const [imageUrl, ...resolved] = await Promise.all([cover, ...paths].map(resolveWinePhoto));
+  const photos = [...new Set([imageUrl, ...resolved].filter((value): value is string => Boolean(value)))];
+  return { ...wine, image_url: imageUrl ?? photos[0], photos };
+}
+
+export async function listWineDenominationOptions(): Promise<WineDenominationOption[]> {
+  const { data, error } = await supabase.from('wine_denominations').select('name,country,classification').eq('active', true).order('country').order('name').limit(2000);
+  if (error) throw error;
+  return (data ?? []).flatMap((row) => typeof row.name === 'string' && typeof row.country === 'string' ? [{ name: row.name, country: row.country, classification: typeof row.classification === 'string' ? row.classification : undefined }] : []);
 }
 
 async function resolveWinePhoto(value?: string): Promise<string | undefined> {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { fetchUserNetwork, removeFriend, respondFriendRequest, sendFriendRequest, type NetworkUser } from '@/lib/network';
+import { getAtlasDemoNetwork } from '@/lib/map/demo';
 
 export function useProfileNetwork(userId?: string, enabled = true) {
   const [users, setUsers] = useState<NetworkUser[]>([]);
@@ -13,7 +14,7 @@ export function useProfileNetwork(userId?: string, enabled = true) {
     if (!userId || !enabled) return;
     setLoading(true);
     setError(null);
-    try { setUsers(await fetchUserNetwork(userId)); }
+    try { setUsers(process.env.NEXT_PUBLIC_ATLAS_DEMO === 'true' ? getAtlasDemoNetwork() : await fetchUserNetwork(userId)); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'No se pudieron cargar tus amigos.'); }
     finally { setLoading(false); }
   }, [enabled, userId]);

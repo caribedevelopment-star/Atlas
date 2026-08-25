@@ -1,58 +1,43 @@
 'use client';
 
-import Link from 'next/link';
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { AlertCircle, ArrowUpRight, Loader2, Orbit, Sparkles, Users, X } from 'lucide-react';
+import { AlertCircle, Loader2, MapPin, Route, Sparkles, Store, Wine, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/hooks/use-profile';
+import { useProfileNetwork } from '@/hooks/use-profile-network';
 import type { ProfileUpdate } from '@/types/profile';
-import { Achievements } from './Achievements';
-import { FavoritePlaces } from './FavoritePlaces';
 import { FavoriteWines } from './FavoriteWines';
-import { NetworkStats } from './NetworkStats';
-import { ProfileCities } from './ProfileCities';
-import { ProfileCountries } from './ProfileCountries';
 import { ProfileHeader } from './ProfileHeader';
+import { ProfileAtlasBridge } from './ProfileAtlasBridge';
 import { ProfileSkeleton } from './ProfileSkeleton';
-import { ProfileStats } from './ProfileStats';
 import { ProfileTimeline } from './ProfileTimeline';
-import { TravelStats } from './TravelStats';
+import type { ProfileStatistics } from '@/types/profile';
 
 export function ProfileSystem({ profileId }: { profileId?: string }) {
   const profile = useProfile(profileId);
+  const network = useProfileNetwork(profile.data?.viewerId, Boolean(profile.data?.viewerId));
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   if (profile.loading) return <ProfileSkeleton />;
   if (!profile.data) return <main className="mx-auto flex min-h-[70vh] max-w-lg items-center px-4"><div className="w-full rounded-3xl border border-red-500/20 bg-red-500/5 p-8 text-center" role="alert"><AlertCircle className="mx-auto h-8 w-8 text-red-400" /><h1 className="mt-3 text-xl font-semibold text-white">{message(profile.error)}</h1><button onClick={() => void profile.retry()} className="mt-5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Reintentar</button></div></main>;
   const data = profile.data;
+  const relationship = network.users.find((user) => user.id === data.profile.id);
 
   return <main className="relative min-h-screen overflow-hidden bg-zinc-950 pb-28 text-zinc-100">
     <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] bg-[radial-gradient(circle_at_18%_0%,rgba(56,189,248,.08),transparent_34%),radial-gradient(circle_at_82%_8%,rgba(244,63,94,.06),transparent_30%)]" />
-    <div className="relative mx-auto max-w-6xl space-y-6 px-4 py-5 sm:px-6 sm:py-8">
-      <ProfileHeader profile={data.profile} access={data.access} onEdit={() => setEditing(true)} onSignOut={() => void profile.signOut().then(() => router.push('/login'))} />
-      <ProfileStats stats={data.statistics} />
-
-      {data.access === 'owner' && <Link href="/profile/friends" className="group relative block overflow-hidden rounded-[2rem] border border-white/[.08] bg-[linear-gradient(135deg,rgba(15,23,42,.82),rgba(9,9,11,.96))] p-5 shadow-[0_24px_70px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,255,255,.05)] transition hover:-translate-y-0.5 hover:border-sky-300/15 sm:p-6">
-        <div className="atlas-profile-orbit pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border border-sky-300/[.09]" />
-        <div className="atlas-profile-orbit atlas-profile-orbit-reverse pointer-events-none absolute -right-5 -top-9 h-44 w-44 rounded-full border border-dashed border-white/[.07]" />
-        <div className="relative flex items-center gap-4">
-          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border border-white/[.09] bg-white/[.05] text-sky-200 shadow-[0_0_35px_rgba(56,189,248,.08)]"><Orbit className="h-6 w-6" /><span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-zinc-950 bg-white px-1 text-[9px] font-bold text-zinc-950">{data.statistics.friends}</span></div>
-          <div className="min-w-0 flex-1"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.18em] text-sky-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-300" />Atlas humano</div><h2 className="mt-1.5 text-xl font-semibold tracking-[-.03em] text-white">Universo de amigos</h2><p className="mt-1 max-w-xl text-xs leading-5 text-zinc-500">Explora a las personas de Atlas en un mundo 3D, acepta solicitudes y añade amigos. Sin followers.</p></div>
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[.08] bg-white/[.04] text-zinc-500 transition group-hover:bg-white group-hover:text-zinc-950"><ArrowUpRight className="h-4 w-4" /></span>
-        </div>
-      </Link>}
-
-      <div className="grid gap-6 lg:grid-cols-2"><TravelStats stats={data.statistics} /><NetworkStats stats={data.statistics} /></div>
-      <FavoriteWines wines={data.favoriteWines} />
-      <div className="grid gap-8 lg:grid-cols-2"><ProfileCountries countries={data.countries} /><ProfileCities cities={data.cities} /></div>
-      <FavoritePlaces places={data.favoritePlaces} />
-      <Achievements achievements={data.achievements} />
+    <div className="atlas-profile-enter relative mx-auto max-w-5xl space-y-5 px-4 py-5 sm:px-6 sm:py-8">
+      <ProfileHeader profile={data.profile} access={data.access} relationship={relationship} relationshipSaving={network.savingId === data.profile.id} onSendRequest={() => void network.sendRequest(data.profile.id)} onAcceptRequest={() => { if (relationship) void network.acceptRequest(relationship); }} onEdit={() => setEditing(true)} onSignOut={() => void profile.signOut().then(() => router.push('/login'))} />
+      <ProfilePulse stats={data.statistics}/>
+      <ProfileAtlasBridge data={data} />
+      {data.favoriteWines.length>0&&<FavoriteWines wines={data.favoriteWines} />}
       <ProfileTimeline items={data.timeline} />
-      <div className="flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[.18em] text-zinc-800"><Sparkles className="h-3 w-3" />Tu Atlas sigue creciendo</div>
+      <div className="flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[.18em] text-zinc-800"><Sparkles className="h-3 w-3" />{data.access === 'owner' ? 'Tu Atlas sigue creciendo' : `Atlas visible de ${data.profile.fullName || data.profile.username}`}</div>
     </div>
     {editing && <EditProfile initial={{ full_name: data.profile.fullName, username: data.profile.username, bio: data.profile.biography ?? '', city: data.profile.city ?? '', country: data.profile.country ?? '', privacy: data.profile.privacy }} saving={profile.saving} error={profile.error} onClose={() => setEditing(false)} onSave={async (value) => { await profile.save(value); setEditing(false); }} />}
   </main>;
 }
+
+function ProfilePulse({stats}:{stats:ProfileStatistics}){const items=[{label:'Memorias',value:stats.memories,icon:MapPin,color:'text-rose-300'},{label:'Viajes',value:stats.trips,icon:Route,color:'text-sky-300'},{label:'Restaurantes',value:stats.restaurants,icon:Store,color:'text-emerald-300'},{label:'Vinos',value:stats.wines,icon:Wine,color:'text-violet-300'}];return <section aria-label="Resumen del perfil" className="grid grid-cols-2 gap-2 sm:grid-cols-4">{items.map(({label,value,icon:Icon,color})=><div key={label} className="group rounded-[1.3rem] border border-white/[.07] bg-white/[.025] p-4 transition hover:-translate-y-0.5 hover:bg-white/[.05]"><Icon className={`h-4 w-4 ${color}`}/><strong className="mt-3 block text-2xl font-semibold tracking-[-.04em] text-white">{value}</strong><span className="mt-0.5 block text-[10px] uppercase tracking-[.14em] text-zinc-600">{label}</span></div>)}</section>}
 
 function EditProfile({ initial, saving, error, onClose, onSave }: { initial: ProfileUpdate; saving: boolean; error: string | null; onClose: () => void; onSave: (value: ProfileUpdate) => Promise<void> }) {
   const [value, setValue] = useState(initial); const closeRef = useRef<HTMLButtonElement>(null); const set = (key: keyof ProfileUpdate, next: string) => setValue((current) => ({ ...current, [key]: next }));

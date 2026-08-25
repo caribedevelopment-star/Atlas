@@ -36,13 +36,20 @@ export interface ProfileMemory {
   linkedWineId?: string;
   visibility: WineVisibility;
   isRestaurant: boolean;
+  restaurantCuisine?: string;
+  restaurantVibe?: string;
+  restaurantPriceLevel?: number;
+  restaurantRating?: number;
+  restaurantMustOrder?: string;
+  restaurantStatus?: 'visited' | 'wishlist';
   isFavoritePlace: boolean;
   tripId?: string;
+  isOwner?: boolean;
 }
 
 export interface ProfileLibraryItem { id: string; userId?: string; title: string; visibility: WineVisibility; createdAt?: string }
 export interface ProfileAchievement { id: string; title: string; description: string }
-export interface ProfileTimelineItem { id: string; title: string; subtitle?: string; date?: string; kind: 'memory' | 'wine' | 'library' }
+export interface ProfileTimelineItem { id: string; title: string; subtitle?: string; date?: string; kind: 'memory' | 'wine' | 'library'; href?: string }
 export interface ProfilePlace { name: string; count: number }
 
 export interface ProfileStatistics {
@@ -60,6 +67,7 @@ export interface ProfileStatistics {
 }
 
 export interface ProfileSnapshot {
+  viewerId: string;
   profile: AtlasProfile;
   access: ProfileAccess;
   statistics: ProfileStatistics;

@@ -32,6 +32,8 @@ body {
 .atlas-map-marker:hover span { transform: scale(1.12); box-shadow: 0 8px 24px rgba(0,0,0,.34); }
 .atlas-map-marker:hover i { opacity: .65; }
 .atlas-map-marker-wines span { border-width: 3px; opacity: .86; }
+.atlas-map-marker-restaurants span { border-radius: 10px; border-color: rgba(236,253,245,.98); box-shadow: 0 8px 24px rgba(4,120,87,.28), inset 0 1px 0 rgba(255,255,255,.32); }
+.atlas-map-marker-restaurants i { inset: -7px; border-radius: 14px; border-color: rgba(110,231,183,.78); box-shadow: 0 0 20px rgba(16,185,129,.2); animation-duration: 5.6s; }
 .atlas-map-source-shared i { border-color: rgba(100,210,255,.95); box-shadow: 0 0 14px rgba(100,210,255,.18); animation-duration: 2.8s; }
 .atlas-map-source-public i { border-color: rgba(244,114,182,.55); }
 

@@ -1,6 +1,7 @@
 import type { ProfileMemory } from '@/types/profile';
 import type { WineItem } from '@/types/wine';
 import type { AtlasTrip } from '@/types/trip';
+import type { TransportMode } from '@/types/trip';
 
 export type MapSource = 'mine' | 'shared' | 'public';
 export type MapLayer = 'memories' | 'wines' | 'trips' | 'favorites' | 'restaurants';
@@ -10,6 +11,9 @@ export interface AtlasWineRegion {
   id: string;
   name: string;
   country: string;
+  classification?: string;
+  officialId?: string;
+  sourceUrl?: string;
   latitude: number;
   longitude: number;
   radius: number;
@@ -29,6 +33,7 @@ export interface AtlasMapPoint {
   year?: string;
   participantIds: string[];
   participantNames: string[];
+  peopleIds: string[];
   ownerId?: string;
   ownerName?: string;
   ownerAvatarUrl?: string;
@@ -39,7 +44,19 @@ export interface AtlasMapPoint {
 export interface AtlasMapSnapshot {
   points: AtlasMapPoint[];
   wineRegions: AtlasWineRegion[];
-  participants: Array<{ id: string; name: string }>;
+  participants: Array<{ id: string; name: string; avatarUrl?: string; itemCount: number; ownsContent: boolean }>;
   years: string[];
 }
-export interface AtlasMapFilters { query: string; sources: Set<MapSource>; layers: Set<MapLayer>; year: string; participant: string }
+
+export interface AtlasWineDenomination {
+  id: string;
+  name: string;
+  country: string;
+  classification?: string;
+  officialId?: string;
+  sourceUrl?: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+}
+export interface AtlasMapFilters { query: string; sources: Set<MapSource>; layers: Set<MapLayer>; transports: Set<TransportMode>; year: string; participant: string }

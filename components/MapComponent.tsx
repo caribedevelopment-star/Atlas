@@ -1,7 +1,8 @@
 'use client';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Orbit, Plus, Sparkles } from 'lucide-react';
 import { MapEmptyState, MapErrorState, MapLoadingState, MapToolbar } from '@/components/map';
 import { AtlasUniverse } from '@/components/map/AtlasUniverse';
@@ -11,18 +12,20 @@ const AtlasLeafletMap = dynamic(() => import('@/components/map/AtlasLeafletMap')
 
 export default function MapComponent() {
   const map = useAtlasMap();
-  const [universeOpen, setUniverseOpen] = useState(false);
+  const [universePhase, setUniversePhase] = useState<'idle' | 'launching' | 'open'>('idle');
+  useEffect(() => { if (universePhase !== 'launching') return; const timer = window.setTimeout(() => setUniversePhase('open'), 1600); return () => window.clearTimeout(timer); }, [universePhase]);
+  const launchUniverse = () => { if (universePhase === 'idle') setUniversePhase('launching'); };
   if (map.loading) return <div className="h-full"><MapLoadingState /></div>;
   if (map.error || !map.snapshot) return <div className="h-full"><MapErrorState message={map.error || 'No hay datos disponibles.'} retry={() => void map.refresh()} /></div>;
 
-  return <section aria-label="Mapa del archivo Atlas" className="relative h-full min-h-[450px] overflow-hidden bg-zinc-950">
-    <AtlasLeafletMap points={map.points} wineRegions={map.wineRegions} />
-    <MapToolbar filters={map.filters} snapshot={map.snapshot} count={map.points.length} setQuery={map.setQuery} setYear={map.setYear} setParticipant={map.setParticipant} toggleLayer={map.toggleLayer} toggleSource={map.toggleSource} applyPreset={map.applyPreset} reset={map.reset} />
+  return <section aria-label="Mapa del archivo Atlas" className={`relative h-full min-h-[450px] overflow-hidden bg-zinc-950 ${universePhase === 'launching' ? 'atlas-map-liftoff' : ''}`}>
+    <AtlasLeafletMap points={map.points} wineRegions={map.wineRegions} focusPointId={map.focusPointId} />
+    <MapToolbar filters={map.filters} snapshot={map.snapshot} count={map.points.length} setQuery={map.setQuery} setYear={map.setYear} setParticipant={map.setParticipant} toggleLayer={map.toggleLayer} toggleSource={map.toggleSource} toggleTransport={map.toggleTransport} applyPreset={map.applyPreset} reset={map.reset} />
     {map.points.length === 0 && <MapEmptyState reset={map.reset} />}
 
-    <div className="absolute bottom-[5.2rem] left-1/2 z-[800] -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-20 sm:translate-x-0">
+    <div className="absolute bottom-[5.2rem] left-1/2 z-[800] -translate-x-1/2 sm:bottom-6 lg:left-auto lg:right-[372px] lg:translate-x-0">
       <div className="atlas-map-action-dock flex items-center gap-1.5 rounded-[1.65rem] border border-white/20 bg-zinc-950/90 p-1.5 shadow-[0_24px_70px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-3xl">
-        <button type="button" onClick={() => setUniverseOpen(true)} aria-label="Abrir universo Atlas" className="atlas-universe-launch group relative flex items-center gap-2 overflow-hidden rounded-[1.2rem] px-3.5 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 active:scale-[.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:px-4">
+        <button type="button" onClick={launchUniverse} disabled={universePhase !== 'idle'} aria-label="Abrir universo Atlas" className="atlas-universe-launch group relative flex items-center gap-2 overflow-hidden rounded-[1.2rem] px-3.5 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 active:scale-[.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 disabled:opacity-70 sm:px-4">
           <span className="atlas-universe-launch-glow absolute inset-0" aria-hidden="true" />
           <span className="relative flex h-9 w-9 items-center justify-center rounded-full border border-cyan-100/20 bg-cyan-200/[.09]"><span className="absolute inset-[-5px] animate-ping rounded-full border border-cyan-100/15 opacity-35" /><Orbit className="relative h-4 w-4 text-cyan-50 transition duration-700 group-hover:rotate-[225deg]" /></span>
           <span className="relative">Universo</span>
@@ -36,6 +39,7 @@ export default function MapComponent() {
       <div className="mt-2 flex items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-[.16em] text-zinc-700"><Sparkles className="h-2.5 w-2.5" />Tu Atlas está vivo</div>
     </div>
 
-    {universeOpen && <AtlasUniverse snapshot={map.snapshot} onClose={() => setUniverseOpen(false)} />}
+    {universePhase === 'launching' && <div className="atlas-liftoff-overlay pointer-events-none absolute inset-0 z-[3900] flex items-center justify-center overflow-hidden bg-zinc-950/30 text-white" role="status" aria-live="polite"><Image src="/images/universe/atlas-orbit-earth-v2.png" alt="" fill priority sizes="100vw" className="atlas-liftoff-space object-cover object-center"/><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,rgba(2,2,5,.18)_38%,rgba(2,2,5,.88)_100%)]"/><div className="atlas-liftoff-message relative flex flex-col items-center"><span className="flex h-16 w-16 items-center justify-center rounded-full border border-cyan-100/20 bg-black/30 shadow-[0_0_80px_rgba(103,232,249,.24)] backdrop-blur-xl"><Orbit className="h-6 w-6 text-cyan-100"/></span><strong className="mt-4 text-sm font-semibold tracking-[.02em]">Saliendo del mapa</strong><span className="mt-1 text-[10px] uppercase tracking-[.24em] text-white/45">Entrando en tu universo</span></div></div>}
+    {universePhase === 'open' && <AtlasUniverse snapshot={map.snapshot} onClose={() => setUniversePhase('idle')} />}
   </section>;
 }

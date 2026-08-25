@@ -83,7 +83,9 @@ export function PlaceAutocomplete({
           autoComplete="off"
           spellCheck={false}
           placeholder={placeholder}
+          role="combobox"
           aria-autocomplete="list"
+          aria-controls={`${id}-results`}
           aria-expanded={open}
           className="h-12 w-full rounded-2xl border border-white/10 bg-white/[.045] pl-11 pr-10 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/30 focus:ring-4 focus:ring-white/5"
         />
@@ -105,7 +107,7 @@ export function PlaceAutocomplete({
           ) : loading ? (
             <div className="px-4 py-3 text-xs font-normal text-zinc-500">Buscando lugares…</div>
           ) : places.length ? (
-            <ul role="listbox" className="max-h-72 overflow-y-auto p-1.5">
+            <ul id={`${id}-results`} role="listbox" className="max-h-72 overflow-y-auto p-1.5">
               {places.map((place) => (
                 <li key={place.id}>
                   <button

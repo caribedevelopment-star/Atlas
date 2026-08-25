@@ -45,7 +45,7 @@ export default function EditMemoryPage() {
         title: String(data.get('title')), location, date: String(data.get('date')), description, participantIds,
         latitude: place.latitude, longitude: place.longitude, city: place.city, country: place.country,
         isRestaurant: memory.isRestaurant, category: memory.isRestaurant ? 'Restaurante' : memory.category,
-        restaurantCuisine: String(data.get('restaurantCuisine') ?? ''), restaurantVibe: String(data.get('restaurantVibe') ?? ''),
+        restaurantCuisine: String(data.get('restaurantCuisine') ?? ''), restaurantChef: String(data.get('restaurantChef') ?? ''), restaurantVibe: String(data.get('restaurantVibe') ?? ''),
         restaurantPriceLevel: optionalNumber(data.get('restaurantPriceLevel')), restaurantRating: optionalNumber(data.get('restaurantRating')),
         restaurantMustOrder: String(data.get('restaurantMustOrder') ?? ''), restaurantStatus,
         restaurantWebsite: String(data.get('restaurantWebsite') ?? ''), restaurantPhone: String(data.get('restaurantPhone') ?? ''), restaurantOpeningHours: String(data.get('restaurantOpeningHours') ?? ''), restaurantSource: String(data.get('restaurantSource') ?? ''), restaurantSourceId: String(data.get('restaurantSourceId') ?? ''),

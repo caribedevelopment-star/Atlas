@@ -1,2 +1,5 @@
 import { ProfileSystem } from '@/components/profile';
-export default function PublicProfilePage({ params }: { params: { id: string } }) { return <ProfileSystem profileId={params.id} />; }
+export default async function PublicProfilePage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  return <ProfileSystem profileId={params.id} />;
+}

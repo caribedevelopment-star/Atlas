@@ -13,7 +13,7 @@ const AtlasLeafletMap = dynamic(() => import('@/components/map/AtlasLeafletMap')
 export default function MapComponent() {
   const map = useAtlasMap();
   const [universePhase, setUniversePhase] = useState<'idle' | 'launching' | 'open'>('idle');
-  useEffect(() => { if (universePhase !== 'launching') return; const timer = window.setTimeout(() => setUniversePhase('open'), 1600); return () => window.clearTimeout(timer); }, [universePhase]);
+  useEffect(() => { if (universePhase !== 'launching') return; const timer = window.setTimeout(() => setUniversePhase('open'), 1180); return () => window.clearTimeout(timer); }, [universePhase]);
   const launchUniverse = () => { if (universePhase === 'idle') setUniversePhase('launching'); };
   if (map.loading) return <div className="h-full"><MapLoadingState /></div>;
   if (map.error || !map.snapshot) return <div className="h-full"><MapErrorState message={map.error || 'No hay datos disponibles.'} retry={() => void map.refresh()} /></div>;
@@ -39,7 +39,7 @@ export default function MapComponent() {
       <div className="mt-2 flex items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-[.16em] text-zinc-700"><Sparkles className="h-2.5 w-2.5" />Tu Atlas está vivo</div>
     </div>
 
-    {universePhase === 'launching' && <div className="atlas-liftoff-overlay pointer-events-none absolute inset-0 z-[3900] flex items-center justify-center overflow-hidden bg-zinc-950/30 text-white" role="status" aria-live="polite"><Image src="/images/universe/atlas-orbit-earth-v2.png" alt="" fill priority sizes="100vw" className="atlas-liftoff-space object-cover object-center"/><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,rgba(2,2,5,.18)_38%,rgba(2,2,5,.88)_100%)]"/><div className="atlas-liftoff-message relative flex flex-col items-center"><span className="flex h-16 w-16 items-center justify-center rounded-full border border-cyan-100/20 bg-black/30 shadow-[0_0_80px_rgba(103,232,249,.24)] backdrop-blur-xl"><Orbit className="h-6 w-6 text-cyan-100"/></span><strong className="mt-4 text-sm font-semibold tracking-[.02em]">Saliendo del mapa</strong><span className="mt-1 text-[10px] uppercase tracking-[.24em] text-white/45">Entrando en tu universo</span></div></div>}
+    {universePhase === 'launching' && <div className="atlas-liftoff-overlay pointer-events-none absolute inset-0 z-[3900] flex items-center justify-center overflow-hidden bg-zinc-950/30 text-white" role="status" aria-live="polite"><Image src="/images/universe/atlas-abstract-particle-field-v3.png" alt="" fill priority sizes="100vw" className="atlas-liftoff-space object-cover object-center"/><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,rgba(2,2,5,.12)_32%,rgba(2,2,5,.9)_100%)]"/><div className="atlas-liftoff-message relative flex flex-col items-center"><span className="flex h-16 w-16 items-center justify-center rounded-full border border-cyan-100/20 bg-black/30 shadow-[0_0_80px_rgba(103,232,249,.24)] backdrop-blur-xl"><Orbit className="h-6 w-6 text-cyan-100"/></span><strong className="mt-4 text-sm font-semibold tracking-[.02em]">Abriendo profundidad</strong><span className="mt-1 text-[10px] uppercase tracking-[.24em] text-white/45">Entrando en tu universo</span></div></div>}
     {universePhase === 'open' && <AtlasUniverse snapshot={map.snapshot} onClose={() => setUniversePhase('idle')} />}
   </section>;
 }

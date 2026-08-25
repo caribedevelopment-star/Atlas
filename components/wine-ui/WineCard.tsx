@@ -79,7 +79,7 @@ export function WineCard({
       )}
     >
       <div className="grid grid-cols-[42%_1fr] gap-4 p-3 sm:grid-cols-1 sm:gap-0 sm:p-4">
-        <WineBottleImage src={coverImage} alt={name} className="min-h-[190px] sm:h-64" />
+        <WineBottleImage src={coverImage} fallbacks={photos} alt={name} className="min-h-[190px] sm:h-64" />
 
         <div className="flex min-w-0 flex-col justify-between gap-4 py-1 sm:pt-4">
           <div className="space-y-3">

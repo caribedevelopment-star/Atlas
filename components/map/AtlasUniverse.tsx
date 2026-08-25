@@ -31,7 +31,8 @@ export function AtlasUniverse({ snapshot, onClose }: { snapshot: AtlasMapSnapsho
   }, [onClose]);
 
   return createPortal(<div className="atlas-universe-enter fixed inset-0 z-[10000] overflow-hidden bg-[#020205] text-white" role="dialog" aria-modal="true" aria-label="Tu universo Atlas">
-    <Image src="/images/universe/atlas-orbit-earth-v2.png" alt="La Tierra vista desde el espacio" fill priority sizes="100vw" className="atlas-universe-background object-cover object-center" />
+    <Image src="/images/universe/atlas-abstract-particle-field-v3.png" alt="Campo abstracto de partículas y nebulosas de Atlas" fill priority sizes="100vw" className="atlas-universe-background object-cover object-center" />
+    <Image src="/images/universe/atlas-abstract-particle-field-v3.png" alt="" fill priority sizes="100vw" className="atlas-universe-background-secondary object-cover object-center" aria-hidden="true" />
     <div className="atlas-universe-depth absolute inset-0" aria-hidden="true" />
 
     <header className="absolute inset-x-0 top-0 z-40 flex items-center justify-between p-4 sm:p-6">

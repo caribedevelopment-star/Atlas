@@ -1,7 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Reutilizar la misma instancia global para evitar duplicados en el cliente
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// El cliente SSR mantiene la sesión en cookies compartidas con middleware y Route Handlers.
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);

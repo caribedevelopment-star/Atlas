@@ -134,9 +134,10 @@ export async function uploadWinePhoto(file: File): Promise<string> {
 async function hydrateWinePhotos(wine: WineItem, row: DatabaseRecord): Promise<WineItem> {
   const cover = text(row.canonical_image_path) ?? text(row.image_path) ?? text(row.photo_path) ?? text(row.storage_path) ?? wine.image_url;
   const paths = stringArray(row.photo_paths).length ? stringArray(row.photo_paths) : wine.photos;
-  const [imageUrl, ...resolved] = await Promise.all([cover, ...paths].map(resolveWinePhoto));
-  const photos = [...new Set([imageUrl, ...resolved].filter((value): value is string => Boolean(value)))];
-  return { ...wine, image_url: imageUrl ?? photos[0], photos };
+  const legacy = [text(row.image_url), text(row.photo_url), text(row.bottle_image), text(row.image)];
+  const resolved = await Promise.all([cover, ...legacy, ...paths].map(resolveWinePhoto));
+  const photos = [...new Set(resolved.filter((value): value is string => Boolean(value)))];
+  return { ...wine, image_url: photos[0], photos };
 }
 
 export async function listWineDenominationOptions(): Promise<WineDenominationOption[]> {

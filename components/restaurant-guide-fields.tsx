@@ -7,10 +7,10 @@ import { useState } from 'react';
 
 const field = 'mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/[.045] px-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-200/35 focus:bg-white/[.07] focus:ring-4 focus:ring-emerald-300/5';
 
-export function RestaurantGuideFields({ status, onStatusChange, defaults, place, onSuggestedDescription }: { status: 'visited' | 'wishlist'; onStatusChange: (value: 'visited' | 'wishlist') => void; defaults?: ProfileMemory; place?: AtlasPlace | null; onSuggestedDescription?: (value: string) => void }) {
+export function RestaurantGuideFields({ status, onStatusChange, defaults, place, initial, onSuggestedDescription }: { status: 'visited' | 'wishlist'; onStatusChange: (value: 'visited' | 'wishlist') => void; defaults?: ProfileMemory; place?: AtlasPlace | null; initial?: { chef?: string; cuisine?: string; website?: string }; onSuggestedDescription?: (value: string) => void }) {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
-  const website = defaults?.restaurantWebsite ?? place?.website;
+  const website = defaults?.restaurantWebsite ?? place?.website ?? initial?.website;
   const phone = defaults?.restaurantPhone ?? place?.phone;
   const openingHours = defaults?.restaurantOpeningHours ?? place?.openingHours;
   const source = defaults?.restaurantSource ?? place?.source;
@@ -37,7 +37,8 @@ export function RestaurantGuideFields({ status, onStatusChange, defaults, place,
       <StatusButton active={status === 'wishlist'} onClick={() => onStatusChange('wishlist')} icon={<Bookmark />} label="Quiero ir" hint="Guardado para más tarde" />
     </div>
     <div className="mt-4 grid gap-4 sm:grid-cols-2">
-      <label className="block text-sm font-medium text-zinc-300">Cocina<input name="restaurantCuisine" defaultValue={defaults?.restaurantCuisine??place?.cuisine} maxLength={80} placeholder="Italiana contemporánea" className={field} /></label>
+      <label className="block text-sm font-medium text-zinc-300">Cocina<input name="restaurantCuisine" defaultValue={defaults?.restaurantCuisine??place?.cuisine??initial?.cuisine} maxLength={80} placeholder="Italiana contemporánea" className={field} /></label>
+      <label className="block text-sm font-medium text-zinc-300">Chef o dirección culinaria<input name="restaurantChef" defaultValue={defaults?.restaurantChef??initial?.chef} maxLength={100} placeholder="Nombre del chef, si aplica" className={field} /></label>
       <label className="block text-sm font-medium text-zinc-300">Ambiente<input name="restaurantVibe" defaultValue={defaults?.restaurantVibe} maxLength={100} placeholder="Íntimo, barra, terraza…" className={field} /></label>
       <label className="block text-sm font-medium text-zinc-300">Nivel de precio<select name="restaurantPriceLevel" defaultValue={defaults?.restaurantPriceLevel ?? ''} className={field}><option value="">Sin indicar</option><option value="1">€ · informal</option><option value="2">€€ · especial sin exceso</option><option value="3">€€€ · ocasión</option><option value="4">€€€€ · experiencia</option></select></label>
       <label className="block text-sm font-medium text-zinc-300">Tu valoración<select name="restaurantRating" defaultValue={defaults?.restaurantRating ?? ''} className={field}><option value="">Pendiente</option>{[5,4.5,4,3.5,3,2.5,2,1.5,1].map((value)=><option key={value} value={value}>{value.toFixed(1)} / 5</option>)}</select></label>

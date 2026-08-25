@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import BottomNav from '@/components/bottom-nav';
+import { HelpCircle } from 'lucide-react';
+import { AtlasOnboarding } from '@/components/AtlasOnboarding';
 
 const NAV_ITEMS = [
   { label: 'Mapa', href: '/home' },
@@ -30,10 +32,11 @@ export function AppShell({ children, showNav = true }: { children: React.ReactNo
         const selected = active(item.href);
         return <Link key={item.href} href={item.href} aria-current={selected ? 'page' : undefined} className={`relative rounded-[.85rem] px-3.5 py-2 text-xs font-medium transition-all ${selected ? 'bg-white text-zinc-950 shadow-[0_5px_18px_rgba(0,0,0,.22)]' : 'text-zinc-500 hover:bg-white/[.05] hover:text-white'}`}>{item.label}{selected && <span className="absolute -bottom-[7px] left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-sky-300"/>}</Link>;
       })}</nav>}
-      <div className="justify-self-end rounded-full border border-white/[.06] bg-white/[.025] px-2.5 py-1 text-[9px] font-medium uppercase tracking-[.16em] text-zinc-600">Live</div>
+      <button type="button" onClick={()=>window.dispatchEvent(new Event('atlas:open-onboarding'))} aria-label="Abrir guía de Atlas" className="group flex h-9 items-center gap-2 justify-self-end rounded-full border border-white/[.07] bg-white/[.03] px-3 text-[9px] font-medium uppercase tracking-[.14em] text-zinc-500 transition hover:bg-white/[.07] hover:text-white"><HelpCircle className="h-3.5 w-3.5"/><span className="hidden sm:inline">Cómo funciona</span></button>
     </header>
     <main className="relative z-[1] flex w-full flex-1 flex-col pb-20 md:pb-0">{children}</main>
     {showNav && <BottomNav />}
+    <AtlasOnboarding />
   </div>;
 }
 

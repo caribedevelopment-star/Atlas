@@ -12,7 +12,7 @@ export function WineListItem({ wine, onOpen, onFavorite }: WineListItemProps) {
   return (
     <article className="flex items-center gap-3 rounded-3xl border border-white/10 bg-zinc-900/70 p-3 shadow-xl shadow-black/10 transition hover:border-white/20 sm:gap-5 sm:p-4">
       <button onClick={onOpen} className="shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400" aria-label={`Abrir ${wine.name}`}>
-        <WineBottleImage src={wine.image_url || wine.photos[0]} alt="" className="h-24 w-20 rounded-2xl sm:h-28 sm:w-24" />
+        <WineBottleImage src={wine.image_url || wine.photos[0]} fallbacks={wine.photos} alt="" className="h-24 w-20 rounded-2xl sm:h-28 sm:w-24" />
       </button>
       <button onClick={onOpen} className="min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400" aria-label={`Ver detalles de ${wine.name}`}>
         <p className="truncate font-semibold text-white">{wine.name}</p>

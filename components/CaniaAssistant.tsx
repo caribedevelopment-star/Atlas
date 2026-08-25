@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Maximize2, Minimize2, Send, Sparkles, Wine, X } from "lucide-react";
+import { Beef, Fish, Maximize2, Minimize2, Send, Sparkles, Tags, Wine, X } from "lucide-react";
 
 interface WineItem {
   id: string;
@@ -23,10 +23,10 @@ interface CaniaAssistantProps {
 type Message = { role: "user" | "assistant"; text: string };
 
 const quickPrompts = [
-  "🍷 Recomiéndame uno",
-  "🥩 Para carne",
-  "🐟 Para pescado",
-  "💸 Mejor calidad-precio",
+  { label: "Qué abro hoy", prompt: "Recomiéndame una botella para abrir hoy", icon: Wine },
+  { label: "Para carne", prompt: "Quiero un vino de mi bodega para acompañar carne", icon: Beef },
+  { label: "Para pescado", prompt: "Quiero un vino de mi bodega para acompañar pescado", icon: Fish },
+  { label: "Calidad-precio", prompt: "Enséñame la mejor relación calidad-precio disponible", icon: Tags },
 ];
 
 export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
@@ -35,7 +35,7 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      text: "🍷 Soy **Can.iA**, el sommelier inteligente de Atlas. Cuéntame qué vas a comer, cuánto quieres gastar o qué estilo te apetece y te recomiendo algo usando la bodega real de Atlas.",
+      text: "Soy **Can.ia**, el sommelier de Atlas. Dime qué vas a comer, cuánto quieres gastar o qué estilo te apetece y elegiré entre los vinos reales de la bodega.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -45,6 +45,15 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [loading, messages]);
   useEffect(() => { if (isOpen) setTimeout(() => inputRef.current?.focus(), 120); }, [isOpen]);
+  useEffect(() => {
+    const open = (event: Event) => {
+      const prompt = (event as CustomEvent<{ prompt?: string }>).detail?.prompt;
+      setIsOpen(true);
+      if (prompt) setInput(prompt);
+    };
+    window.addEventListener('atlas:open-cania', open);
+    return () => window.removeEventListener('atlas:open-cania', open);
+  }, []);
 
   async function sendMessage(raw: string) {
     const userMsg = raw.trim();
@@ -60,10 +69,10 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo consultar a Can.iA.");
-      const reply = data.reply || data.text || "🍷 No he podido procesar la recomendación ahora mismo.";
+      const reply = data.reply || data.text || "No he podido procesar la recomendación ahora mismo.";
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
     } catch (error) {
-      setMessages((prev) => [...prev, { role: "assistant", text: error instanceof Error ? `⚠️ ${error.message}` : "⚠️ Hubo un error al conectar con Can.iA." }]);
+      setMessages((prev) => [...prev, { role: "assistant", text: error instanceof Error ? error.message : "Hubo un error al conectar con Can.ia." }]);
     } finally { setLoading(false); }
   }
 
@@ -101,7 +110,7 @@ export default function CaniaAssistant({ userWines }: CaniaAssistantProps) {
             </div>
           </header>
 
-          <div className="border-b border-white/5 px-3 py-2.5"><div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{quickPrompts.map((prompt) => <button type="button" key={prompt} disabled={loading} onClick={() => void sendMessage(prompt.replace(/^[^\p{L}\p{N}]+/u, ""))} className="shrink-0 rounded-full border border-white/10 bg-white/[.035] px-3 py-1.5 text-[11px] text-zinc-300 transition hover:border-rose-400/30 hover:bg-rose-400/10 hover:text-white disabled:opacity-50">{prompt}</button>)}</div></div>
+          <div className="border-b border-white/5 px-3 py-2.5"><div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{quickPrompts.map(({label,prompt,icon:Icon}) => <button type="button" key={label} disabled={loading} onClick={() => void sendMessage(prompt)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[.035] px-3 py-1.5 text-[11px] text-zinc-300 transition hover:border-rose-400/30 hover:bg-rose-400/10 hover:text-white disabled:opacity-50"><Icon className="h-3 w-3"/>{label}</button>)}</div></div>
 
           <div className="flex-1 space-y-3 overflow-y-auto px-3.5 py-4 text-sm [scrollbar-width:thin]">
             {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}><div className={`max-w-[86%] whitespace-pre-wrap rounded-2xl px-3.5 py-3 leading-5 shadow-sm ${message.role === "user" ? "rounded-br-md bg-white text-zinc-950" : "rounded-bl-md border border-white/10 bg-white/[.045] text-zinc-200"}`}><MessageText text={message.text} /></div></div>)}

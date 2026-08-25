@@ -37,6 +37,7 @@ export interface ProfileMemory {
   visibility: WineVisibility;
   isRestaurant: boolean;
   restaurantCuisine?: string;
+  restaurantChef?: string;
   restaurantVibe?: string;
   restaurantPriceLevel?: number;
   restaurantRating?: number;

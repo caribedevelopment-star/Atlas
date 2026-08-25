@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { message?: string; wines?: WineContext[]; history?: HistoryItem[] };
     const message = body.message?.trim();
-    if (!message) return NextResponse.json({ error: 'Escribe una pregunta para Can.iA 🍷' }, { status: 400 });
+    if (!message) return NextResponse.json({ error: 'Escribe una pregunta para Can.iA.' }, { status: 400 });
 
     const wines = (body.wines ?? []).slice(0, 100);
     const cellar = wines.map((wine) => ({
@@ -46,13 +46,13 @@ export async function POST(request: Request) {
       .map((item) => `${item.role === 'user' ? 'Usuario' : 'Can.iA'}: ${item.text ?? ''}`)
       .join('\n');
 
-    const prompt = `Eres Can.iA 🍷, el sommelier inteligente de Atlas. Responde siempre en español natural, elegante, cercano y muy fácil de escanear.
+    const prompt = `Eres Can.iA, el sommelier inteligente de Atlas. Responde siempre en español natural, elegante, cercano y muy fácil de escanear.
 
 REGLAS DE ESTILO:
-- Usa entre 1 y 4 emojis útiles por respuesta, nunca una lluvia de emojis.
 - Mensajes limpios: frases cortas, espacios y como máximo 3 bloques breves.
 - Si recomiendas un vino, empieza directamente por la recomendación.
-- Puedes usar encabezados muy cortos como "🍷 Mi elección", "🍽️ Maridaje" o "💡 Por qué" cuando ayuden.
+- Puedes usar encabezados muy cortos como "Mi elección", "Maridaje" o "Por qué" cuando ayuden.
+- No uses emojis: la interfaz ya aporta el lenguaje visual.
 - Evita párrafos largos, introducciones genéricas y repeticiones.
 - Máximo 140 palabras salvo que el usuario pida detalle.
 
@@ -88,12 +88,12 @@ Pregunta del usuario: ${message}`;
     return NextResponse.json({ reply: localSommelier(message, wines), mode: 'local' });
   } catch (error) {
     console.error('Can.iA error:', error);
-    return NextResponse.json({ error: 'Can.iA no pudo procesar la consulta 🍷' }, { status: 400 });
+    return NextResponse.json({ error: 'Can.iA no pudo procesar la consulta.' }, { status: 400 });
   }
 }
 
 function localSommelier(message: string, wines: WineContext[]): string {
-  if (!wines.length) return '🍷 Todavía no tengo vinos cargados para recomendarte una botella concreta.\n\nPuedes preguntarme por un maridaje general o añadir vinos a Atlas para que use tu bodega real.';
+  if (!wines.length) return 'Todavía no tengo vinos cargados para recomendarte una botella concreta.\n\nPuedes preguntarme por un maridaje general o añadir vinos a Atlas para que use tu bodega real.';
   const words = message.toLocaleLowerCase('es');
   const preferred = wines.filter((wine) => {
     const text = `${wine.name ?? ''} ${wine.winery ?? ''} ${wine.tasting_notes ?? ''} ${wine.region ?? ''} ${Array.isArray(wine.grapes) ? wine.grapes.join(' ') : wine.grapes ?? ''}`.toLocaleLowerCase('es');
@@ -104,5 +104,5 @@ function localSommelier(message: string, wines: WineContext[]): string {
   });
   const choice = (preferred.length ? preferred : wines).slice().sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
   const details = [choice.winery, choice.vintage, choice.rating ? `${choice.rating}/5` : undefined, choice.price ? `${choice.price} €` : undefined].filter(Boolean).join(' · ');
-  return `🍷 **Mi elección: ${choice.name ?? 'esta botella'}**${details ? `\n${details}` : ''}\n\n${choice.tasting_notes ? `💡 ${choice.tasting_notes}\n\n` : ''}Si me dices el plato, presupuesto o estilo que buscas, te la afino.`;
+  return `**Mi elección: ${choice.name ?? 'esta botella'}**${details ? `\n${details}` : ''}\n\n${choice.tasting_notes ? `${choice.tasting_notes}\n\n` : ''}Si me dices el plato, presupuesto o estilo que buscas, te la afino.`;
 }

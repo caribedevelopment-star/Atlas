@@ -29,12 +29,13 @@
 @keyframes atlas-universe-core { 0%,100% { transform:translate(-50%,-50%) scale(1); filter:drop-shadow(0 0 22px rgba(103,232,249,.12)); } 50% { transform:translate(-50%,-50%) scale(1.045); filter:drop-shadow(0 0 48px rgba(103,232,249,.24)); } }
 @keyframes atlas-universe-glow { 0%,100% { opacity:.38; transform:scale(.84); } 50% { opacity:.95; transform:scale(1.18); } }
 @keyframes atlas-universe-stat { 0%,100% { transform:translate(-50%,-50%) translateY(0) scale(var(--atlas-stat-scale,1)); } 50% { transform:translate(-50%,-50%) translateY(-10px) scale(calc(var(--atlas-stat-scale,1) + .035)); } }
-@keyframes atlas-map-liftoff { 0% { transform:scale(1); filter:blur(0) saturate(1); opacity:1; } 46% { transform:scale(.76); filter:blur(.8px) saturate(.8); opacity:.82; } 100% { transform:scale(.08); filter:blur(10px) saturate(.18); opacity:.04; } }
+@keyframes atlas-map-liftoff { 0% { transform:scale(1); filter:blur(0) saturate(1); opacity:1; } 48% { transform:scale(1.035); filter:blur(.7px) saturate(.9); opacity:.74; } 100% { transform:scale(1.16); filter:blur(8px) saturate(.34); opacity:.02; } }
 @keyframes atlas-liftoff-overlay { from { background:rgba(9,9,11,0); } to { background:rgba(2,2,5,.96); } }
-@keyframes atlas-liftoff-message { 0% { opacity:0; transform:scale(1.4); filter:blur(8px); } 50% { opacity:1; transform:scale(1); filter:blur(0); } 100% { opacity:.45; transform:scale(.74); filter:blur(1px); } }
+@keyframes atlas-liftoff-message { 0% { opacity:0; transform:scale(.72); filter:blur(7px); } 42% { opacity:1; transform:scale(1); filter:blur(0); } 100% { opacity:.2; transform:scale(1.14); filter:blur(2px); } }
 @keyframes atlas-universe-friend { 0%,100% { transform:translate(-50%,-50%) translateY(0); filter:drop-shadow(0 0 0 rgba(103,232,249,0)); } 50% { transform:translate(-50%,-50%) translateY(-7px); filter:drop-shadow(0 0 12px rgba(103,232,249,.2)); } }
-@keyframes atlas-liftoff-space { 0% { opacity:0; transform:scale(1.42); filter:blur(8px); } 38% { opacity:.42; } 100% { opacity:1; transform:scale(1.02); filter:blur(0); } }
-@keyframes atlas-universe-background { 0% { transform:scale(1.035); filter:brightness(.74) saturate(.82); } 100% { transform:scale(1.085); filter:brightness(.9) saturate(.94); } }
+@keyframes atlas-liftoff-space { 0% { opacity:0; transform:scale(.76); filter:blur(12px) brightness(.4); } 38% { opacity:.58; } 100% { opacity:1; transform:scale(1.16); filter:blur(0) brightness(.88); } }
+@keyframes atlas-universe-background { 0% { transform:scale(1.04) translate3d(-1%,0,0); filter:brightness(.62) saturate(.95); } 100% { transform:scale(1.13) translate3d(1.5%,-1%,0); filter:brightness(.82) saturate(1.12); } }
+@keyframes atlas-universe-background-secondary { 0% { transform:scale(1.55) rotate(-2deg); opacity:.08; } 100% { transform:scale(1.28) rotate(2deg); opacity:.24; } }
 @keyframes atlas-universe-person { 0%,100% { transform:translate(-50%,-50%) translateY(0) scale(var(--atlas-person-scale,1)); } 50% { transform:translate(-50%,-50%) translateY(-5px) scale(var(--atlas-person-scale,1)); } }
 @keyframes atlas-profile-enter { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 @keyframes atlas-gateway-orbit-a { from { transform:rotateX(68deg) rotateZ(10deg); } to { transform:rotateX(68deg) rotateZ(370deg); } }
@@ -84,6 +85,9 @@
 .atlas-do-core-rated { filter:drop-shadow(0 0 10px #fde68a); }
 .atlas-do-card-pulse { animation:atlas-do-card-pulse 2.4s ease-in-out infinite; }
 .atlas-do-region-focused { filter:drop-shadow(0 0 16px currentColor); }
+.atlas-visited-country-glow { filter:drop-shadow(0 0 8px rgba(125,211,252,.48)) drop-shadow(0 0 18px rgba(34,211,238,.2)); }
+.atlas-visited-country { transition:fill-opacity .25s ease,stroke-opacity .25s ease; filter:drop-shadow(0 1px 2px rgba(2,6,23,.32)); }
+.atlas-visited-country:hover { fill-opacity:.68; stroke-opacity:1; }
 .atlas-do-focused { animation-duration:8s; filter:drop-shadow(0 0 12px currentColor); }
 .atlas-location-pulse { animation:atlas-location-wave 2.6s ease-in-out infinite; }
 .atlas-location-core { animation:atlas-location-core 1.8s ease-in-out infinite; }
@@ -101,7 +105,8 @@
 
 .atlas-universe-enter { animation:atlas-universe-enter .92s cubic-bezier(.2,.82,.2,1) both; }
 .atlas-universe-background { animation:atlas-universe-background 28s ease-in-out infinite alternate; will-change:transform,filter; }
-.atlas-universe-depth { background:linear-gradient(180deg,rgba(2,2,5,.12),rgba(2,2,5,.02) 38%,rgba(2,2,5,.35)),radial-gradient(circle at 50% 48%,transparent 0 22%,rgba(2,2,5,.1) 52%,rgba(2,2,5,.72) 100%); }
+.atlas-universe-background-secondary { opacity:.16; mix-blend-mode:screen; filter:blur(1.4px) saturate(1.2); animation:atlas-universe-background-secondary 18s ease-in-out infinite alternate; will-change:transform,opacity; }
+.atlas-universe-depth { background:linear-gradient(180deg,rgba(2,2,5,.28),rgba(2,2,5,.04) 38%,rgba(2,2,5,.42)),radial-gradient(circle at 50% 48%,rgba(2,2,5,.05) 0 16%,rgba(2,2,5,.25) 48%,rgba(2,2,5,.82) 100%); }
 .atlas-universe-nebula { background:radial-gradient(circle at 18% 20%,rgba(59,130,246,.18),transparent 30%),radial-gradient(circle at 78% 72%,rgba(244,63,94,.13),transparent 27%),radial-gradient(circle at 52% 48%,rgba(103,232,249,.11),transparent 33%); filter:blur(18px); animation:atlas-universe-nebula 12s ease-in-out infinite; }
 .atlas-universe-stars { opacity:.9; background-image:radial-gradient(circle,rgba(255,255,255,.9) 0 1px,transparent 1.3px),radial-gradient(circle,rgba(125,211,252,.8) 0 1px,transparent 1.4px); background-size:76px 76px,126px 126px; background-position:7px 18px,41px 62px; animation:atlas-universe-stars 15s linear infinite alternate; }
 .atlas-universe-stars-far { opacity:.34; background-size:49px 49px,95px 95px; animation-duration:24s; animation-direction:alternate-reverse; }
@@ -117,11 +122,11 @@
 .atlas-universe-stat { animation:atlas-universe-stat 4.8s ease-in-out infinite; will-change:transform; }
 .atlas-universe-friend { animation:atlas-universe-friend 4.4s ease-in-out infinite; will-change:transform; }
 .atlas-universe-person { animation:atlas-universe-person 7.5s ease-in-out infinite; will-change:transform; }
-.atlas-map-liftoff .leaflet-container { animation:atlas-map-liftoff 1.6s cubic-bezier(.2,.72,.12,1) both; transform-origin:center center; }
-.atlas-map-liftoff > :not(.atlas-liftoff-overlay) { animation:atlas-map-liftoff 1.6s cubic-bezier(.2,.72,.12,1) both; }
-.atlas-liftoff-overlay { animation:atlas-liftoff-overlay 1.6s ease-in both; }
-.atlas-liftoff-space { animation:atlas-liftoff-space 1.6s cubic-bezier(.18,.78,.2,1) both; }
-.atlas-liftoff-message { animation:atlas-liftoff-message 1.6s cubic-bezier(.2,.8,.2,1) both; }
+.atlas-map-liftoff .leaflet-container { animation:atlas-map-liftoff 1.18s cubic-bezier(.2,.72,.12,1) both; transform-origin:center center; }
+.atlas-map-liftoff > :not(.atlas-liftoff-overlay) { animation:atlas-map-liftoff 1.18s cubic-bezier(.2,.72,.12,1) both; }
+.atlas-liftoff-overlay { animation:atlas-liftoff-overlay 1.18s ease-in both; }
+.atlas-liftoff-space { animation:atlas-liftoff-space 1.18s cubic-bezier(.18,.78,.2,1) both; }
+.atlas-liftoff-message { animation:atlas-liftoff-message 1.18s cubic-bezier(.2,.8,.2,1) both; }
 .atlas-profile-enter { animation:atlas-profile-enter .55s cubic-bezier(.2,.8,.2,1) both; }
 
 .atlas-gateway-system { perspective:1350px; transform-style:preserve-3d; }

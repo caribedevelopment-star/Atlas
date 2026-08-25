@@ -60,6 +60,7 @@ export function buildWineRegions(wines: WineItem[], catalog: AtlasWineDenominati
       wineryCount: wineries.size,
       favoriteCount,
       averageRating: average(items.map((wine) => wine.rating)),
+      grapes: topValues(items.flatMap((wine) => wine.grapes), 3),
     };
   }).sort((a, b) => b.wineCount - a.wineCount || a.country.localeCompare(b.country, 'es') || a.name.localeCompare(b.name, 'es'));
 }
@@ -86,3 +87,4 @@ function text(value: unknown) { return typeof value === 'string' && value.trim()
 function numeric(value: unknown) { const result = Number(value); return value === null || value === undefined || !Number.isFinite(result) ? undefined : result; }
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
 function average(values: Array<number | undefined>) { const valid = values.filter((value): value is number => Number.isFinite(value)); return valid.length ? Math.round((valid.reduce((sum, value) => sum + value, 0) / valid.length) * 10) / 10 : undefined; }
+function topValues(values: string[], limit: number) { const counts = new Map<string, number>(); values.filter(Boolean).forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1)); return [...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'es')).slice(0,limit).map(([value])=>value); }

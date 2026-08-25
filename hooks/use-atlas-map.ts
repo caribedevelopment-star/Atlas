@@ -5,13 +5,14 @@ import { getAtlasMapSnapshot } from '@/lib/map/repository';
 import { getAtlasDemoSnapshot } from '@/lib/map/demo';
 import type { AtlasMapFilters, AtlasMapSnapshot, MapLayer, MapSource } from '@/types/map';
 import type { TransportMode } from '@/types/trip';
+import { denominationMatches } from '@/lib/wines/denomination-style';
 
 export type AtlasExplorePreset = 'all' | 'mine' | 'wine' | 'trips' | 'shared' | 'public';
 
 const defaultLayers: MapLayer[] = ['memories', 'restaurants', 'wines', 'trips'];
 const allLayers: MapLayer[] = ['memories', 'wines', 'trips', 'favorites', 'restaurants'];
 const allTransports: TransportMode[] = ['car', 'train', 'boat', 'plane'];
-const createInitialFilters = (): AtlasMapFilters => ({ query: '', sources: new Set(['mine', 'shared', 'public']), layers: new Set(defaultLayers), transports: new Set(allTransports), year: '', participant: '' });
+const createInitialFilters = (): AtlasMapFilters => ({ query: '', sources: new Set(['mine', 'shared', 'public']), layers: new Set(defaultLayers), transports: new Set(allTransports), year: '', participant: '', showVisitedCountries: false, denominationId: '' });
 
 export function useAtlasMap() {
   const searchParams = useSearchParams();
@@ -19,6 +20,7 @@ export function useAtlasMap() {
   const contextSource = searchParams.get('source');
   const requestedMemoryId = searchParams.get('memory');
   const requestedTripId = searchParams.get('trip');
+  const requestedDenomination = searchParams.get('denomination') ?? '';
   const [snapshot, setSnapshot] = useState<AtlasMapSnapshot | null>(null);
   const [filters, setFilters] = useState(createInitialFilters);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,11 @@ export function useAtlasMap() {
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => { if (contextPerson) setFilters((current) => ({ ...current, participant: contextPerson })); }, [contextPerson]);
   useEffect(() => { if (contextSource === 'mine' || contextSource === 'shared' || contextSource === 'public') setFilters((current) => ({ ...current, sources: new Set<MapSource>([contextSource]) })); }, [contextSource]);
+  useEffect(() => {
+    if (!requestedDenomination || !snapshot) return;
+    const region = snapshot.wineRegions.find((item) => item.id === requestedDenomination || denominationMatches(item.name, requestedDenomination));
+    if (region) setFilters((current) => ({ ...current, query: '', sources: new Set<MapSource>(['public']), layers: new Set<MapLayer>(['wines']), denominationId: region.id }));
+  }, [requestedDenomination, snapshot]);
 
   const points = useMemo(() => {
     const query = filters.query.trim().toLocaleLowerCase('es');
@@ -52,7 +59,7 @@ export function useAtlasMap() {
   const toggleSource = (value: MapSource) => setFilters((current) => ({ ...current, sources: toggle(current.sources, value) }));
   const toggleLayer = (value: MapLayer) => setFilters((current) => ({ ...current, layers: toggle(current.layers, value) }));
   const applyPreset = (preset: AtlasExplorePreset) => setFilters((current) => {
-    const base = { ...current, query: '', year: '', participant: '', transports: new Set<TransportMode>(allTransports) };
+    const base = { ...current, query: '', year: '', participant: '', transports: new Set<TransportMode>(allTransports), denominationId: '', showVisitedCountries: false };
     if (preset === 'mine') return { ...base, sources: new Set<MapSource>(['mine']), layers: new Set<MapLayer>(allLayers) };
     if (preset === 'wine') return { ...base, sources: new Set<MapSource>(['public']), layers: new Set<MapLayer>(['wines']) };
     if (preset === 'trips') return { ...base, sources: new Set<MapSource>(['mine', 'shared']), layers: new Set<MapLayer>(['trips']) };
@@ -72,9 +79,12 @@ export function useAtlasMap() {
     toggleTransport: (transport: TransportMode) => setFilters((current) => ({ ...current, transports: toggle(current.transports, transport) })),
     toggleSource,
     toggleLayer,
+    toggleVisitedCountries: () => setFilters((current) => ({ ...current, showVisitedCountries: !current.showVisitedCountries })),
+    selectDenomination: (denominationId: string) => setFilters((current) => ({ ...current, query: '', sources: new Set<MapSource>(['public']), layers: new Set<MapLayer>(['wines']), denominationId })),
     applyPreset,
     reset: () => setFilters(createInitialFilters()),
     focusPointId,
+    focusDenominationId: filters.denominationId || undefined,
     loading,
     error,
     refresh,

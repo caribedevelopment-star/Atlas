@@ -11,6 +11,7 @@ export function PlaceAutocomplete({
   onSelect,
   required = false,
   placeholder = 'Busca ciudad, calle, hotel o lugar',
+  kind,
 }: {
   label: string;
   value: string;
@@ -18,6 +19,7 @@ export function PlaceAutocomplete({
   onSelect: (place: AtlasPlace) => void;
   required?: boolean;
   placeholder?: string;
+  kind?: 'restaurant';
 }) {
   const id = useId();
   const [places, setPlaces] = useState<AtlasPlace[]>([]);
@@ -42,7 +44,7 @@ export function PlaceAutocomplete({
       setLoading(true);
       setError(null);
       try {
-        const results = await searchPlaces(query, controller.signal);
+        const results = await searchPlaces(query, controller.signal, kind);
         setPlaces(results);
         setSearched(true);
         setOpen(true);
@@ -62,7 +64,7 @@ export function PlaceAutocomplete({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [selected, value]);
+  }, [kind, selected, value]);
 
   return (
     <div className="relative block text-sm font-medium text-zinc-300">
@@ -127,6 +129,7 @@ export function PlaceAutocomplete({
                       {(place.city || place.country) && (
                         <span className="mt-0.5 block text-[10px] text-zinc-500">{[place.city, place.country].filter(Boolean).join(' · ')}</span>
                       )}
+                      {kind === 'restaurant' && (place.cuisine || place.openingHours) && <span className="mt-1 block text-[10px] text-emerald-300/65">{[place.cuisine, place.openingHours].filter(Boolean).join(' · ')}</span>}
                     </span>
                   </button>
                 </li>

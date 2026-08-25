@@ -3,10 +3,19 @@ import { NextResponse } from 'next/server';
 type AtlasPlaceResult = {
   id: string;
   label: string;
+  name?: string;
   latitude: number;
   longitude: number;
   city?: string;
   country?: string;
+  cuisine?: string;
+  website?: string;
+  phone?: string;
+  openingHours?: string;
+  source?: 'nominatim' | 'photon';
+  sourceId?: string;
+  category?: string;
+  type?: string;
 };
 
 const headers = {
@@ -16,6 +25,7 @@ const headers = {
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
+  const kind = params.get('kind') === 'restaurant' ? 'restaurant' as const : undefined;
   const latParam = params.get('lat');
   const lonParam = params.get('lon');
 
@@ -33,14 +43,14 @@ export async function GET(request: Request) {
   if (query.length > 140) return NextResponse.json({ error: 'La búsqueda es demasiado larga.' }, { status: 400 });
 
   try {
-    const places = await searchNominatim(query);
+    const places = await searchNominatim(query, kind);
     if (places.length) return NextResponse.json({ places, provider: 'nominatim' });
   } catch (error) {
     console.warn('Nominatim search failed:', error);
   }
 
   try {
-    const places = await searchPhoton(query);
+    const places = await searchPhoton(query, kind);
     return NextResponse.json({ places, provider: 'photon' });
   } catch (error) {
     console.error('Geocoding fallback failed:', error);
@@ -48,12 +58,14 @@ export async function GET(request: Request) {
   }
 }
 
-async function searchNominatim(query: string): Promise<AtlasPlaceResult[]> {
+async function searchNominatim(query: string, kind?: 'restaurant'): Promise<AtlasPlaceResult[]> {
   const url = new URL('https://nominatim.openstreetmap.org/search');
   url.searchParams.set('q', query);
   url.searchParams.set('format', 'jsonv2');
   url.searchParams.set('addressdetails', '1');
   url.searchParams.set('namedetails', '1');
+  url.searchParams.set('extratags', '1');
+  if (kind === 'restaurant') url.searchParams.set('layer', 'poi');
   url.searchParams.set('dedupe', '1');
   url.searchParams.set('limit', '7');
   url.searchParams.set('accept-language', 'es');
@@ -64,24 +76,44 @@ async function searchNominatim(query: string): Promise<AtlasPlaceResult[]> {
   const data = await response.json() as Array<{
     place_id: number;
     display_name: string;
+    name?: string;
+    osm_id?: number | string;
+    osm_type?: string;
+    category?: string;
+    type?: string;
     lat: string;
     lon: string;
     address?: Record<string, string>;
+    extratags?: Record<string, string>;
+    namedetails?: Record<string, string>;
   }>;
 
-  return data
+  const mapped = data
     .map((place) => ({
-      id: `osm-${place.place_id}`,
+      id: `osm-${place.osm_type ?? 'place'}-${place.osm_id ?? place.place_id}`,
       label: place.display_name,
+      name: place.name ?? place.namedetails?.name ?? place.address?.restaurant ?? place.address?.cafe,
       latitude: Number(place.lat),
       longitude: Number(place.lon),
       city: place.address?.city ?? place.address?.town ?? place.address?.village ?? place.address?.municipality ?? place.address?.county,
       country: place.address?.country,
+      cuisine: readableCuisine(place.extratags?.cuisine),
+      website: place.extratags?.website ?? place.extratags?.['contact:website'],
+      phone: place.extratags?.phone ?? place.extratags?.['contact:phone'],
+      openingHours: place.extratags?.opening_hours,
+      source: 'nominatim' as const,
+      sourceId: place.osm_id ? `${place.osm_type ?? ''}${place.osm_id}` : String(place.place_id),
+      category: place.category,
+      type: place.type,
     }))
     .filter(validPlace);
+  if (kind !== 'restaurant') return mapped;
+  const restaurantTypes = new Set(['restaurant', 'cafe', 'fast_food', 'food_court', 'bar', 'pub']);
+  const exact = mapped.filter((place) => restaurantTypes.has(place.type ?? '') || Boolean(place.cuisine));
+  return (exact.length ? exact : mapped).map(({ category: _category, type: _type, ...place }) => place);
 }
 
-async function searchPhoton(query: string): Promise<AtlasPlaceResult[]> {
+async function searchPhoton(query: string, kind?: 'restaurant'): Promise<AtlasPlaceResult[]> {
   const url = new URL('https://photon.komoot.io/api/');
   url.searchParams.set('q', query);
   url.searchParams.set('limit', '7');
@@ -92,7 +124,7 @@ async function searchPhoton(query: string): Promise<AtlasPlaceResult[]> {
 
   const body = await response.json() as {
     features?: Array<{
-      properties?: { osm_id?: number | string; name?: string; city?: string; state?: string; country?: string; street?: string; housenumber?: string };
+      properties?: { osm_id?: number | string; osm_type?: string; name?: string; city?: string; state?: string; country?: string; street?: string; housenumber?: string; osm_value?: string; cuisine?: string; website?: string; phone?: string; opening_hours?: string };
       geometry?: { coordinates?: [number, number] };
     }>;
   };
@@ -108,13 +140,23 @@ async function searchPhoton(query: string): Promise<AtlasPlaceResult[]> {
       return {
         id: `photon-${properties.osm_id ?? index}`,
         label: [primary || properties.city || properties.state || properties.country || query, secondary].filter(Boolean).join(' · '),
+        name: properties.name,
         latitude,
         longitude,
         city: properties.city,
         country: properties.country,
+        cuisine: readableCuisine(properties.cuisine),
+        website: properties.website,
+        phone: properties.phone,
+        openingHours: properties.opening_hours,
+        source: 'photon' as const,
+        sourceId: properties.osm_id ? `${properties.osm_type ?? ''}${properties.osm_id}` : undefined,
+        type: properties.osm_value,
       } satisfies AtlasPlaceResult;
     })
-    .filter(validPlace);
+    .filter(validPlace)
+    .filter((place) => kind !== 'restaurant' || !place.type || ['restaurant', 'cafe', 'fast_food', 'food_court', 'bar', 'pub'].includes(place.type))
+    .map(({ type: _type, ...place }) => place);
 }
 
 async function reverseGeocode(latitude: number, longitude: number) {
@@ -148,4 +190,9 @@ function validPlace(place: AtlasPlaceResult) {
     && place.latitude <= 90
     && place.longitude >= -180
     && place.longitude <= 180;
+}
+
+function readableCuisine(value?: string) {
+  if (!value) return undefined;
+  return value.split(/[;,]/).map((item) => item.trim()).filter(Boolean).map((item) => item.charAt(0).toLocaleUpperCase('es') + item.slice(1).replace(/_/g, ' ')).join(' · ');
 }

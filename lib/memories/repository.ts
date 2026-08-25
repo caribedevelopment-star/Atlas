@@ -22,6 +22,7 @@ export function normalizeMemory(row: Row): ProfileMemory {
     route: rawRoute.flatMap((point) => { if (!point || typeof point !== 'object') return []; const value = point as Row; const latitude = number(value.latitude ?? value.lat); const longitude = number(value.longitude ?? value.lng ?? value.lon); return latitude === undefined || longitude === undefined ? [] : [{ latitude, longitude }]; }), participantIds: strings(row.shared_with ?? row.tagged_friends ?? row.participant_ids), participantNames: strings(row.participant_names), linkedWineId: text(row.wine_id ?? row.linked_wine_id),
     visibility: visibility(row), isRestaurant: row.is_restaurant === true || category?.toLowerCase().includes('restaur') === true,
     restaurantCuisine: text(row.restaurant_cuisine), restaurantVibe: text(row.restaurant_vibe), restaurantPriceLevel: number(row.restaurant_price_level), restaurantRating: number(row.restaurant_rating), restaurantMustOrder: text(row.restaurant_must_order), restaurantStatus: row.restaurant_status === 'wishlist' ? 'wishlist' : row.restaurant_status === 'visited' ? 'visited' : undefined,
+    restaurantWebsite: text(row.restaurant_website), restaurantPhone: text(row.restaurant_phone), restaurantOpeningHours: text(row.restaurant_opening_hours), restaurantSource: text(row.restaurant_source), restaurantSourceId: text(row.restaurant_source_id),
     isFavoritePlace: row.favorite === true || row.is_favorite === true, tripId: text(row.trip_id),
   };
 }
@@ -68,7 +69,7 @@ async function hydrateMemories(memories: ProfileMemory[]): Promise<ProfileMemory
   });
 }
 
-export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility?: WineVisibility; participantIds: string[]; latitude?: number; longitude?: number; city?: string; country?: string; isRestaurant?: boolean; category?: string; restaurantCuisine?: string; restaurantVibe?: string; restaurantPriceLevel?: number; restaurantRating?: number; restaurantMustOrder?: string; restaurantStatus?: 'visited' | 'wishlist' }
+export interface CreateMemoryInput { title: string; location: string; date: string; description: string; visibility?: WineVisibility; participantIds: string[]; latitude?: number; longitude?: number; city?: string; country?: string; isRestaurant?: boolean; category?: string; restaurantCuisine?: string; restaurantVibe?: string; restaurantPriceLevel?: number; restaurantRating?: number; restaurantMustOrder?: string; restaurantStatus?: 'visited' | 'wishlist'; restaurantWebsite?: string; restaurantPhone?: string; restaurantOpeningHours?: string; restaurantSource?: string; restaurantSourceId?: string }
 export async function createMemory(input: CreateMemoryInput): Promise<string> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error('Debes iniciar sesión para guardar una memoria.');
@@ -89,8 +90,8 @@ export async function updateMemory(id: string, input: CreateMemoryInput): Promis
 
 function memorySaveMessage(error: { code?: string; message?: string }): string { if (error.code === '42501') return 'No tienes permiso para guardar esta memoria. Revisa tu sesión.'; if (error.code === 'PGRST204') return `La tabla de memorias no está actualizada: ${error.message ?? 'falta una columna requerida'}.`; return error.message || 'No se pudo guardar la memoria.'; }
 
-function restaurantPayload(input: CreateMemoryInput): { restaurant_cuisine: string | null; restaurant_vibe: string | null; restaurant_price_level: number | null; restaurant_rating: number | null; restaurant_must_order: string | null; restaurant_status: 'visited' | 'wishlist' | null } {
-  if (!input.isRestaurant) return { restaurant_cuisine: null, restaurant_vibe: null, restaurant_price_level: null, restaurant_rating: null, restaurant_must_order: null, restaurant_status: null };
+function restaurantPayload(input: CreateMemoryInput): { restaurant_cuisine: string | null; restaurant_vibe: string | null; restaurant_price_level: number | null; restaurant_rating: number | null; restaurant_must_order: string | null; restaurant_status: 'visited' | 'wishlist' | null; restaurant_website: string | null; restaurant_phone: string | null; restaurant_opening_hours: string | null; restaurant_source: string | null; restaurant_source_id: string | null } {
+  if (!input.isRestaurant) return { restaurant_cuisine: null, restaurant_vibe: null, restaurant_price_level: null, restaurant_rating: null, restaurant_must_order: null, restaurant_status: null, restaurant_website: null, restaurant_phone: null, restaurant_opening_hours: null, restaurant_source: null, restaurant_source_id: null };
   return {
     restaurant_cuisine: input.restaurantCuisine?.trim() || null,
     restaurant_vibe: input.restaurantVibe?.trim() || null,
@@ -98,5 +99,10 @@ function restaurantPayload(input: CreateMemoryInput): { restaurant_cuisine: stri
     restaurant_rating: input.restaurantRating ?? null,
     restaurant_must_order: input.restaurantMustOrder?.trim() || null,
     restaurant_status: input.restaurantStatus ?? 'visited',
+    restaurant_website: input.restaurantWebsite?.trim() || null,
+    restaurant_phone: input.restaurantPhone?.trim() || null,
+    restaurant_opening_hours: input.restaurantOpeningHours?.trim() || null,
+    restaurant_source: input.restaurantSource?.trim() || null,
+    restaurant_source_id: input.restaurantSourceId?.trim() || null,
   };
 }

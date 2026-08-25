@@ -22,6 +22,10 @@ export interface AtlasWineRegion {
   favoriteCount: number;
   averageRating?: number;
 }
+export interface AtlasVisitedCountry {
+  name: string;
+  itemCount: number;
+}
 export interface AtlasMapPoint {
   id: string;
   layer: MapLayer;
@@ -44,6 +48,7 @@ export interface AtlasMapPoint {
 export interface AtlasMapSnapshot {
   points: AtlasMapPoint[];
   wineRegions: AtlasWineRegion[];
+  visitedCountries: AtlasVisitedCountry[];
   participants: Array<{ id: string; name: string; avatarUrl?: string; itemCount: number; ownsContent: boolean }>;
   years: string[];
 }
@@ -59,4 +64,4 @@ export interface AtlasWineDenomination {
   longitude: number;
   radius: number;
 }
-export interface AtlasMapFilters { query: string; sources: Set<MapSource>; layers: Set<MapLayer>; transports: Set<TransportMode>; year: string; participant: string }
+export interface AtlasMapFilters { query: string; sources: Set<MapSource>; layers: Set<MapLayer>; transports: Set<TransportMode>; year: string; participant: string; showVisitedCountries: boolean; denominationId: string }

@@ -7,6 +7,7 @@ import BottomNav from '@/components/bottom-nav';
 const NAV_ITEMS = [
   { label: 'Mapa', href: '/home' },
   { label: 'Memorias', href: '/memories' },
+  { label: 'Restaurantes', href: '/restaurants' },
   { label: 'Vinos', href: '/wines' },
   { label: 'Biblioteca', href: '/library' },
   { label: 'Perfil', href: '/profile' },

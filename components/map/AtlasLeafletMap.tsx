@@ -2,10 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
+import Link from 'next/link';
 import { LocateFixed } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import { Circle, CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
-import type { AtlasMapPoint, AtlasWineRegion, MapCoordinate, MapLayer, MapSource } from '@/types/map';
+import { Circle, CircleMarker, GeoJSON, MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
+import { feature } from 'topojson-client';
+import worldCountries from 'world-atlas/countries-110m.json';
+import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
+import type { AtlasMapPoint, AtlasVisitedCountry, AtlasWineRegion, MapCoordinate, MapLayer, MapSource } from '@/types/map';
 import { WineCard } from '@/components/wine-ui';
 import { getRoadRoute } from '@/lib/map/road-route';
 import { buildTransportRoute } from '@/lib/map/transport-route';
@@ -14,10 +18,14 @@ import type { TransportMode } from '@/types/trip';
 import { MapOwner } from './MapOwner';
 import { MemoryPopup } from './MemoryPopup';
 import { TripPopup } from './TripPopup';
+import { denominationStyle } from '@/lib/wines/denomination-style';
+import { findVisitedCountry } from '@/lib/map/countries';
 
 const WORLD_BOUNDS: L.LatLngBoundsExpression = [[-84, -180], [84, 180]];
 
-export function AtlasLeafletMap({ points, wineRegions = [], focusPointId }: { points: AtlasMapPoint[]; wineRegions?: AtlasWineRegion[]; focusPointId?: string }) {
+const countryFeatures = feature(worldCountries as any, (worldCountries as any).objects.countries) as unknown as FeatureCollection;
+
+export function AtlasLeafletMap({ points, wineRegions = [], visitedCountries = [], showVisitedCountries = false, focusPointId, focusDenominationId }: { points: AtlasMapPoint[]; wineRegions?: AtlasWineRegion[]; visitedCountries?: AtlasVisitedCountry[]; showVisitedCountries?: boolean; focusPointId?: string; focusDenominationId?: string }) {
   const trips = points.filter((point) => point.trip && point.trip.points.length > 1);
   const markers = points.filter((point) => !point.trip);
 
@@ -25,9 +33,11 @@ export function AtlasLeafletMap({ points, wineRegions = [], focusPointId }: { po
     <ZoomControl position="bottomleft" />
     <TileLayer noWrap bounds={WORLD_BOUNDS} attribution='&copy; OpenStreetMap &copy; CARTO' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
     <FitBounds points={points} focusPointId={focusPointId} />
+    <FocusWineRegion regions={wineRegions} focusDenominationId={focusDenominationId} />
     <CurrentLocation />
 
-    <WineRegionsLayer regions={wineRegions} />
+    {showVisitedCountries && <VisitedCountriesLayer countries={visitedCountries} />}
+    <WineRegionsLayer regions={wineRegions} focusedId={focusDenominationId} />
 
     <MarkerClusterGroup chunkedLoading chunkInterval={100} chunkDelay={20} removeOutsideVisibleBounds spiderfyOnMaxZoom showCoverageOnHover={false} maxClusterRadius={52} iconCreateFunction={(cluster: { getChildCount: () => number }) => clusterIcon(cluster.getChildCount())}>
       {markers.map((point) => <Marker key={point.id} position={[point.latitude, point.longitude]} icon={icon(point.layer, point.source, point.id === focusPointId)} title={point.title} keyboard>
@@ -114,7 +124,7 @@ function RouteStop({ item, color, label, index }: { item: MapCoordinate; color: 
   return <><CircleMarker center={[item.latitude, item.longitude]} radius={11} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .035, opacity: .14, weight: 1, className: 'atlas-route-stop-wave' }} /><CircleMarker center={[item.latitude, item.longitude]} radius={6.5} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: 1, weight: 2.5, className: 'atlas-route-stop' }}><Tooltip direction="top">{index + 1}. {label}</Tooltip></CircleMarker></>;
 }
 
-function WineRegionsLayer({ regions }: { regions: AtlasWineRegion[] }) {
+function WineRegionsLayer({ regions, focusedId }: { regions: AtlasWineRegion[]; focusedId?: string }) {
   const map = useMap();
   const [zoom, setZoom] = useState(() => map.getZoom());
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
@@ -123,27 +133,48 @@ function WineRegionsLayer({ regions }: { regions: AtlasWineRegion[] }) {
     const countryCounts = new Map<string, number>();
     return regions.filter((region) => {
       const shown = countryCounts.get(region.country) ?? 0;
-      const keep = region.wineCount > 0 || shown < 7;
+      const keep = region.id === focusedId || region.wineCount > 0 || shown < 7;
       if (keep) countryCounts.set(region.country, shown + 1);
       return keep;
     });
-  }, [regions, zoom]);
-  return <>{visible.map((region) => <LivingWineRegion key={region.id} region={region} />)}</>;
+  }, [focusedId, regions, zoom]);
+  return <>{visible.map((region) => <LivingWineRegion key={region.id} region={region} focused={region.id === focusedId} />)}</>;
 }
 
-function LivingWineRegion({ region }: { region: AtlasWineRegion }) {
-  const color = wineRegionColor(region.country, region.name);
+function LivingWineRegion({ region, focused }: { region: AtlasWineRegion; focused: boolean }) {
+  const regionRef = useRef<L.Circle | null>(null);
+  const color = denominationStyle(region.country).accent;
   const intensity = region.wineCount ? Math.min(.105, .025 + region.wineCount * .008) : .006;
   const loved = region.favoriteCount > 0;
   const rated = (region.averageRating ?? 0) >= 4;
+  useEffect(() => { if (!focused) return; const timer = window.setTimeout(() => regionRef.current?.openPopup(), 720); return () => window.clearTimeout(timer); }, [focused]);
   return <>
-    <Circle center={[region.latitude, region.longitude]} radius={region.radius} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: intensity, opacity: region.wineCount ? .32 : .14, weight: 1, className: 'atlas-do-region atlas-do-breathe' }} />
-    <Circle center={[region.latitude, region.longitude]} radius={Math.round(region.radius * 1.08)} pathOptions={{ color, fillColor: color, fillOpacity: 0, opacity: region.wineCount ? .52 : .24, weight: region.wineCount ? 1.5 : 1, dashArray: region.wineCount ? '3 13' : '1 18', className: `atlas-do-orbit${loved ? ' atlas-do-favorites' : ''}` }} eventHandlers={{ mouseover: (event) => event.target.bringToFront() }}>
+    <Circle center={[region.latitude, region.longitude]} radius={region.radius} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: focused ? .18 : intensity, opacity: focused ? .8 : region.wineCount ? .32 : .14, weight: focused ? 2.5 : 1, className: `atlas-do-region atlas-do-breathe${focused ? ' atlas-do-region-focused' : ''}` }} />
+    <Circle ref={regionRef} center={[region.latitude, region.longitude]} radius={Math.round(region.radius * 1.08)} pathOptions={{ color, fillColor: color, fillOpacity: 0, opacity: focused ? .95 : region.wineCount ? .52 : .24, weight: focused ? 2.6 : region.wineCount ? 1.5 : 1, dashArray: focused ? '2 7' : region.wineCount ? '3 13' : '1 18', className: `atlas-do-orbit${loved ? ' atlas-do-favorites' : ''}${focused ? ' atlas-do-focused' : ''}` }} eventHandlers={{ mouseover: (event) => event.target.bringToFront() }}>
       <Tooltip direction="top" sticky opacity={.98}><div className="min-w-[190px] py-1.5"><span className="text-[9px] font-semibold uppercase tracking-[.14em]" style={{color}}>{region.classification || 'Indicación protegida'} · {region.country}</span><br/><strong className="text-[13px]">{region.name}</strong><br/><span className="text-[11px] text-zinc-500">{region.wineCount ? `${region.wineCount} ${region.wineCount === 1 ? 'vino conectado' : 'vinos conectados'} · ${region.wineryCount} ${region.wineryCount === 1 ? 'bodega' : 'bodegas'}` : 'Denominación del catálogo oficial'}</span>{region.averageRating&&<><br/><span className="text-[10px]">Valoración media {region.averageRating}/5</span></>}{loved&&<><br/><span className="text-[10px]">{region.favoriteCount} {region.favoriteCount===1?'favorito personal':'favoritos personales'}</span></>}</div></Tooltip>
+      <Popup className="atlas-map-popup" minWidth={245}><div className="w-[245px] bg-zinc-950 p-4 text-zinc-100"><p className="text-[9px] font-semibold uppercase tracking-[.16em]" style={{color}}>{region.classification || 'Indicación protegida'} · {region.country}</p><h3 className="mt-1.5 text-lg font-semibold text-white">{region.name}</h3><p className="mt-2 text-[11px] leading-5 text-zinc-500">Zona aproximada para aprender su ubicación. {region.wineCount ? `${region.wineCount} vinos y ${region.wineryCount} bodegas conectados.` : 'Sin botellas conectadas todavía.'}</p><Link href={`/wines?denomination=${encodeURIComponent(region.name)}`} className="mt-4 flex items-center justify-center rounded-xl bg-white px-3 py-2.5 text-xs font-semibold text-zinc-950">Ver vinos de esta denominación</Link>{region.sourceUrl&&<a href={region.sourceUrl} target="_blank" rel="noreferrer" className="mt-2 block text-center text-[10px] text-zinc-500 hover:text-white">Consultar fuente oficial</a>}</div></Popup>
     </Circle>
     <CircleMarker center={[region.latitude, region.longitude]} radius={region.wineCount ? 5 + Math.min(3, region.wineCount * .35) : 3.1} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: region.wineCount ? .98 : .78, weight: region.wineCount ? 2.4 : 1.4, className: `atlas-do-core${rated ? ' atlas-do-core-rated' : ''}` }}><Tooltip direction="top">{region.name}</Tooltip></CircleMarker>
     <CircleMarker center={[region.latitude, region.longitude]} radius={region.wineCount ? 14 : 10} interactive={false} pathOptions={{ color, fillColor: color, fillOpacity: .018, opacity: region.wineCount ? .18 : .08, weight: 1, className: 'atlas-do-core-halo' }} />
   </>;
+}
+
+function FocusWineRegion({ regions, focusDenominationId }: { regions: AtlasWineRegion[]; focusDenominationId?: string }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!focusDenominationId) return;
+    const region = regions.find((item) => item.id === focusDenominationId);
+    if (!region) return;
+    const bounds = L.circle([region.latitude, region.longitude], { radius: region.radius * 1.45 }).getBounds();
+    map.fitBounds(bounds, { padding: [80, 80], maxZoom: 9, animate: true, duration: .7 });
+  }, [focusDenominationId, map, regions]);
+  return null;
+}
+
+function VisitedCountriesLayer({ countries }: { countries: AtlasVisitedCountry[] }) {
+  const map = useMap();
+  const data = useMemo<FeatureCollection>(() => ({ ...countryFeatures, features: countryFeatures.features.filter((item) => findVisitedCountry(String(item.properties?.name ?? ''), countries)) }), [countries]);
+  return <GeoJSON key={countries.map((item) => `${item.name}-${item.itemCount}`).join('|')} data={data} style={(item) => { const visited = findVisitedCountry(String(item?.properties?.name ?? ''), countries); const strength = Math.min(.5, .2 + (visited?.itemCount ?? 0) * .045); return { color: '#0f172a', weight: 1.25, opacity: .55, fillColor: '#38bdf8', fillOpacity: strength, className: 'atlas-visited-country' }; }} onEachFeature={(item: Feature<Geometry, GeoJsonProperties>, layer) => { const visited = findVisitedCountry(String(item.properties?.name ?? ''), countries); if (!visited) return; layer.bindTooltip(`<strong>${visited.name}</strong><br><span>${visited.itemCount} ${visited.itemCount === 1 ? 'historia registrada' : 'historias registradas'}</span>`, { sticky: true, className: 'atlas-country-tooltip' }); layer.on('click', () => { const bounded = layer as L.Layer & { getBounds?: () => L.LatLngBounds }; const bounds = bounded.getBounds?.(); if (bounds) map.fitBounds(bounds, { padding: [55, 55], maxZoom: 6, animate: true }); }); }} />;
 }
 
 function FitBounds({ points, focusPointId }: { points: AtlasMapPoint[]; focusPointId?: string }) {
@@ -212,8 +243,6 @@ function routeVisual(mode: TransportMode) {
   if (mode === 'plane') return { weight: 3.2, glowWeight: 15, mainDash: '21 12', flowColor: '#ffffff', flowWeight: 2.8, flowDash: '2 27', lineCap: 'round' as const };
   return { weight: 5, glowWeight: 10, mainDash: undefined, flowColor: '#dbeafe', flowWeight: 1.8, flowDash: '2 16', lineCap: 'round' as const };
 }
-
-function wineRegionColor(country: string, name: string) { const palette: Record<string, string[]> = { España: ['#BE123C', '#9F1239', '#B45309'], Italia: ['#047857', '#0F766E', '#15803D'], Francia: ['#6D28D9', '#4338CA', '#7C3AED'] }; const colors = palette[country] ?? ['#9F1239']; let hash = 0; for (let index = 0; index < name.length; index += 1) hash = ((hash << 5) - hash + name.charCodeAt(index)) | 0; return colors[Math.abs(hash) % colors.length]; }
 
 const cache = new Map<string, L.DivIcon>();
 function icon(layer: MapLayer, source: MapSource, focused = false) {

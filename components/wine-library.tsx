@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { Camera, Grid2X2, Heart, List, MapPin, Plus, Search, ShoppingBag, SlidersHorizontal, Star, TrendingUp, Users, Wine } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowUpRight, Camera, Compass, Grid2X2, Heart, List, MapPin, Plus, Search, ShoppingBag, SlidersHorizontal, Star, TrendingUp, Users, Wine } from 'lucide-react';
 import CaniaAssistant from '@/components/CaniaAssistant';
 import { initialWineFilters, useWineLibrary } from '@/hooks/use-wine-library';
 import type { WineItem, WineSort } from '@/types/wine';
 import { WineBottleImage, WineCard, WineCreateDialog, WineDetailDialog, WineErrorState, WineFilters, WineGrid, WineListItem, WineLoadingState, WineNoResults } from '@/components/wine-ui';
+import { denominationMatches, denominationStyle } from '@/lib/wines/denomination-style';
 
 export function WineLibrary() {
   const library = useWineLibrary();
+  const { wines: allWines, setFilters: setLibraryFilters, setSearch: setLibrarySearch } = library;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [requestedDenomination, setRequestedDenomination] = useState('');
   const activeFilters = Object.entries(library.filters).filter(([key, value]) => key === 'source' ? value !== 'all' : value !== '' && value !== false && value !== null).length;
   const isFiltered = Boolean(library.search || activeFilters);
   const reset = () => { library.setSearch(''); library.setFilters(initialWineFilters); };
@@ -18,6 +22,14 @@ export function WineLibrary() {
   const countries = new Set(library.wines.map((wine) => wine.country).filter(Boolean)).size;
   const denominations = new Set(library.wines.map((wine) => wine.denomination).filter(Boolean)).size;
   const photographed = library.wines.filter((wine) => wine.image_url || wine.photos.length).length;
+  useEffect(() => { setRequestedDenomination(new URLSearchParams(window.location.search).get('denomination') ?? ''); }, []);
+  useEffect(() => {
+    if (!requestedDenomination || !allWines.length) return;
+    const matching = allWines.find((wine) => denominationMatches(wine.denomination || wine.region, requestedDenomination));
+    if (matching?.denomination) setLibraryFilters((current) => ({ ...current, denomination: matching.denomination! }));
+    else if (matching?.region) setLibraryFilters((current) => ({ ...current, region: matching.region! }));
+    else setLibrarySearch(requestedDenomination);
+  }, [allWines, requestedDenomination, setLibraryFilters, setLibrarySearch]);
 
   return <main className="min-h-screen bg-zinc-950 pb-28 text-zinc-100 selection:bg-rose-500/30">
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
@@ -27,6 +39,7 @@ export function WineLibrary() {
       </header>
 
       {!library.loading&&library.wines.length>0&&<MarketplaceHighlights wines={library.wines} userId={library.userId} onOpen={library.setSelectedWine}/>}
+      {!library.loading&&library.wines.length>0&&<CellarNavigator wines={library.wines} userId={library.userId} source={library.filters.source} selectedDenomination={library.filters.denomination} onSource={(source)=>library.setFilters((current)=>({...current,source}))} onDenomination={(denomination)=>{library.setSearch('');library.setFilters((current)=>({...current,denomination}))}}/>}
 
       <section aria-label="Controles de la bodega" className="sticky top-0 z-20 -mx-4 mt-5 border-y border-white/10 bg-zinc-950/90 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:mt-7 sm:rounded-2xl sm:border sm:bg-zinc-900/60">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -74,3 +87,10 @@ function MarketplaceHighlights({ wines, userId, onOpen }: { wines: WineItem[]; u
 }
 
 function normalizeCountry(value?:string){return (value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+
+function CellarNavigator({wines,userId,source,selectedDenomination,onSource,onDenomination}:{wines:WineItem[];userId:string|null;source:'all'|'mine'|'friends'|'public';selectedDenomination:string;onSource:(source:'all'|'mine'|'friends'|'public')=>void;onDenomination:(value:string)=>void}){
+  const groups=useMemo(()=>{const map=new Map<string,{name:string;country?:string;count:number;rating:number[]}>();wines.forEach((wine)=>{const name=wine.denomination||wine.region;if(!name)return;const current=map.get(name)??{name,country:wine.country,count:0,rating:[]};current.count+=1;if(wine.rating!==undefined)current.rating.push(wine.rating);map.set(name,current)});return [...map.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'es')).slice(0,8)},[wines]);
+  const mine=wines.filter((wine)=>Boolean(userId&&wine.user_id===userId)).length;
+  const catalogue=wines.filter((wine)=>!wine.user_id||wine.is_popular).length;
+  return <section className="mt-5 overflow-hidden rounded-[1.7rem] border border-white/[.08] bg-[linear-gradient(145deg,rgba(39,39,42,.5),rgba(9,9,11,.92))] p-4 sm:p-5" aria-label="Navegación sencilla de la bodega"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><p className="flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[.18em] text-sky-300"><Compass className="h-3.5 w-3.5"/>Cómo quieres entrar</p><h2 className="mt-1.5 text-lg font-semibold tracking-[-.025em] text-white">Tu bodega, el mercado y el territorio.</h2><p className="mt-1 text-[11px] leading-5 text-zinc-600">Primero elige la colección; después puedes aprender por denominación y volver al mapa.</p></div><div className="grid min-w-[280px] grid-cols-3 gap-1 rounded-xl border border-white/[.07] bg-black/20 p-1">{([{id:'all',label:'Todo',count:wines.length},{id:'mine',label:'Mi bodega',count:mine},{id:'public',label:'Descubrir',count:catalogue}] as const).map((item)=><button key={item.id} type="button" onClick={()=>onSource(item.id)} aria-pressed={source===item.id} className={`rounded-lg px-2 py-2 text-[10px] font-medium transition ${source===item.id?'bg-white text-zinc-950':'text-zinc-500 hover:text-white'}`}><span className="block">{item.label}</span><span className={`mt-0.5 block text-[8px] ${source===item.id?'text-zinc-500':'text-zinc-700'}`}>{item.count}</span></button>)}</div></div>{groups.length>0&&<div className="mt-5 border-t border-white/[.07] pt-4"><div className="flex items-center justify-between"><div><h3 className="text-[10px] font-semibold uppercase tracking-[.16em] text-zinc-500">Aprender por denominación</h3><p className="mt-1 text-[9px] text-zinc-700">El mismo código de color continúa en el mapa.</p></div>{selectedDenomination&&<button type="button" onClick={()=>onDenomination('')} className="text-[9px] text-rose-300">Ver todas</button>}</div><div className="mt-3 flex gap-2 overflow-x-auto pb-1">{groups.map((group)=>{const style=denominationStyle(group.country);const active=selectedDenomination===group.name;const average=group.rating.length?group.rating.reduce((sum,value)=>sum+value,0)/group.rating.length:undefined;return <div key={group.name} className={`min-w-[190px] rounded-2xl border p-3 transition ${active?'border-white/20 bg-white/[.09]':'border-white/[.06] bg-white/[.025]'}`} style={active?{boxShadow:`0 0 0 1px ${style.accent}45,0 12px 35px ${style.accent}12`}:undefined}><button type="button" onClick={()=>onDenomination(group.name)} className="block w-full text-left"><span className="flex items-center justify-between"><span className="h-2 w-2 rounded-full" style={{backgroundColor:style.accent,boxShadow:`0 0 12px ${style.accent}77`}}/><span className="text-[8px] uppercase tracking-[.12em]" style={{color:style.accent}}>{group.country}</span></span><strong className="mt-3 block truncate text-xs text-white">{group.name}</strong><span className="mt-1 block text-[9px] text-zinc-600">{group.count} {group.count===1?'vino':'vinos'}{average?` · ${average.toFixed(1)}/5`:''}</span></button><Link href={`/home?denomination=${encodeURIComponent(group.name)}`} className="mt-3 flex items-center justify-between border-t border-white/[.06] pt-2 text-[9px] text-sky-300">Ver región en mapa<ArrowUpRight className="h-3 w-3"/></Link></div>})}</div></div>}</section>;
+}

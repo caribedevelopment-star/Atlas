@@ -19,8 +19,8 @@ export default function MapComponent() {
   if (map.error || !map.snapshot) return <div className="h-full"><MapErrorState message={map.error || 'No hay datos disponibles.'} retry={() => void map.refresh()} /></div>;
 
   return <section aria-label="Mapa del archivo Atlas" className={`relative h-full min-h-[450px] overflow-hidden bg-zinc-950 ${universePhase === 'launching' ? 'atlas-map-liftoff' : ''}`}>
-    <AtlasLeafletMap points={map.points} wineRegions={map.wineRegions} focusPointId={map.focusPointId} />
-    <MapToolbar filters={map.filters} snapshot={map.snapshot} count={map.points.length} setQuery={map.setQuery} setYear={map.setYear} setParticipant={map.setParticipant} toggleLayer={map.toggleLayer} toggleSource={map.toggleSource} toggleTransport={map.toggleTransport} applyPreset={map.applyPreset} reset={map.reset} />
+    <AtlasLeafletMap points={map.points} wineRegions={map.wineRegions} visitedCountries={map.snapshot.visitedCountries} showVisitedCountries={map.filters.showVisitedCountries} focusPointId={map.focusPointId} focusDenominationId={map.focusDenominationId} />
+    <MapToolbar filters={map.filters} snapshot={map.snapshot} count={map.points.length} setQuery={map.setQuery} setYear={map.setYear} setParticipant={map.setParticipant} toggleLayer={map.toggleLayer} toggleSource={map.toggleSource} toggleTransport={map.toggleTransport} toggleVisitedCountries={map.toggleVisitedCountries} selectDenomination={map.selectDenomination} applyPreset={map.applyPreset} reset={map.reset} />
     {map.points.length === 0 && <MapEmptyState reset={map.reset} />}
 
     <div className="absolute bottom-[5.2rem] left-1/2 z-[800] -translate-x-1/2 sm:bottom-6 lg:left-auto lg:right-[372px] lg:translate-x-0">

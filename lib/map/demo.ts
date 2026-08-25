@@ -39,6 +39,7 @@ export function getAtlasDemoSnapshot(): AtlasMapSnapshot {
       { id: 'demo-bordeaux', name: 'Bordeaux AOP', country: 'Francia', latitude: 44.84, longitude: -.58, radius: 105000, wineCount: 4, wineryCount: 3, favoriteCount: 2, averageRating: 4.5 },
       { id: 'demo-sancerre', name: 'Sancerre AOP', country: 'Francia', latitude: 47.33, longitude: 2.84, radius: 35000, wineCount: 2, wineryCount: 2, favoriteCount: 1, averageRating: 4.4 },
     ],
+    visitedCountries: [{ name: 'España', itemCount: 6 }, { name: 'Francia', itemCount: 1 }],
     participants: [
       { ...owner, itemCount: 6, ownsContent: true },
       { ...friend, itemCount: 3, ownsContent: false },

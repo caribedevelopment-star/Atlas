@@ -3,6 +3,7 @@ import { getCurrentWineUserId, listWines } from '@/lib/wines/repository';
 import { buildWineRegions, listWineDenominations } from '@/lib/map/wine-regions';
 import type { AtlasMapPoint, AtlasMapSnapshot, MapSource } from '@/types/map';
 import { listTrips } from '@/lib/trips/repository';
+import { buildVisitedCountries } from '@/lib/map/countries';
 
 function valid(latitude?: number, longitude?: number): latitude is number { return latitude !== undefined && longitude !== undefined && Number.isFinite(latitude) && Number.isFinite(longitude) && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180; }
 function personalSource(ownerId: string | undefined, userId: string | null): MapSource { return ownerId && ownerId === userId ? 'mine' : 'shared'; }
@@ -66,6 +67,10 @@ export async function getAtlasMapSnapshot(): Promise<AtlasMapSnapshot> {
   return {
     points,
     wineRegions: buildWineRegions(authorizedWines, denominations),
+    visitedCountries: buildVisitedCountries([
+      ...authorizedMemories.filter((memory) => Boolean(userId && memory.userId === userId)).map((memory) => memory.country),
+      ...authoritativeTrips.filter((trip) => Boolean(userId && trip.userId === userId)).flatMap((trip) => trip.countries),
+    ]),
     participants: [...people.values()].map(({ itemIds, ...person }) => ({ ...person, itemCount: itemIds.size })).sort((a, b) => b.itemCount - a.itemCount || a.name.localeCompare(b.name, 'es')),
     years: unique(points.map((point) => point.year)).sort().reverse(),
   };

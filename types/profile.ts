@@ -42,6 +42,11 @@ export interface ProfileMemory {
   restaurantRating?: number;
   restaurantMustOrder?: string;
   restaurantStatus?: 'visited' | 'wishlist';
+  restaurantWebsite?: string;
+  restaurantPhone?: string;
+  restaurantOpeningHours?: string;
+  restaurantSource?: string;
+  restaurantSourceId?: string;
   isFavoritePlace: boolean;
   tripId?: string;
   isOwner?: boolean;

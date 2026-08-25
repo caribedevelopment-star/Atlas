@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CalendarDays, CarFront, Check, Loader2, Lock, MapPin, Plane, Plus, Route, Ship, Sparkles, TrainFront, Trash2, Users, UtensilsCrossed } from 'lucide-react';
 import { createMemory } from '@/lib/memories/repository';
@@ -27,10 +27,13 @@ export default function NewMemoryPage() {
   const [stops, setStops] = useState<Stop[]>([blankStop('stop-1'), blankStop('stop-2')]);
   const [memoryLocation, setMemoryLocation] = useState('');
   const [memoryPlace, setMemoryPlace] = useState<AtlasPlace | null>(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [participantIds, setParticipantIds] = useState<string[]>([]);
   const [transportMode, setTransportMode] = useState<TransportMode>('car');
   const [restaurantStatus, setRestaurantStatus] = useState<'visited' | 'wishlist'>('visited');
   const shareable = useShareableUsers();
+  useEffect(() => { const type = new URLSearchParams(window.location.search).get('type'); if (type === 'restaurant' || type === 'trip') setMode(type); }, []);
   const validStops = useMemo(() => stops.filter((stop) => stop.title.trim() && validCoordinate(stop.latitude, stop.longitude)), [stops]);
   const visibility = participantIds.length ? 'friends' as const : 'private' as const;
 
@@ -39,7 +42,7 @@ export default function NewMemoryPage() {
     try {
       if (mode !== 'trip') {
         if (!memoryPlace) throw new Error('Selecciona una ubicación de la lista para mostrar la memoria en el mapa.');
-        await createMemory({ title: String(data.get('title')), location: memoryLocation, date: String(data.get('date')), description: String(data.get('description')), participantIds, latitude: memoryPlace.latitude, longitude: memoryPlace.longitude, city: memoryPlace.city, country: memoryPlace.country, isRestaurant: mode === 'restaurant', category: mode === 'restaurant' ? 'Restaurante' : 'Memoria', restaurantCuisine: String(data.get('restaurantCuisine') ?? ''), restaurantVibe: String(data.get('restaurantVibe') ?? ''), restaurantPriceLevel: optionalNumber(data.get('restaurantPriceLevel')), restaurantRating: optionalNumber(data.get('restaurantRating')), restaurantMustOrder: String(data.get('restaurantMustOrder') ?? ''), restaurantStatus });
+        await createMemory({ title, location: memoryLocation, date: String(data.get('date')), description, participantIds, latitude: memoryPlace.latitude, longitude: memoryPlace.longitude, city: memoryPlace.city, country: memoryPlace.country, isRestaurant: mode === 'restaurant', category: mode === 'restaurant' ? 'Restaurante' : 'Memoria', restaurantCuisine: String(data.get('restaurantCuisine') ?? ''), restaurantVibe: String(data.get('restaurantVibe') ?? ''), restaurantPriceLevel: optionalNumber(data.get('restaurantPriceLevel')), restaurantRating: optionalNumber(data.get('restaurantRating')), restaurantMustOrder: String(data.get('restaurantMustOrder') ?? ''), restaurantStatus, restaurantWebsite: String(data.get('restaurantWebsite') ?? ''), restaurantPhone: String(data.get('restaurantPhone') ?? ''), restaurantOpeningHours: String(data.get('restaurantOpeningHours') ?? ''), restaurantSource: String(data.get('restaurantSource') ?? ''), restaurantSourceId: String(data.get('restaurantSourceId') ?? '') });
       } else {
         if (validStops.length < 2) throw new Error('Añade al menos dos paradas con coordenadas válidas.');
         if (new Set(validStops.map((stop) => `${stop.latitude},${stop.longitude}`)).size !== validStops.length) throw new Error('Hay paradas duplicadas. Revisa sus coordenadas.');
@@ -47,7 +50,7 @@ export default function NewMemoryPage() {
         if (endDate < startDate) throw new Error('La fecha final no puede ser anterior al inicio.');
         await saveTrip({ title: String(data.get('title')), description: String(data.get('description')), coverImageUrl: '', galleryUrl: normalizeGalleryUrl(String(data.get('galleryUrl'))), startDate, endDate, transportMode, visibility, stops: validStops.map((stop) => ({ title: stop.title.trim(), city: stop.city.trim() || undefined, country: stop.country.trim() || undefined, latitude: Number(stop.latitude), longitude: Number(stop.longitude) })), participantIds, wineIds: [], photos: [] });
       }
-      router.push('/home'); router.refresh();
+      router.push(mode === 'restaurant' ? '/restaurants' : '/home'); router.refresh();
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se pudo guardar.'); } finally { setSaving(false); }
   }
 
@@ -56,9 +59,9 @@ export default function NewMemoryPage() {
     <header className="mt-7"><p className="text-xs font-semibold uppercase tracking-[.22em] text-rose-300">Nuevo en tu archivo</p><h1 className="mt-3 text-4xl font-semibold tracking-[-.045em] text-white sm:text-5xl">Guarda lo que importa.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">Tus recuerdos son privados por defecto. Si eliges amigos, solo esas personas podrán ver ese momento.</p></header>
     <div className="mt-8 grid grid-cols-3 rounded-2xl border border-white/10 bg-white/[.035] p-1.5" role="tablist" aria-label="Tipo de elemento"><ModeButton active={mode === 'memory'} onClick={() => setMode('memory')} icon={<MapPin />} label="Memoria" /><ModeButton active={mode === 'restaurant'} onClick={() => setMode('restaurant')} icon={<UtensilsCrossed />} label="Restaurante" /><ModeButton active={mode === 'trip'} onClick={() => setMode('trip')} icon={<Route />} label="Viaje" /></div>
     <form onSubmit={submit} className="mt-5 space-y-5 rounded-[2rem] border border-white/10 bg-[linear-gradient(145deg,rgba(39,39,42,.75),rgba(9,9,11,.9))] p-5 shadow-2xl shadow-black/30 sm:p-8">
-      <label className="block text-sm font-medium text-zinc-300">Título<input name="title" required maxLength={160} autoFocus placeholder={mode === 'restaurant' ? 'Nombre del restaurante' : mode === 'memory' ? 'Cena bajo las estrellas' : 'Costa norte, verano'} className={field} /></label>
-      {mode !== 'trip' ? <><div className="grid gap-4 sm:grid-cols-2"><PlaceAutocomplete label={mode === 'restaurant' ? 'Dirección del restaurante' : 'Lugar'} required value={memoryLocation} onChange={(value) => { setMemoryLocation(value); setMemoryPlace(null); }} onSelect={setMemoryPlace} placeholder="Escribe una ciudad o calle" /><Field label="Fecha" name="date" type="date" defaultValue={today} icon={<CalendarDays />} /></div>{mode === 'restaurant' && <RestaurantGuideFields status={restaurantStatus} onStatusChange={setRestaurantStatus} />}</> : <><div className="grid gap-4 sm:grid-cols-2"><Field label="Inicio" name="startDate" type="date" defaultValue={today} required icon={<CalendarDays />} /><Field label="Fin" name="endDate" type="date" defaultValue={today} required icon={<CalendarDays />} /></div><TransportPicker value={transportMode} onChange={setTransportMode} /><Stops stops={stops} setStops={setStops} /></>}
-      <label className="block text-sm font-medium text-zinc-300">Notas<textarea name="description" rows={4} maxLength={2000} placeholder="¿Qué quieres recordar?" className={`${field} h-auto resize-none py-3 leading-6`} /></label>
+      <label className="block text-sm font-medium text-zinc-300">Título<input name="title" required maxLength={160} autoFocus value={title} onChange={(event)=>setTitle(event.target.value)} placeholder={mode === 'restaurant' ? 'Nombre del restaurante' : mode === 'memory' ? 'Cena bajo las estrellas' : 'Costa norte, verano'} className={field} /></label>
+      {mode !== 'trip' ? <><div className="grid gap-4 sm:grid-cols-2"><PlaceAutocomplete label={mode === 'restaurant' ? 'Busca el restaurante' : 'Lugar'} required kind={mode === 'restaurant' ? 'restaurant' : undefined} value={memoryLocation} onChange={(value) => { setMemoryLocation(value); setMemoryPlace(null); }} onSelect={(value)=>{setMemoryPlace(value);if(mode==='restaurant'&&value.name)setTitle(value.name)}} placeholder={mode === 'restaurant' ? 'Nombre + ciudad' : 'Escribe una ciudad o calle'} /><Field label="Fecha" name="date" type="date" defaultValue={today} icon={<CalendarDays />} /></div>{mode === 'restaurant' && <RestaurantGuideFields key={memoryPlace?.id??'empty'} status={restaurantStatus} onStatusChange={setRestaurantStatus} place={memoryPlace} onSuggestedDescription={setDescription} />}</> : <><div className="grid gap-4 sm:grid-cols-2"><Field label="Inicio" name="startDate" type="date" defaultValue={today} required icon={<CalendarDays />} /><Field label="Fin" name="endDate" type="date" defaultValue={today} required icon={<CalendarDays />} /></div><TransportPicker value={transportMode} onChange={setTransportMode} /><Stops stops={stops} setStops={setStops} /></>}
+      <label className="block text-sm font-medium text-zinc-300">Notas<textarea name="description" rows={4} maxLength={2000} value={description} onChange={(event)=>setDescription(event.target.value)} placeholder={mode === 'restaurant' ? 'Tu impresión en una o dos frases' : '¿Qué quieres recordar?'} className={`${field} h-auto resize-none py-3 leading-6`} /></label>
       {mode === 'trip' && <label className="block text-sm font-medium text-zinc-300">Galería del viaje <span className="font-normal text-zinc-600">(opcional)</span><input name="galleryUrl" type="url" inputMode="url" placeholder="https://drive.google.com/..." className={field} /><span className="mt-2 block text-xs font-normal text-zinc-600">Pega un enlace compartido de Google Drive, Google Photos, iCloud o tu galería preferida.</span></label>}
       <ParticipantPicker users={shareable.users} selected={participantIds} onChange={setParticipantIds} loading={shareable.loading} error={shareable.error} />
       <PrivacySummary count={participantIds.length} />

@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Library, MapPin, User, Wine } from 'lucide-react';
+import { Home, MapPin, Store, User, Wine } from 'lucide-react';
 
-const ITEMS = [{ label: 'Mapa', href: '/home', icon: Home }, { label: 'Memorias', href: '/memories', icon: MapPin }, { label: 'Vinos', href: '/wines', icon: Wine }, { label: 'Biblioteca', href: '/library', icon: Library }, { label: 'Perfil', href: '/profile', icon: User }];
+const ITEMS = [{ label: 'Mapa', href: '/home', icon: Home }, { label: 'Memorias', href: '/memories', icon: MapPin }, { label: 'Mesas', href: '/restaurants', icon: Store }, { label: 'Vinos', href: '/wines', icon: Wine }, { label: 'Perfil', href: '/profile', icon: User }];
 
 export default function BottomNav() {
   const pathname = usePathname();

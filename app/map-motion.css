@@ -83,6 +83,8 @@
 .atlas-do-favorites { animation:atlas-do-favorites 16s linear infinite; }
 .atlas-do-core-rated { filter:drop-shadow(0 0 10px #fde68a); }
 .atlas-do-card-pulse { animation:atlas-do-card-pulse 2.4s ease-in-out infinite; }
+.atlas-do-region-focused { filter:drop-shadow(0 0 16px currentColor); }
+.atlas-do-focused { animation-duration:8s; filter:drop-shadow(0 0 12px currentColor); }
 .atlas-location-pulse { animation:atlas-location-wave 2.6s ease-in-out infinite; }
 .atlas-location-core { animation:atlas-location-core 1.8s ease-in-out infinite; }
 .atlas-map-glass { animation:atlas-glass-live 5s ease-in-out infinite; }
